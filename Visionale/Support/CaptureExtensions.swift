@@ -1,11 +1,13 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-Extensions on AVFoundation capture and related types.
-*/
+ See the LICENSE.txt file for this sample’s licensing information.
+ 
+ Abstract:
+ Extensions on AVFoundation capture and related types.
+ */
 
 import AVFoundation
+import CoreImage
+import CoreML
 
 extension CMVideoDimensions: @retroactive Equatable, @retroactive Comparable {
     
@@ -38,4 +40,3 @@ extension AVCaptureDevice.Format {
         videoSupportedFrameRateRanges.last?.maxFrameRate ?? 0
     }
 }
-

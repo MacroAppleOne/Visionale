@@ -171,3 +171,19 @@ extension OutputService {
     }
     func updateConfiguration(for device: AVCaptureDevice) {}
 }
+
+enum FrameType: String {
+    case ruleOfThirds = "Rule of Thirds"
+    case center = "Center"
+    case goldenRatio = "Golden Ratio"
+    case curved = "Curved"
+    case diagonal = "Diagonal"
+    case symmetric = "Symmetric"
+    case triangle = "Triangle"
+    case horizontal = "Horizontal"
+    case vertical = "Vertical"
+}
+enum SaliencyType {
+    case objectness
+    case attention
+}

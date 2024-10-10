@@ -1,17 +1,19 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-An object that manages a capture session and its inputs and outputs.
-*/
+ See the LICENSE.txt file for this sample’s licensing information.
+ 
+ Abstract:
+ An object that manages a capture session and its inputs and outputs.
+ */
 
 import Foundation
 import AVFoundation
 import Combine
+import Vision
+import CoreML
 
 /// An actor that manages the capture pipeline, which includes the capture session, device inputs, and capture outputs.
 /// The app defines it as an `actor` type to ensure that all camera operations happen off of the `@MainActor`.
-actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+actor CaptureService {
     
     /// A value that indicates whether the capture service is idle or capturing a photo or movie.
     @Published private(set) var captureActivity: CaptureActivity = .idle
@@ -21,10 +23,7 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     @Published private(set) var isInterrupted = false
     /// A Boolean value that indicates whether the user enables HDR video capture.
     @Published var isHDRVideoEnabled = false
-    
-//    private let mlModel = MLModel()
-//    @Published var currentPredictions: [String] = []
-    
+        
     /// A type that connects a preview destination with the capture session.
     nonisolated let previewSource: PreviewSource
     
@@ -50,14 +49,16 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator!
     private var rotationObservers = [AnyObject]()
     
+    // An object to call the MLCLayer instance
+    var mlcLayer = MachineLearningClassificationLayer()
+    
+    private var MLVideoOutput = AVCaptureVideoDataOutput()
     // A Boolean value that indicates whether the actor finished its required configuration.
     private var isSetUp = false
     
-    override init() {
+    init() {
         // Create a source object to connect the preview view with the capture session.
         previewSource = DefaultPreviewSource(session: captureSession)
-        
-        super.init()
     }
     
     // MARK: - Authorization
@@ -77,7 +78,6 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
             return isAuthorized
         }
     }
-    
     // MARK: - Capture session life cycle
     func start() async throws {
         // Exit early if not authorized or the session is already running.
@@ -92,7 +92,7 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     private func setUpSession() throws {
         // Return early if already set up.
         guard !isSetUp else { return }
-
+        
         // Observe internal state and notifications.
         observeOutputServices()
         observeNotifications()
@@ -100,18 +100,18 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         do {
             // Retrieve the default camera and microphone.
             let defaultCamera = try deviceLookup.defaultCamera
-
+            
             // Add inputs for the default camera and microphone devices.
             activeVideoInput = try addInput(for: defaultCamera)
-
+            
             // Configure the session for photo capture by default.
             captureSession.sessionPreset = .photo
             // Add the photo capture output as the default output type.
             try addOutput(photoCapture.output)
             
-            // Add ML output to the session output
-            addMachineLearningOutput()
-            
+            // ML Output
+            MLVideoOutput.setSampleBufferDelegate(self.mlcLayer, queue: DispatchQueue(label: "videoQueue"))
+            try addOutput(MLVideoOutput)
             // Monitor the system-preferred camera state.
             monitorSystemPreferredCamera()
             
@@ -127,14 +127,7 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
             throw CameraError.setupFailed
         }
     }
-    
-    private func addMachineLearningOutput() {
-        let videoDataOutput = AVCaptureVideoDataOutput()
-        videoDataOutput.setSampleBufferDelegate(self, queue: DispatchQueue(label: "videoQueue"))
-        if captureSession.canAddOutput(videoDataOutput) {
-            captureSession.addOutput(videoDataOutput)
-        }
-    }
+
     // Adds an input to the capture session to connect the specified capture device.
     @discardableResult
     private func addInput(for device: AVCaptureDevice) throws -> AVCaptureDeviceInput {
@@ -176,7 +169,7 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
         
         // Configure the capture session for the selected capture mode.
         captureSession.sessionPreset = .photo
-
+        
         // Update the advertised capabilities after reconfiguration.
         updateCaptureCapabilities()
     }
@@ -191,7 +184,7 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     func selectNextVideoDevice() {
         // The array of available video capture devices.
         let videoDevices = deviceLookup.cameras
-
+        
         // Find the index of the currently selected video device.
         let selectedIndex = videoDevices.firstIndex(of: currentDevice) ?? 0
         // Get the next index.
@@ -386,8 +379,7 @@ actor CaptureService: NSObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     /// Merge the `captureActivity` values of the photo and movie capture services,
     /// and assign the value to the actor's property.`
     private func observeOutputServices() {
-        Publishers.Merge(photoCapture.$captureActivity, photoCapture.$captureActivity)
-            .assign(to: &$captureActivity)
+        captureActivity = photoCapture.captureActivity
     }
     
     /// Observe capture-related notifications.

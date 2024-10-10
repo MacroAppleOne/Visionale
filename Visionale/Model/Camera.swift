@@ -25,10 +25,7 @@ protocol Camera: AnyObject {
     
     /// Starts the camera capture pipeline.
     func start() async
-    
-    /// The capture mode, which can be photo or video.
-    //    var captureMode: CaptureMode { get set }
-    
+
     func toggleTorch ()
     
     var isTorchOn: Bool { get }
@@ -59,4 +56,6 @@ protocol Camera: AnyObject {
     
     /// An error if the camera encountered a problem.
     var error: Error? { get }
+    
+    var captureService: CaptureService { get }
 }

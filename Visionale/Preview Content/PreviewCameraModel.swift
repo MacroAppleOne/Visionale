@@ -26,6 +26,7 @@ class PreviewCameraModel: Camera {
     private(set) var isVideoDeviceSwitchable = true
     private(set) var isSwitchingVideoDevices = false
     private(set) var photoFeatures = PhotoFeatures()
+    private(set) var captureService = CaptureService()
     private(set) var thumbnail: CGImage?
     
     var error: Error?

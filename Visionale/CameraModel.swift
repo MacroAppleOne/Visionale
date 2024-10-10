@@ -55,7 +55,7 @@ final class CameraModel: Camera {
     private let mediaLibrary = MediaLibrary()
     
     /// An object that manages the app's capture functionality.
-    private let captureService = CaptureService()
+    let captureService = CaptureService()
     
     init() {
         //
