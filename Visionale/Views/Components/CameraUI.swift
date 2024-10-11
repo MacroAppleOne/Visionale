@@ -1,16 +1,16 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-A view that presents the main camera user interface.
-*/
+ See the LICENSE.txt file for this sample’s licensing information.
+ 
+ Abstract:
+ A view that presents the main camera user interface.
+ */
 
 import SwiftUI
 import AVFoundation
 
 /// A view that presents the main camera user interface.
 struct CameraUI<CameraModel: Camera>: PlatformView {
-
+    
     @State var camera: CameraModel
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
@@ -24,8 +24,8 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
             }
         }
         .overlay(alignment: .top) {
-                LiveBadge()
-                    .opacity(camera.captureActivity.isLivePhoto ? 1.0 : 0.0)
+            LiveBadge()
+                .opacity(camera.captureActivity.isLivePhoto ? 1.0 : 0.0)
         }
         .overlay {
             StatusOverlayView(status: camera.status)
@@ -38,8 +38,16 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
         VStack(spacing: 0) {
             FeaturesToolbar(camera: camera)
             Spacer()
-            MainToolbar(camera: camera)
-                .padding(.bottom, bottomPadding)
+            VStack{
+                ZStack{
+                    Carousel()
+                        .padding(.bottom, padding - 50)
+                    MainToolbar(camera: camera)
+                        .padding(.top, padding + 200)
+                }
+            }
+            //            MainToolbar(camera: camera)
+            //                .padding(.bottom, bottomPadding)
         }
     }
     
@@ -61,7 +69,7 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
         }
     }
     
-    var bottomPadding: CGFloat {
+    var padding: CGFloat {
         // Dynamically calculate the offset for the bottom toolbar in iOS.
         let bounds = UIScreen.main.bounds
         let rect = AVMakeRect(aspectRatio: currentAspectRatio, insideRect: bounds)

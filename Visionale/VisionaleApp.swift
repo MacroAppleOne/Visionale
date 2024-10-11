@@ -10,7 +10,7 @@ import os
 
 @main
 struct VisionaleApp: App {
-    @State private var camera = CameraModel()
+    @State private var camera = CameraViewModel()
     var body: some Scene {
         WindowGroup {
             CameraView(camera: camera)
