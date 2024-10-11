@@ -100,10 +100,9 @@ actor CaptureService {
         do {
             // Retrieve the default camera.
             let defaultCamera = try deviceLookup.defaultCamera
-            
             // Add inputs for the default camera devices.
             activeVideoInput = try addInput(for: defaultCamera)
-            
+    
             // Configure the session for photo capture by default.
             captureSession.sessionPreset = .photo
             // Add the photo capture output as the default output type.
@@ -112,6 +111,7 @@ actor CaptureService {
             // ML Output
             MLVideoOutput.setSampleBufferDelegate(self.mlcLayer, queue: DispatchQueue(label: "videoQueue"))
             try addOutput(MLVideoOutput)
+            
             // Monitor the system-preferred camera state.
             monitorSystemPreferredCamera()
             
