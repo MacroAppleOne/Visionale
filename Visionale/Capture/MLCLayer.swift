@@ -9,9 +9,13 @@ import CoreML
 import CoreImage
 import AVFoundation
 
+/// A class responsible for handling machine learning classification tasks.
 @Observable
 class MachineLearningClassificationLayer: NSObject {
+    /// The frame type used for classification
     var frame: FrameType = .center
+    
+    /// The CoreML model used for image classification.
     let model: ImageClassificationModel?
     var predictionLabels: [String] = []
     //    var guidanceSystem: GuidanceSystem?

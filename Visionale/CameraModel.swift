@@ -64,7 +64,7 @@ final class CameraModel: Camera {
     // MARK: - Starting the camera
     /// Start the camera and begin the stream of data.
     func start() async {
-        // Verify that the person authorizes the app to use device cameras and microphones.
+        // Verify that the person authorizes the app to use device cameras.
         guard await captureService.isAuthorized else {
             status = .unauthorized
             return
