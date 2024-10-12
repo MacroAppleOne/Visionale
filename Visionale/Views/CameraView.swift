@@ -19,26 +19,41 @@ struct CameraView<CameraModel: Camera>: PlatformView {
         ZStack {
             // A container view that manages the placement of the preview.
             PreviewContainer(camera: camera) {
-                CameraPreview(source: camera.previewSource)
-                    .onTapGesture { location in
-                        // Focus and expose at the tapped point.
-                        Task { await camera.focusAndExpose(at: location) }
-                    }
-                    .overlay(alignment: .top){
-                        ClassifiedLabelCard(camera: camera)
-                            .offset(y: 100)
-                    }
-                /// The value of `shouldFlashScreen` changes briefly to `true` when capture
-                /// starts, then immediately changes to `false`. Use this to
-                /// flash the screen to provide visual feedback.
-                    .opacity(camera.shouldFlashScreen ? 0 : 1)
+                GeometryReader { gr in
+                    CameraPreview(source: camera.previewSource)
+                        .onTapGesture { location in
+                            // Focus and expose at the tapped point.
+                            Task { await camera.focusAndExpose(at: location) }
+                        }
+                        .overlay(alignment: .top){
+                            ClassifiedLabelCard(camera: camera)
+                                .offset(y: 100)
+                        }
+                        .overlay {
+                            if camera.captureService.mlcLayer.bestShotPoint != nil {
+                                Circle()
+                                    .position(
+                                        x: camera.captureService.mlcLayer.bestShotPoint?.x ?? 0 * gr.size.width,
+                                        y: camera.captureService.mlcLayer.bestShotPoint?.y ?? 0 * gr.size.height
+                                    )
+                                    .foregroundStyle(.yellow)
+                                    .frame(width: 50, height: 50)
+                            }
+                            
+                        }
+                    /// The value of `shouldFlashScreen` changes briefly to `true` when capture
+                    /// starts, then immediately changes to `false`. Use this to
+                    /// flash the screen to provide visual feedback.
+                        .opacity(camera.shouldFlashScreen ? 0 : 1)
+                }
+                
             }
             // The main camera user interface.
-            CameraUI(camera: camera)
+            CameraUI(camera: $camera)
         }
     }
 }
 
 #Preview {
-    CameraView(camera: PreviewCameraModel())
+//    CameraView(camera: PreviewCameraModel(cameraView))
 }

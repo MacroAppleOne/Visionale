@@ -173,6 +173,7 @@ extension OutputService {
 }
 
 enum FrameType: String {
+    case none = "None"
     case ruleOfThirds = "Rule of Thirds"
     case center = "Center"
     case goldenRatio = "Golden Ratio"
