@@ -5,11 +5,6 @@
 //  Created by Kyrell Leano Siauw on 10/10/24.
 //
 
-import CoreML
-import CoreImage
-import AVFoundation
-
-//
 //  VideoProcessing.swift
 //  TestCameraAI
 //
@@ -28,9 +23,11 @@ class MachineLearningClassificationLayer: NSObject, AVCaptureVideoDataOutputSamp
     var frameType: FrameType = .center
     var predictionLabels: [String] = []
     var bestShotPoint: CGPoint?
+    var boundingBox: CGRect?
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         self.predictionLabels = self.frameRecommendation.processFrame(sampleBuffer)
         self.bestShotPoint = self.guidanceSystem.doShotSuggestion(buffer: sampleBuffer, frameType: self.frameType)
+        self.boundingBox = self.guidanceSystem.geBoundingBox(buffer: sampleBuffer, frameType: frameType)
     }
 }

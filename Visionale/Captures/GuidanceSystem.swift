@@ -38,6 +38,10 @@ class GuidanceSystem {
                     return
                 }
                 
+//                observation.confidence
+                
+//                print(observation.salientObjects.first.)
+                
                 if saliencyType == .objectness {
                     completion(observation.salientObjects ?? nil)
                 }
@@ -84,7 +88,7 @@ class GuidanceSystem {
             
         }
         
-        print("best shot point: \(bestShotPoint)")
+//        print("best shot point: \(bestShotPoint)")
         return bestShotPoint
     }
     
@@ -94,10 +98,24 @@ class GuidanceSystem {
         var bestPoint: CGPoint?
         self.detectSalientRegions(in: ciImage, frameType: .center, completion: { result in
             bestPoint = self.determineBestShotPoint(image: ciImage, rect: result, frameType: frameType)
-            print(bestPoint)
+//            print(bestPoint)
         })
         
         return bestPoint
+    }
+    
+    func geBoundingBox(buffer: CMSampleBuffer, frameType: FrameType) -> CGRect? {
+        guard let ciImage = convertBufferIntoCIImage(buffer: buffer) else { return nil }
+        
+        var boundingBox: CGRect?
+        
+        self.detectSalientRegions(in: ciImage, frameType: .center, completion: { result in
+            boundingBox = result?.first?.boundingBox
+        })
+        
+//        print(boundingBox?.origin.x, boundingBox?.origin.y)
+                                                    
+        return boundingBox
     }
 }
 

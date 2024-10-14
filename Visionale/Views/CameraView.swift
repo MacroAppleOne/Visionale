@@ -15,6 +15,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     @State var camera: CameraModel
+//    @State var orientation: UIDeviceOrientation = UIDevice.current.orientation
+    @State var bestShotPoint: CGPoint = .zero
+    
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
@@ -29,22 +32,39 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             ClassifiedLabelCard(camera: camera)
                                 .offset(y: 100)
                         }
-                        .overlay {
-                            if camera.captureService.mlcLayer.bestShotPoint != nil {
-                                Circle()
-                                    .position(
-                                        x: camera.captureService.mlcLayer.bestShotPoint?.x ?? 0 * gr.size.width,
-                                        y: camera.captureService.mlcLayer.bestShotPoint?.y ?? 0 * gr.size.height
-                                    )
-                                    .foregroundStyle(.yellow)
-                                    .frame(width: 50, height: 50)
-                            }
-                            
+                        .overlay(alignment: .topLeading) {
+                            Circle()
+                                .offset(
+                                    x: bestShotPoint.x * gr.size.width,
+                                    y: bestShotPoint.y * gr.size.height
+                                )
+                                .foregroundStyle(.yellow)
+                                .frame(width: 50, height: 50)
+                            //                            Rectangle()
+                            //                                .foregroundStyle(.clear)
+                            //                                .border(Color.red, width: 1)
+                            //                                .frame(width: boxWidth * gr.size.height, height: boxHeight * gr.size.width)
+                            //                                .offset(x: originX * gr.size.width, y: originY * gr.size.height)
+                            //                                .offset(x: originX * gr.size.width , y: originY * gr.size.height + ((gr.size.height - (gr.size.width * 4 / 3)) / 2))
                         }
                     /// The value of `shouldFlashScreen` changes briefly to `true` when capture
                     /// starts, then immediately changes to `false`. Use this to
                     /// flash the screen to provide visual feedback.
-                        .opacity(camera.shouldFlashScreen ? 0 : 1)
+                        .onChange(of: camera.captureService.mlcLayer.boundingBox) {
+                            Task {
+                                bestShotPoint = camera.captureService.mlcLayer.bestShotPoint ?? .zero
+                            }
+                        }
+//                        .onAppear {
+//                            UIDevice.current.beginGeneratingDeviceOrientationNotifications()
+//                            NotificationCenter.default.addObserver(forName: UIDevice.orientationDidChangeNotification, object: nil, queue: .main) { _ in
+//                                self.orientation = UIDevice.current.orientation
+//                            }
+//                        }
+//                        .onDisappear {
+//                            NotificationCenter.default.removeObserver(self, name: UIDevice.orientationDidChangeNotification, object: nil)
+//                            UIDevice.current.endGeneratingDeviceOrientationNotifications()
+//                        }
                 }
                 
             }
@@ -55,5 +75,5 @@ struct CameraView<CameraModel: Camera>: PlatformView {
 }
 
 #Preview {
-//    CameraView(camera: PreviewCameraModel(cameraView))
+    //    CameraView(camera: PreviewCameraModel(cameraView))
 }

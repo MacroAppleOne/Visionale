@@ -50,7 +50,7 @@ actor CaptureService {
     private var rotationObservers = [AnyObject]()
     
     // An object to call the MLCLayer instance
-    var mlcLayer = MachineLearningClassificationLayer()
+    nonisolated let mlcLayer = MachineLearningClassificationLayer()
     
     private var MLVideoOutput = AVCaptureVideoDataOutput()
     // A Boolean value that indicates whether the actor finished its required configuration.

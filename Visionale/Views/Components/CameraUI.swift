@@ -11,9 +11,12 @@ import AVFoundation
 /// A view that presents the main camera user interface.
 struct CameraUI<CameraModel: Camera>: PlatformView {
     
-    @State var camera: CameraModel
+    @Binding var camera: CameraModel
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
+    
+    @State var compositions: [FrameType] = [.none, .center, .curved, .diagonal, .goldenRatio, .ruleOfThirds, .symmetric, .triangle]
+    @State var activeCompositionIndex: Int? = 0
     
     var body: some View {
         Group {
@@ -40,7 +43,7 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
             Spacer()
             VStack{
                 ZStack{
-                    Carousel()
+                    Carousel(compositions: $compositions, activeCompositionIndex: $activeCompositionIndex, cameraViewModel: $camera)
                         .padding(.bottom, padding - 50)
                     MainToolbar(camera: camera)
                         .padding(.top, padding + 200)
@@ -78,5 +81,5 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
 }
 
 #Preview {
-    CameraUI(camera: PreviewCameraModel())
+//    CameraUI(camera: PreviewCameraModel())
 }

@@ -1,12 +1,12 @@
 import SwiftUI
 
-struct Carousel: View {
+struct Carousel<CameraModel: Camera>: View {
     
+//    @State private var activeCompositions: String = "Center"
     var colors: [Color] = [.red, .blue, .green, .yellow, .orange, .purple, .pink, .cyan]
-    var compositions: [String] = ["NONE","CENTER", "CURVED", "DIAGONAL", "GOLDEN RATIO", "RULE OF THIRDS", "SYMMETRIC", "TRIANGLE"]
-    @State private var activeID: Int? = 0
-    @State private var activeCompositions: String = "Center"
-    
+    @Binding var compositions: [FrameType]
+    @Binding var activeCompositionIndex: Int?
+    @Binding var cameraViewModel: CameraModel
     
     var body: some View {
         ZStack {
@@ -22,15 +22,16 @@ struct Carousel: View {
                     ForEach(0...7, id: \.self) { index in
                         VStack {
                             Circle()
-                                .fill(activeID == index ? Color.activeCircle : Color.inActiveCircle)
+                                .fill(activeCompositionIndex == index ? Color.activeCircle : Color.inActiveCircle)
                                 .frame(width: 10, height: 10)
                                 .padding(.bottom, 10)
                             
-                            Text(compositions[index])
+                            Text(compositions[index].rawValue)
                                 .font(.subheadline)
-                                .foregroundStyle(activeID == index ? Color.activeCircle : Color.inActiveCircle)
+                                .foregroundStyle(activeCompositionIndex == index ? Color.activeCircle : Color.inActiveCircle)
                                 .fontWeight(.bold)
                                 .lineLimit(1)
+                                .textCase(.uppercase)
                                 .minimumScaleFactor(1.5)
                                 .frame(width: 125)
                         }
@@ -51,11 +52,11 @@ struct Carousel: View {
             .safeAreaPadding((UIScreen.main.bounds.width - 70) / 2)
             .scrollIndicators(.hidden)
             .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: $activeID)
-            .onChange(of: activeID, perform: { newID in
-                print("terganti")
+            .scrollPosition(id: $activeCompositionIndex)
+            .onChange(of: activeCompositionIndex, perform: { newID in
+//                print("terganti")
                 if let id = newID {
-                    activeCompositions = compositions[id]
+                    activeCompositionIndex = id
                     UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                 }
             })
@@ -113,5 +114,5 @@ struct HalfCircleShape: Shape {
 }
 
 #Preview {
-    Carousel()
+//    Carousel()
 }
