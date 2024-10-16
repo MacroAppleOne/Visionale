@@ -24,10 +24,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                         // Focus and expose at the tapped point.
                         Task { await camera.focusAndExpose(at: location) }
                     }
-                    .overlay(alignment: .top){
-                        ClassifiedLabelCard(camera: camera)
-                            .offset(y: 100)
-                    }
                 /// The value of `shouldFlashScreen` changes briefly to `true` when capture
                 /// starts, then immediately changes to `false`. Use this to
                 /// flash the screen to provide visual feedback.
