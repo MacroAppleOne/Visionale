@@ -13,24 +13,32 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
+    
     @State var camera: CameraModel
+    @State var isSettingSheetPresented: Bool = false
     
     var body: some View {
         @Bindable var features = camera.photoFeatures
         
         HStack(spacing: 30) {
             if isCompactSize {
-                livePhotoButton
                 torchButton
+                livePhotoButton
                 Spacer()
+                gridOverlayButton
             } else {
                 Spacer()
-                livePhotoButton
                 torchButton
+                livePhotoButton
             }
         }
         .buttonStyle(DefaultButtonStyle(size: isRegularSize ? .large : .small))
         .padding([.leading, .trailing])
+        .sheet(isPresented: $isSettingSheetPresented, content: {
+            NavigationStack{
+                Text("GG Lah")
+            }.navigationTitle("Settings")
+        })
     }
     
     //  A button to toggle the enabled state of Live Photo capture.
@@ -51,11 +59,43 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         Button {
             camera.toggleTorch()
         } label: {
-            VStack {
-                Image(systemName: camera.isTorchOn ? "bolt.circle" : "bolt.slash.circle")
+            VStack{
+                Image(systemName: camera.isTorchOn ? "bolt.circle.fill" : "bolt.slash.circle")
+                    .symbolRenderingMode(camera.isTorchOn ? .monochrome : .hierarchical)
+                    .fontWeight(.thin)
+                    .font(.title2)
                     .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
                     .foregroundColor(camera.isTorchOn ? .accentColor: .primary)
             }
+        }
+        .frame(width: smallButtonSize.width, height: smallButtonSize.height)
+    }
+    
+    // A button to toggle the information sheet
+    var gridOverlayButton: some View {
+        Button {
+            camera.toggleGridOverlay()
+        } label: {
+            VStack{
+                Image(systemName: camera.isGridOverlayVisible ? "viewfinder.circle.fill" : "viewfinder.circle")
+                    .symbolRenderingMode(camera.isGridOverlayVisible ? .monochrome : .hierarchical  )
+                    .fontWeight(.thin)
+                    .font(.title2)
+                    .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
+                    .foregroundColor(camera.isGridOverlayVisible ? .accentColor: .primary)
+            }
+        }
+        .frame(width: smallButtonSize.width, height: smallButtonSize.height)
+    }
+    
+    // A button to open Setting page
+    var settingButton: some View {
+        Button{
+            isSettingSheetPresented.toggle()
+        } label: {
+            Image(systemName: "gear.circle")
+            //                .foregroundColor(isSettingSheetPresented ? .accentColor : .primary)
+                .foregroundStyle(isSettingSheetPresented ? .accent: .primary)
         }
     }
     

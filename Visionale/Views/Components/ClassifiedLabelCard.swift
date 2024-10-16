@@ -7,6 +7,7 @@
 
 import SwiftUI
 
+
 struct ClassifiedLabelCard: View {
     @State var camera: Camera
     var body: some View {

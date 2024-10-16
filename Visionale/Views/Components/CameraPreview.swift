@@ -9,15 +9,14 @@ import SwiftUI
 @preconcurrency import AVFoundation
 
 struct CameraPreview: UIViewRepresentable {
-    
     private let source: PreviewSource
-    
-    init(source: PreviewSource) {
+    private let device: AVCaptureDevice
+    init(source: PreviewSource, device: AVCaptureDevice) {
         self.source = source
+        self.device = device
     }
-    
     func makeUIView(context: Context) -> PreviewView {
-        let preview = PreviewView()
+        let preview = PreviewView(device: self.device)
         // Connect the preview layer to the capture session.
         source.connect(to: preview)
         return preview
@@ -32,10 +31,12 @@ struct CameraPreview: UIViewRepresentable {
     /// This class owns the `AVCaptureVideoPreviewLayer` that presents the captured content.
     ///
     class PreviewView: UIView, PreviewTarget {
-        private var lastZoomFactor: CGFloat = 1.0
+        private var lastZoomFactor: CGFloat = 2.0
         private var zoomFactor: ClosedRange<CGFloat> = 1.0...1.0
-        
-        init() {
+        // Current video active input
+        private var device: AVCaptureDevice
+        init(device: AVCaptureDevice) {
+            self.device = device
             super.init(frame: .zero)
 #if targetEnvironment(simulator)
             // The capture APIs require running on a real device. If running
@@ -48,6 +49,7 @@ struct CameraPreview: UIViewRepresentable {
 #endif
             setupPinchGesture()
             setupVideoMinMaxZoomFactor()
+            setInitialZoomFactor()
         }
         
         required init?(coder: NSCoder) {
@@ -71,22 +73,32 @@ struct CameraPreview: UIViewRepresentable {
             }
         }
         // MARK: - Pinch Gesture Handling for Zoom
-        
         /// Function that returns the videoMaxZoomfactor
         private func setupVideoMinMaxZoomFactor() {
-            guard let device = AVCaptureDevice.default(for: AVMediaType.video) else { return }
             guard let availableZoomFactors = device.activeFormat.systemRecommendedVideoZoomRange else { return }
             self.zoomFactor = availableZoomFactors
+            print(device.virtualDeviceSwitchOverVideoZoomFactors)
+            print(device.localizedName)
         }
-
+        
+        /// Function to set initial zoom factor to 2
+        private func setInitialZoomFactor() {
+            do {
+                try device.lockForConfiguration()
+                defer { device.unlockForConfiguration() }
+                device.videoZoomFactor = lastZoomFactor
+                print("woi jancok")
+            } catch {
+                print("\(error.localizedDescription)")
+            }
+        }
+        
         private func setupPinchGesture() {
             let pinchGesture = UIPinchGestureRecognizer(target: self, action: #selector(handlePinch(_:)))
             self.addGestureRecognizer(pinchGesture)
         }
         
         @objc private func handlePinch(_ pinch: UIPinchGestureRecognizer) {
-            guard let device = AVCaptureDevice.default(for: AVMediaType.video) else { return }
-            
             // Return zoom value between the minimum and maximum zoom values
             func minMaxZoom(_ factor: CGFloat) -> CGFloat {
                 return min(min(max(factor, zoomFactor.lowerBound), zoomFactor.upperBound), device.activeFormat.videoMaxZoomFactor)

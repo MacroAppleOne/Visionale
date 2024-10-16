@@ -19,7 +19,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
         ZStack {
             // A container view that manages the placement of the preview.
             PreviewContainer(camera: camera) {
-                CameraPreview(source: camera.previewSource)
+                CameraPreview(source: camera.previewSource, device: camera.captureService.deviceLookup.cameras.first!)
                     .onTapGesture { location in
                         // Focus and expose at the tapped point.
                         Task { await camera.focusAndExpose(at: location) }
@@ -31,7 +31,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                 /// The value of `shouldFlashScreen` changes briefly to `true` when capture
                 /// starts, then immediately changes to `false`. Use this to
                 /// flash the screen to provide visual feedback.
-                    .opacity(camera.shouldFlashScreen ? 0 : 1)
+                    .opacity (camera.shouldFlashScreen ? 0 : 1)
             }
             // The main camera user interface.
             CameraUI(camera: camera)

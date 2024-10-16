@@ -25,10 +25,14 @@ protocol Camera: AnyObject {
     
     /// Starts the camera capture pipeline.
     func start() async
-
+    
     func toggleTorch ()
     
     var isTorchOn: Bool { get }
+    
+    var isGridOverlayVisible: Bool { get }
+    
+    func toggleGridOverlay()
     
     /// A Boolean value that indicates whether the camera is currently switching capture modes.
     var isSwitchingModes: Bool { get }

@@ -15,7 +15,7 @@ struct VisionaleApp: App {
         WindowGroup {
             CameraView(camera: camera)
                 .statusBarHidden(true)
-                .task {
+                .task { 
                     // Start the capture pipeline.
                     await camera.start()
                 }

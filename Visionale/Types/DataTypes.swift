@@ -148,7 +148,6 @@ enum QualityPrioritization: Int, Identifiable, CaseIterable, CustomStringConvert
 
 enum CameraError: Error {
     case videoDeviceUnavailable
-    case audioDeviceUnavailable
     case addInputFailed
     case addOutputFailed
     case setupFailed

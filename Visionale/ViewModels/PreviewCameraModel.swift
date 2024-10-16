@@ -25,6 +25,7 @@ class PreviewCameraModel: Camera {
     private(set) var isTorchOn: Bool = false
     private(set) var isVideoDeviceSwitchable = true
     private(set) var isSwitchingVideoDevices = false
+    private(set) var isGridOverlayVisible = false
     private(set) var photoFeatures = PhotoFeatures()
     private(set) var captureService = CaptureService()
     private(set) var thumbnail: CGImage?
@@ -39,6 +40,10 @@ class PreviewCameraModel: Camera {
         if status == .unknown {
             status = .running
         }
+    }
+    
+    func toggleGridOverlay() {
+        logger.debug("Grid overlay isn't implemented in PreviewCamera.")
     }
     
     func switchVideoDevices() {

@@ -46,8 +46,6 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
                         .padding(.top, padding + 200)
                 }
             }
-            //            MainToolbar(camera: camera)
-            //                .padding(.bottom, bottomPadding)
         }
     }
     
@@ -68,6 +66,7 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
             .padding(.bottom, 32)
         }
     }
+    
     
     var padding: CGFloat {
         // Dynamically calculate the offset for the bottom toolbar in iOS.

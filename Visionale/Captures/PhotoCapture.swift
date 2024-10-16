@@ -121,7 +121,7 @@ final class PhotoCapture: OutputService {
     ///
     func updateConfiguration(for device: AVCaptureDevice) {
         // Enable all supported features.
-        photoOutput.maxPhotoDimensions = device.activeFormat.supportedMaxPhotoDimensions.last ?? .zero
+        photoOutput.maxPhotoDimensions = device.activeFormat.supportedMaxPhotoDimensions.first ?? .zero
         photoOutput.isLivePhotoCaptureEnabled = photoOutput.isLivePhotoCaptureSupported
         photoOutput.maxPhotoQualityPrioritization = .quality
         photoOutput.isResponsiveCaptureEnabled = photoOutput.isResponsiveCaptureSupported
