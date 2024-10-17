@@ -17,7 +17,7 @@ class MachineLearningClassificationLayer: NSObject {
     
     /// The CoreML model used for image classification.
     let model: ImageClassificationModel?
-    var predictionLabels: [String] = []
+    var predictionLabels: String?
     //    var guidanceSystem: GuidanceSystem?
     
     override init() {
@@ -38,7 +38,7 @@ class MachineLearningClassificationLayer: NSObject {
             let input = ImageClassificationModelInput(x_1: image)
             let prediction = try model?.prediction(input: input)
             
-            predictionLabels = convertPredictionIntoLabel(in: prediction?.var_1120) ?? []
+            predictionLabels = convertPredictionIntoLabel(in: prediction?.var_1120) ?? nil
             
         } catch {
             print("Error making prediction: \(error)")
@@ -102,7 +102,7 @@ class MachineLearningClassificationLayer: NSObject {
         return multiArray
     }
     
-    func convertPredictionIntoLabel(in multiArray: MLMultiArray?) -> [String]? {
+    func convertPredictionIntoLabel(in multiArray: MLMultiArray?) -> String? {
         guard let multiArray = multiArray else { return nil }
         
         // Access the pointer to the underlying data
@@ -119,7 +119,8 @@ class MachineLearningClassificationLayer: NSObject {
         
         let classes = ["center", "curved", "diagonal", "golden_ratio", "rule_of_thirds", "symmetric", "triangle"]
         
-        return Array(arrayLiteral: classes[topThreeIndices[0]], classes[topThreeIndices[1]], classes[topThreeIndices[2]])
+//        return Array(arrayLiteral: classes[topThreeIndices[0]], classes[topThreeIndices[1]], classes[topThreeIndices[2]])
+        return classes[indexedArray.first!.offset]
     }
     
 }
