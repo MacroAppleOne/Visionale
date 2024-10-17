@@ -60,11 +60,9 @@ struct Carousel<CameraModel: Camera>: View {
                 .scrollIndicators(.hidden)
                 .scrollTargetBehavior(.viewAligned)
                 .scrollPosition(id: $viewModel.activeID)
-                .onChange(of: viewModel.activeID, perform: { newID in
+                .onChange(of: viewModel.activeID) {oldID, newID in
                     viewModel.updateActiveComposition(id: newID)
-                    print("test")
-                    print(viewModel.recommendedCompositions)
-                })
+                }
             
             
             Rectangle()
@@ -117,7 +115,3 @@ struct HalfCircleShape: Shape {
         return path
     }
 }
-
-//#Preview {
-//    Carousel()
-//}
