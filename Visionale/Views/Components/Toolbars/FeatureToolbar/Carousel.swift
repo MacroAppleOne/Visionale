@@ -21,13 +21,13 @@ struct Carousel: View {
                     ForEach(0...7, id: \.self) { index in
                         VStack {
                             Circle()
-                                .fill(activeID == index ? Color.activeCircle : Color.inActiveCircle)
+                                .fill(activeID == index ? Color.activeCircle : Color.activeCircle)
                                 .frame(width: 10, height: 10)
                                 .padding(.bottom, 10)
                             
                             Text(compositions[index])
                                 .font(.subheadline)
-                                .foregroundStyle(activeID == index ? Color.activeCircle : Color.inActiveCircle)
+                                .foregroundStyle(activeID == index ? Color.activeCircle : Color.activeCircle)
                                 .fontWeight(.bold)
                                 .lineLimit(1)
                                 .minimumScaleFactor(1.5)

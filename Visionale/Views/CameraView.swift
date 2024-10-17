@@ -9,12 +9,11 @@ import SwiftUI
 import AVFoundation
 
 @MainActor
-struct CameraView<CameraModel: Camera>: PlatformView {
+struct CameraView: PlatformView {
+    @State private var camera = CameraViewModel()
     
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
-    
-    @State var camera: CameraModel
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
@@ -32,9 +31,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             // The main camera user interface.
             CameraUI(camera: camera)
         }
+        .task {
+            // Start the capture pipeline.
+            await camera.start()
+        }
     }
-}
-
-#Preview {
-    CameraView(camera: PreviewCameraModel())
 }

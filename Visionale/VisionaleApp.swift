@@ -10,15 +10,12 @@ import os
 
 @main
 struct VisionaleApp: App {
-    @State private var camera = CameraViewModel()
+    // AppStorage for onboarding
+    @StateObject private var session = SessionManager()
     var body: some Scene {
         WindowGroup {
-            CameraView(camera: camera)
-                .statusBarHidden(true)
-                .task { 
-                    // Start the capture pipeline.
-                    await camera.start()
-                }
+            MainView()
+                .environmentObject(session)
         }
     }
 }
