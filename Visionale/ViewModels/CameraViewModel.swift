@@ -39,6 +39,8 @@ final class CameraViewModel: Camera {
     
     private(set) var isTorchOn: Bool = false
     
+    private(set) var isGridOverlayVisible: Bool = false
+    
     /// A thumbnail for the last captured photo or video.
     private(set) var thumbnail: CGImage?
     
@@ -48,6 +50,10 @@ final class CameraViewModel: Camera {
     /// An Boolean value that indicates the flash is on or
     private(set) var isFlashOn = false
     
+    private(set) var lastZoomFactor: CGFloat = 1.0
+    
+    private(set) var zoomFactor: ClosedRange<CGFloat> = 1.0...1.0
+    
     /// An object that provides the connection between the capture session and the video preview layer.
     var previewSource: PreviewSource { captureService.previewSource }
     
@@ -55,11 +61,54 @@ final class CameraViewModel: Camera {
     private let mediaLibrary = MediaLibrary()
     
     /// An object that manages the app's capture functionality.
-    let captureService = CaptureService()
+    let captureService = CaptureService.shared
+    
     
     init() {
-        //
+        //     
     }
+    
+    // MARK: - Camera Zoom Implementation
+    //    func setupDevice(_ device: AVCaptureDevice) {
+    //        self.device = device
+    //        setupVideoMinMaxZoomFactor()
+    //    }
+    
+    //    nonisolated private func setupVideoMinMaxZoomFactor() {
+    //        let device = captureService.currentDevice
+    //        let availableZoomFactors = device.activeFormat.systemRecommendedVideoZoomRange else { return }
+    //        self.zoomFactor = availableZoomFactors
+    //    }
+    //    
+    //    func handlePinch(_ pinch: UIPinchGestureRecognizer) {
+    //        guard let device = device else { return }
+    //        
+    //        func minMaxZoom(_ factor: CGFloat) -> CGFloat {
+    //            return min(min(max(factor, zoomFactor.lowerBound), zoomFactor.upperBound), device.activeFormat.videoMaxZoomFactor)
+    //        }
+    //        
+    //        func update(scale factor: CGFloat) {
+    //            do {
+    //                try device.lockForConfiguration()
+    //                defer { device.unlockForConfiguration() }
+    //                device.videoZoomFactor = factor
+    //            } catch {
+    //                print("\(error.localizedDescription)")
+    //            }
+    //        }
+    //        
+    //        let newScaleFactor = minMaxZoom(pinch.scale * lastZoomFactor)
+    //        
+    //        switch pinch.state {
+    //        case .began, .changed:
+    //            update(scale: newScaleFactor)
+    //        case .ended:
+    //            lastZoomFactor = minMaxZoom(newScaleFactor)
+    //            update(scale: lastZoomFactor)
+    //        default:
+    //            break
+    //        }
+    //    }
     
     // MARK: - Starting the camera
     /// Start the camera and begin the stream of data.
@@ -105,6 +154,11 @@ final class CameraViewModel: Camera {
         } catch {
             print(error)
         }
+    }
+    
+    /// Toggles grid overlay visibility
+    func toggleGridOverlay() {
+        isGridOverlayVisible.toggle()
     }
     
     /// Selects the next available video device for capture.

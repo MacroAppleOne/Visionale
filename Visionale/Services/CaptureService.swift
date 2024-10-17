@@ -14,7 +14,7 @@ import CoreML
 /// An actor that manages the capture pipeline, which includes the capture session, device inputs, and capture outputs.
 /// The app defines it as an `actor` type to ensure that all camera operations happen off of the `@MainActor`.
 actor CaptureService {
-    
+    static let shared = CaptureService()
     /// A value that indicates whether the capture service is idle or capturing a photo or movie.
     @Published private(set) var captureActivity: CaptureActivity = .idle
     /// A value that indicates the current capture capabilities of the service.
@@ -23,7 +23,7 @@ actor CaptureService {
     @Published private(set) var isInterrupted = false
     /// A Boolean value that indicates whether the user enables HDR video capture.
     @Published var isHDRVideoEnabled = false
-        
+    
     /// A type that connects a preview destination with the capture session.
     nonisolated let previewSource: PreviewSource
     
@@ -40,7 +40,7 @@ actor CaptureService {
     private var activeVideoInput: AVCaptureDeviceInput?
     
     // An object the service uses to retrieve capture devices.
-    private let deviceLookup = DeviceLookup()
+    let deviceLookup = DeviceLookup()
     
     // An object that monitors the state of the system-preferred camera.
     private let systemPreferredCamera = SystemPreferredCameraObserver()
@@ -51,8 +51,9 @@ actor CaptureService {
     
     // An object to call the MLCLayer instance
     var mlcLayer = MachineLearningClassificationLayer()
-    
     private var MLVideoOutput = AVCaptureVideoDataOutput()
+    
+    
     // A Boolean value that indicates whether the actor finished its required configuration.
     private var isSetUp = false
     
@@ -99,10 +100,11 @@ actor CaptureService {
         
         do {
             // Retrieve the default camera.
-            let defaultCamera = try deviceLookup.defaultCamera
+            let defaultCamera = deviceLookup.cameras.first!
             // Add inputs for the default camera devices.
             activeVideoInput = try addInput(for: defaultCamera)
-    
+            
+            //            print(defaultCamera.virtualDeviceSwitchOverVideoZoomFactors)
             // Configure the session for photo capture by default.
             captureSession.sessionPreset = .photo
             // Add the photo capture output as the default output type.
@@ -111,9 +113,6 @@ actor CaptureService {
             // ML Output
             MLVideoOutput.setSampleBufferDelegate(self.mlcLayer, queue: DispatchQueue(label: "videoQueue"))
             try addOutput(MLVideoOutput)
-            
-            // Monitor the system-preferred camera state.
-            monitorSystemPreferredCamera()
             
             // Configure a rotation coordinator for the default video device.
             createRotationCoordinator(for: defaultCamera)
@@ -127,7 +126,7 @@ actor CaptureService {
             throw CameraError.setupFailed
         }
     }
-
+    
     // Adds an input to the capture session to connect the specified capture device.
     @discardableResult
     private func addInput(for device: AVCaptureDevice) throws -> AVCaptureDeviceInput {
@@ -150,7 +149,7 @@ actor CaptureService {
     }
     
     // The device for the active video input.
-    private var currentDevice: AVCaptureDevice {
+    var currentDevice: AVCaptureDevice {
         guard let device = activeVideoInput?.device else {
             fatalError("No device found for current video input.")
         }
@@ -184,7 +183,6 @@ actor CaptureService {
     func selectNextVideoDevice() {
         // The array of available video capture devices.
         let videoDevices = deviceLookup.cameras
-        
         // Find the index of the currently selected video device.
         let selectedIndex = videoDevices.firstIndex(of: currentDevice) ?? 0
         // Get the next index.
@@ -235,18 +233,18 @@ actor CaptureService {
     /// they're signaling the intent to use the device. The system responds by updating the
     /// system-preferred camera (SPC) selection to this new device. When this occurs, if the SPC
     /// isn't the currently selected camera, switch to the new device.
-    private func monitorSystemPreferredCamera() {
-        Task {
-            // An object monitors changes to system-preferred camera (SPC) value.
-            for await camera in systemPreferredCamera.changes {
-                // If the SPC isn't the currently selected camera, attempt to change to that device.
-                if let camera, currentDevice != camera {
-                    logger.debug("Switching camera selection to the system-preferred camera.")
-                    changeCaptureDevice(to: camera)
-                }
-            }
-        }
-    }
+    //    private func monitorSystemPreferredCamera() {
+    //        Task {
+    //            // An object monitors changes to system-preferred camera (SPC) value.
+    //            for await camera in systemPreferredCamera.changes {
+    //                // If the SPC isn't the currently selected camera, attempt to change to that device.
+    //                if let camera, currentDevice != camera {
+    //                    logger.debug("Switching camera selection to the system-preferred camera.")
+    //                    changeCaptureDevice(to: camera)
+    //                }
+    //            }
+    //        }
+    //    }
     
     // MARK: - Rotation handling
     
@@ -333,7 +331,7 @@ actor CaptureService {
     
     private func focusAndExpose(at devicePoint: CGPoint, isUserInitiated: Bool) throws {
         // Configure the current device.
-        let device = currentDevice
+        let device = deviceLookup.cameras.first!
         
         // The following mode and point of interest configuration requires obtaining an exclusive lock on the device.
         try device.lockForConfiguration()
@@ -371,7 +369,7 @@ actor CaptureService {
     /// determine which features to enable in the user interface.
     private func updateCaptureCapabilities() {
         // Update the output service configuration.
-        outputServices.forEach { $0.updateConfiguration(for: currentDevice) }
+        outputServices.forEach { $0.updateConfiguration(for: deviceLookup.cameras.first!) }
         // Set the capture service's capabilities for the selected mode.
         captureCapabilities = photoCapture.capabilities
     }

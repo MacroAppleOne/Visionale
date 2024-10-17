@@ -7,7 +7,6 @@ struct Carousel: View {
     @State private var activeID: Int? = 0
     @State private var activeCompositions: String = "Center"
     
-    
     var body: some View {
         ZStack {
             // Half circle background shape
@@ -22,13 +21,13 @@ struct Carousel: View {
                     ForEach(0...7, id: \.self) { index in
                         VStack {
                             Circle()
-                                .fill(activeID == index ? Color.activeCircle : Color.inActiveCircle)
+                                .fill(activeID == index ? Color.activeCircle : Color.activeCircle)
                                 .frame(width: 10, height: 10)
                                 .padding(.bottom, 10)
                             
                             Text(compositions[index])
                                 .font(.subheadline)
-                                .foregroundStyle(activeID == index ? Color.activeCircle : Color.inActiveCircle)
+                                .foregroundStyle(activeID == index ? Color.activeCircle : Color.activeCircle)
                                 .fontWeight(.bold)
                                 .lineLimit(1)
                                 .minimumScaleFactor(1.5)
@@ -52,49 +51,36 @@ struct Carousel: View {
             .scrollIndicators(.hidden)
             .scrollTargetBehavior(.viewAligned)
             .scrollPosition(id: $activeID)
-            .onChange(of: activeID, perform: { newID in
-                print("terganti")
+            .sensoryFeedback(.selection, trigger: activeID)
+            .onChange(of: activeID) { oldID, newID in
                 if let id = newID {
                     activeCompositions = compositions[id]
-                    UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
                 }
-            })
-//            .onChange(of: activeID) { newID in
-//                print("terganti")
-//                if let id = newID {
-//                    activeCompositions = compositions[id]
-//                    UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
-//                }
-//            }
-            
+            }
             Rectangle()
                 .fill(Color.frameRectangle)
                 .frame(maxWidth: .infinity)
                 .frame(height: 100)
                 .padding(.top, 165)
-            
-            
         }
     }
     
     // Circular Slider View Offset
-    func offset(_ proxy: GeometryProxy) -> CGFloat {
+    nonisolated func offset(_ proxy: GeometryProxy) -> CGFloat {
         let progress = progress(proxy)
         return progress < 0 ? progress * -20 : progress * 20
     }
     
-    func scale(_ proxy: GeometryProxy) -> CGFloat {
-        let progress = min(max(progress(proxy), -1), 1)
-        return progress < 0 ? 1 + progress : 1 - progress
-    }
-    
-    func progress(_ proxy: GeometryProxy) -> CGFloat {
+    nonisolated func progress(_ proxy: GeometryProxy) -> CGFloat {
         let viewWidth = proxy.size.width
         let minX = (proxy.bounds(of: .scrollView)?.minX ?? 0)
         return minX / viewWidth
     }
     
-    
+    nonisolated func scale(_ proxy: GeometryProxy) -> CGFloat {
+        let progress = min(max(progress(proxy), -1), 1)
+        return progress < 0 ? 1 + progress : 1 - progress
+    }
 }
 
 // Custom Half Circle Shape
