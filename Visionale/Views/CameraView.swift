@@ -10,7 +10,7 @@ import AVFoundation
 
 @MainActor
 struct CameraView: PlatformView {
-    @State private var camera = CameraViewModel()
+    @StateObject private var camera = CameraViewModel()
     
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.horizontalSizeClass) var horizontalSizeClass

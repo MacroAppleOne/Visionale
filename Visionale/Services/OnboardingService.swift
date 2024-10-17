@@ -9,7 +9,7 @@ import Foundation
 import AVFoundation
 import Photos
 
-final class SessionManager: ObservableObject {
+final class OnboardingService: ObservableObject {
     enum CurrentState {
         case onboarding
         case cameraPermissionRequest

@@ -65,50 +65,8 @@ final class CameraViewModel: Camera {
     
     
     init() {
-        //     
+        //
     }
-    
-    // MARK: - Camera Zoom Implementation
-    //    func setupDevice(_ device: AVCaptureDevice) {
-    //        self.device = device
-    //        setupVideoMinMaxZoomFactor()
-    //    }
-    
-    //    nonisolated private func setupVideoMinMaxZoomFactor() {
-    //        let device = captureService.currentDevice
-    //        let availableZoomFactors = device.activeFormat.systemRecommendedVideoZoomRange else { return }
-    //        self.zoomFactor = availableZoomFactors
-    //    }
-    //    
-    //    func handlePinch(_ pinch: UIPinchGestureRecognizer) {
-    //        guard let device = device else { return }
-    //        
-    //        func minMaxZoom(_ factor: CGFloat) -> CGFloat {
-    //            return min(min(max(factor, zoomFactor.lowerBound), zoomFactor.upperBound), device.activeFormat.videoMaxZoomFactor)
-    //        }
-    //        
-    //        func update(scale factor: CGFloat) {
-    //            do {
-    //                try device.lockForConfiguration()
-    //                defer { device.unlockForConfiguration() }
-    //                device.videoZoomFactor = factor
-    //            } catch {
-    //                print("\(error.localizedDescription)")
-    //            }
-    //        }
-    //        
-    //        let newScaleFactor = minMaxZoom(pinch.scale * lastZoomFactor)
-    //        
-    //        switch pinch.state {
-    //        case .began, .changed:
-    //            update(scale: newScaleFactor)
-    //        case .ended:
-    //            lastZoomFactor = minMaxZoom(newScaleFactor)
-    //            update(scale: lastZoomFactor)
-    //        default:
-    //            break
-    //        }
-    //    }
     
     // MARK: - Starting the camera
     /// Start the camera and begin the stream of data.
@@ -132,7 +90,7 @@ final class CameraViewModel: Camera {
     // MARK: - Changing modes and devices
     /// Toggles the torch on and off
     func toggleTorch() {
-        guard let device = AVCaptureDevice.default(for: AVMediaType.video) else { return }
+        let device = captureService.currentDevice
         guard device.hasTorch else { return }
         
         do {

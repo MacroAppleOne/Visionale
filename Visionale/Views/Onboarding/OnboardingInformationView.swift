@@ -9,7 +9,7 @@ import SwiftUI
 
 
 struct OnboardingInformationView: View {
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: OnboardingService
     
     @State private var currentStep = 0
     init(){

@@ -9,7 +9,7 @@ import SwiftUI
 import AVFoundation
 
 struct OnboardingCameraPermissionView: View {
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: OnboardingService
     var body: some View {
         ZStack {
             VStack{

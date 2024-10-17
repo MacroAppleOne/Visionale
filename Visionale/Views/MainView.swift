@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct MainView: View {
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: OnboardingService
     var body: some View {
         Group {
             switch session.currentState {

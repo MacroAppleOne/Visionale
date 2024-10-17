@@ -11,7 +11,7 @@ import os
 @main
 struct VisionaleApp: App {
     // AppStorage for onboarding
-    @StateObject private var session = SessionManager()
+    @StateObject private var session = OnboardingService()
     var body: some Scene {
         WindowGroup {
             MainView()

@@ -8,7 +8,7 @@
 import SwiftUI
 
 struct OnboardingStartView: View {
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: OnboardingService
 
     @State private var isActive = false
     var body: some View {

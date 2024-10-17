@@ -9,7 +9,7 @@ import SwiftUI
 import Photos
 
 struct OnboardingGalleryPermissionView: View {
-    @EnvironmentObject var session: SessionManager
+    @EnvironmentObject var session: OnboardingService
     
     var meshGradient: some View {
         MeshGradient(
