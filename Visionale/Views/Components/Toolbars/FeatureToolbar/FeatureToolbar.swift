@@ -95,7 +95,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         } label: {
             Image(systemName: "gear.circle")
             //                .foregroundColor(isSettingSheetPresented ? .accentColor : .primary)
-                .foregroundStyle(isSettingSheetPresented ? .accent: .primary)
+                .foregroundStyle(isSettingSheetPresented ? .base: .primary)
         }
     }
     

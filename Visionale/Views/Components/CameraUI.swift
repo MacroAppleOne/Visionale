@@ -40,7 +40,7 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
             Spacer()
             VStack{
                 ZStack{
-                    Carousel(camera: $camera)
+                    Carousel(camera: camera)
                         .padding(.bottom, padding - 50)
                     MainToolbar(camera: camera)
                         .padding(.top, padding + 200)
