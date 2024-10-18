@@ -17,7 +17,7 @@ struct CameraView: PlatformView {
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
-            PreviewContainer(camera: camera) {
+            CameraPreviewContainer(camera: camera) {
                 CameraPreview(source: camera.previewSource, device: camera.captureService.deviceLookup.cameras.first!)
                     .onTapGesture { location in
                         // Focus and expose at the tapped point.

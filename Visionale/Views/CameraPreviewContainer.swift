@@ -1,4 +1,16 @@
+//
+//  CameraPreviewContainer.swift
+//  Visionale
+//
+//  Created by Michelle Alvera Lolang on 18/10/24.
+//
+
+
 import SwiftUI
+
+// Portrait-orientation aspect ratios.
+typealias AspectRatio = CGSize
+let currentAspectRatio = AspectRatio(width: 9.0, height: 16.0)
 
 /// A view that provides a container view around the camera preview.
 ///
@@ -6,7 +18,7 @@ import SwiftUI
 /// On a compact device size, the app also uses this view to offset the vertical position
 /// of the camera preview to better fit the UI when in photo capture mode.
 @MainActor
-struct PreviewContainer<Content: View, CameraModel: Camera>: View {
+struct CameraPreviewContainer<Content: View, CameraModel: Camera>: View {
     
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
