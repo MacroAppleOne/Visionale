@@ -77,8 +77,6 @@ struct CameraPreview: UIViewRepresentable {
         private func setupVideoMinMaxZoomFactor() {
             guard let availableZoomFactors = device.activeFormat.systemRecommendedVideoZoomRange else { return }
             self.zoomFactor = availableZoomFactors
-            print(device.virtualDeviceSwitchOverVideoZoomFactors)
-            print(device.localizedName)
         }
         
         /// Function to set initial zoom factor to 2
@@ -87,7 +85,6 @@ struct CameraPreview: UIViewRepresentable {
                 try device.lockForConfiguration()
                 defer { device.unlockForConfiguration() }
                 device.videoZoomFactor = lastZoomFactor
-                print("woi jancok")
             } catch {
                 print("\(error.localizedDescription)")
             }
