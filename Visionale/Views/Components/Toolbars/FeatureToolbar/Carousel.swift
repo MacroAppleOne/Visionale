@@ -2,13 +2,13 @@ import SwiftUI
 
 struct Carousel<CameraModel: Camera>: View {
     var camera: CameraModel
-    @ObservedObject var viewModel: CompositionViewModel
+    @State var viewModel: CompositionViewModel
     @State private var compositionName: String = ""
     
-    init(camera: CameraModel){
-        self.viewModel = CompositionViewModel(ml: camera.captureService.mlcLayer)
-        self.camera = camera
-    }
+//    init(camera: CameraModel){
+//        self.viewModel = CompositionViewModel(ml: camera.captureService.mlcLayer)
+//        self.camera = camera
+//    }
     var body: some View {
         ZStack {
             // Half circle background shape
@@ -68,6 +68,7 @@ struct Carousel<CameraModel: Camera>: View {
             }
             .onChange(of: viewModel.mlcLayer.predictionLabels) { oldLabels, newLabels in
                 guard let labels = newLabels else { return }
+                viewModel.findComposition(withName: labels)
             }
             
             Text(compositionName)

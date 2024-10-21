@@ -27,7 +27,8 @@ final class CompositionViewModel: ObservableObject {
     func findComposition(withName name: String) -> String? {
         recommendedCompositions = []
         
-        if let index = compositions.firstIndex(where: { $0.name == name }) {
+        if let index = compositions.firstIndex(where: { $0.name.lowercased() == name }) {
+//            print(index)
             // Set the recommended status for the selected composition
             compositions[index].isRecommended = true
 
@@ -47,9 +48,6 @@ final class CompositionViewModel: ObservableObject {
         
         return nil
     }
-
-
-    
     
     // Update the active composition based on ID change
     func updateActiveComposition(id: UUID?) {
@@ -62,8 +60,6 @@ final class CompositionViewModel: ObservableObject {
             }
         }
     }
-    
-    
 }
 
 

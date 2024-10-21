@@ -12,6 +12,7 @@ import AVFoundation
 struct CameraUI<CameraModel: Camera>: PlatformView {
     
     @State var camera: CameraModel
+    @State var compositionVM: CompositionViewModel
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
@@ -40,7 +41,7 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
             Spacer()
             VStack{
                 ZStack{
-                    Carousel(camera: camera)
+                    Carousel(camera: camera, viewModel: compositionVM)
                         .padding(.bottom, padding - 50)
                     MainToolbar(camera: camera)
                         .padding(.top, padding + 200)
@@ -77,5 +78,5 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
 }
 
 #Preview {
-    CameraUI(camera: PreviewCameraModel())
+//    CameraUI(camera: PreviewCameraModel())
 }
