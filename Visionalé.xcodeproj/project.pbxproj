@@ -417,6 +417,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Visionalé";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires access to the camera.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app need your location permission for photo metadatas";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "This app requires access to your photo library, SO WE CAN TAKE YOUR DATA!";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs your library usage permision";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -457,6 +458,7 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Visionalé";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires access to the camera.";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app need your location permission for photo metadatas";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "This app requires access to your photo library, SO WE CAN TAKE YOUR DATA!";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs your library usage permision";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
