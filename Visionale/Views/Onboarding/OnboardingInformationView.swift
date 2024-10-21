@@ -133,8 +133,9 @@ struct OnboardingInformationView: View {
                             }
                             .padding(.leading, 45)
                         }.padding(.bottom, 150)
-                        
+                            
                     }
+                    .padding(.horizontal, 40)
                     .edgesIgnoringSafeArea(.all)
                     
                 }

@@ -1,18 +1,13 @@
-//
-//  OnboardingPermissionView.swift
-//  Visionale
-//
-//  Created by Kyrell Leano Siauw on 17/10/24.
-//
-
 import SwiftUI
 import AVFoundation
 
 struct OnboardingCameraPermissionView: View {
     @EnvironmentObject var session: OnboardingService
+    @State private var showPermissionAlert = false
+
     var body: some View {
         ZStack {
-            VStack{
+            VStack {
                 MeshGradient(
                     width: 5,
                     height: 5,
@@ -33,28 +28,30 @@ struct OnboardingCameraPermissionView: View {
                         .darkGradient, .darkGradient, .darkGradient, .darkGradient, .darkGradient  // Bottom row colors
                     ],
                     smoothsColors: true
-                ) .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
+                ).frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height)
             }
             
-            
-            
             VStack {
-                ZStack{
+                ZStack {
                     Rectangle()
-                        .fill(.darkGradient) // Change this color to whatever you want
-                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2) // Half screen height
+                        .fill(.darkGradient)
+                        .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
                     Image("systemVideoName")
                         .resizable()
                 }
+                
                 Spacer(minLength: 50)
-                VStack(alignment: .leading){
+                
+                VStack(alignment: .leading) {
                     Text("Camera Access")
                         .font(.largeTitle)
                         .foregroundColor(.lightGradient)
                         .bold()
+                    
                     Text("Visionalé fully respects your privacy. We only request access to your camera to ensure the app functions properly, without collecting your personal data.")
                         .font(.footnote)
                         .foregroundColor(.lightGradient)
+                    
                     Button(action: {
                         session.requestCameraPermission()
                     }) {
@@ -69,14 +66,27 @@ struct OnboardingCameraPermissionView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
-                        .background(Color.accentColor)
+                        .background(Color.base)
                         .cornerRadius(50)
                         .shadow(radius: 5)
                     }
+                    .alert(isPresented: $showPermissionAlert) {
+                        Alert(
+                            title: Text("Camera Access Denied"),
+                            message: Text("Please allow camera access in settings."),
+                            primaryButton: .default(Text("Settings"), action: {
+                                if let settingsURL = URL(string: UIApplication.openSettingsURLString),
+                                   UIApplication.shared.canOpenURL(settingsURL) {
+                                    UIApplication.shared.open(settingsURL)
+                                }
+                            }),
+                            secondaryButton: .cancel()
+                        )
+                    }
                     .padding(.vertical, 100)
-                }.padding(.bottom,60)
-                    .padding(.horizontal, 35)
-                
+                }
+                .padding(.bottom, 60)
+                .padding(.horizontal, 35)
             }
             .edgesIgnoringSafeArea(.all)
         }
