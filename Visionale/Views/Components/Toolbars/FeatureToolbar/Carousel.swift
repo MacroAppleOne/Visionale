@@ -5,10 +5,6 @@ struct Carousel<CameraModel: Camera>: View {
     @State var viewModel: CompositionViewModel
     @State private var compositionName: String = ""
     
-//    init(camera: CameraModel){
-//        self.viewModel = CompositionViewModel(ml: camera.captureService.mlcLayer)
-//        self.camera = camera
-//    }
     var body: some View {
         ZStack {
             // Half circle background shape
@@ -17,38 +13,45 @@ struct Carousel<CameraModel: Camera>: View {
                 .opacity(0.7)
                 .frame(width: UIScreen.main.bounds.width + 10, height: UIScreen.main.bounds.height / 2 + 35)
             
-            
             ScrollView(.horizontal) {
                 HStack(spacing: -7) {
                     ForEach(viewModel.compositions) { composition in
-                        VStack {
-                            if(viewModel.activeID == composition.id && composition.isRecommended == true){
-                                Image(composition.imageSelectedRecommended)
-                                    .resizable()
-                                    .frame(width: 35, height: 35)
-                            } else if (viewModel.activeID == composition.id && composition.isRecommended == false){
-                                Image(composition.imageSelected)
-                                    .resizable()
-                                    .frame(width: 35, height: 35)
-                            } else if (viewModel.activeID != composition.id && composition.isRecommended == true){
-                                Image(composition.imageRecommended)
-                                    .resizable()
-                                    .frame(width: 35, height: 35)
-                            } else {
-                                Image(composition.image)
-                                    .resizable()
-                                    .frame(width: 35, height: 35)
+                        Button(action: {
+                            // Update the active composition when clicked
+                            withAnimation(.easeInOut(duration: 0.4)) { // Adding sliding animation
+                                viewModel.activeID = composition.id
                             }
-                        }
-                        .frame(width: 80, height: 150)
-                        .scaleEffect(viewModel.activeID == composition.id ? 1.24 : 1.0)
-                        .visualEffect {
-                            view, proxy in view
-                                .offset(y: offset(proxy))
-                                .offset(y: scale(proxy) * 2)
-                        }
-                        .scrollTransition(.interactive, axis: .horizontal) {
-                            view, phase in view
+                        }) {
+                            VStack {
+                                if(viewModel.activeID == composition.id && composition.isRecommended == true) {
+                                    Image(composition.imageSelectedRecommended)
+                                        .resizable()
+                                        .frame(width: 35, height: 35)
+                                } else if (viewModel.activeID == composition.id && composition.isRecommended == false) {
+                                    Image(composition.imageSelected)
+                                        .resizable()
+                                        .frame(width: 35, height: 35)
+                                } else if (viewModel.activeID != composition.id && composition.isRecommended == true) {
+                                    Image(composition.imageRecommended)
+                                        .resizable()
+                                        .frame(width: 35, height: 35)
+                                } else {
+                                    Image(composition.image)
+                                        .resizable()
+                                        .frame(width: 35, height: 35)
+                                }
+                            }
+                            .frame(width: 80, height: 150)
+                            .scaleEffect(viewModel.activeID == composition.id ? 1.24 : 1.0) // Scale effect for selected item
+                            .visualEffect {
+                                view, proxy in view
+                                    .offset(y: offset(proxy))
+                                    .offset(y: scale(proxy) * 2)
+                            }
+                            .scrollTransition(.interactive, axis: .horizontal) {
+                                view, phase in view
+                            }
+                            .animation(.easeInOut(duration: 0.4), value: viewModel.activeID) // Animate position changes
                         }
                     }
                 }
@@ -58,13 +61,12 @@ struct Carousel<CameraModel: Camera>: View {
             .safeAreaPadding((UIScreen.main.bounds.width - 70) / 2)
             .scrollIndicators(.hidden)
             .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: Binding($viewModel.activeID))
-            .onChange(of: viewModel.activeID){ oldID, newID in
+            .scrollPosition(id: Binding($viewModel.activeID)) // Sync scroll position with active ID
+            .onChange(of: viewModel.activeID) { oldID, newID in
                 viewModel.updateActiveComposition(id: newID)
                 if let composition = viewModel.compositions.first(where: { $0.id == newID }) {
                     compositionName = composition.name
                 }
-                
             }
             .onChange(of: viewModel.mlcLayer.predictionLabels) { oldLabels, newLabels in
                 guard let labels = newLabels else { return }
@@ -80,8 +82,6 @@ struct Carousel<CameraModel: Camera>: View {
                 .background(.base)
                 .cornerRadius(5)
                 .offset(y: -100)
-            
-            
             
             Rectangle()
                 .fill(Color.frameRectangle)
@@ -110,13 +110,6 @@ struct Carousel<CameraModel: Camera>: View {
         let minX = (proxy.bounds(of: .scrollView)?.minX ?? 0)
         return minX / viewWidth
     }
-    
-    nonisolated func compositionRecommended(withName name: String, in compositions: [Composition]) -> Bool {
-        return compositions.contains { $0.name == name }
-    }
-    
-    
-    
 }
 
 // Custom Half Circle Shape
