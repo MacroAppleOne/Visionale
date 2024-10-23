@@ -1,9 +1,9 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-A view that presents a video preview of the captured content.
-*/
+ See the LICENSE.txt file for this sample’s licensing information.
+ 
+ Abstract:
+ A view that presents a video preview of the captured content.
+ */
 
 import SwiftUI
 @preconcurrency import AVFoundation
@@ -35,7 +35,7 @@ struct CameraPreview: UIViewRepresentable {
         
         init() {
             super.init(frame: .zero)
-    #if targetEnvironment(simulator)
+#if targetEnvironment(simulator)
             // The capture APIs require running on a real device. If running
             // in Simulator, display a static image to represent the video feed.
             let imageView = UIImageView(frame: UIScreen.main.bounds)
@@ -43,7 +43,7 @@ struct CameraPreview: UIViewRepresentable {
             imageView.contentMode = .scaleAspectFill
             imageView.autoresizingMask = [.flexibleWidth, .flexibleHeight]
             addSubview(imageView)
-    #endif
+#endif
         }
         
         required init?(coder: NSCoder) {

@@ -144,7 +144,7 @@ actor CaptureService {
     /// Returns the recommended maximum zoom factor for the current device.
     func getRecommendedMaxZoomFactor(for device: AVCaptureDevice) -> CGFloat {
         if let lastZoomFactor = device.virtualDeviceSwitchOverVideoZoomFactors.last as? CGFloat {
-            return lastZoomFactor
+            return lastZoomFactor * 10
         } else {
             return min(device.activeFormat.videoMaxZoomFactor, 6.0)
         }
