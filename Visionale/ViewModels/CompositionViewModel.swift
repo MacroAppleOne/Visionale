@@ -39,9 +39,9 @@ final class CompositionViewModel: ObservableObject {
                 }
             }
 
-            for i in 0..<compositions.count {
-                print(compositions[i].name)
-            }
+//            for i in 0..<compositions.count {
+//                print(compositions[i].name)
+//            }
 
             return compositions[0].name
         }

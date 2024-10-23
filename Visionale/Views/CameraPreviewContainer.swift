@@ -53,23 +53,7 @@ struct CameraPreviewContainer<Content: View, CameraModel: Camera>: View {
                 .aspectRatio(currentAspectRatio, contentMode: .fit)
                 // In photo mode, adjust the vertical offset of the preview area to better fit the UI.
                 .offset(y: photoModeOffset)
-                .overlay {
-                    switch activeComposition {
-                    case "CENTER": CenterGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "RULE OF THIRDS": RuleOfThirdsGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case .none:
-                        EmptyView()
-                    case .some(_):
-                        EmptyView()
-                    }
-                }
-                .onChange(of: compositionVM.activeComposition) {
-                    self.activeComposition = compositionVM.activeComposition
-                }
+                
             }
             .task {
 //                print(self.compositionVM.compositions)
