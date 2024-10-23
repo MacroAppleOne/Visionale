@@ -34,10 +34,6 @@ protocol Camera: AnyObject {
     
     var isTorchOn: Bool { get }
     
-    func toggleGridOverlay() async
-    
-    var isGridOverlayOn: Bool { get }
-    
     /// Switches between video devices available on the host system.
     func switchVideoDevices() async
     

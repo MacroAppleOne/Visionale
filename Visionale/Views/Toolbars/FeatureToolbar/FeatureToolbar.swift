@@ -23,6 +23,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                 livePhotoButton
                 torchButton
                 Spacer()
+                cameraZoomFactorUI
                 imageClassification
             } else {
                 Spacer()
@@ -33,6 +34,13 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         }
         .buttonStyle(DefaultButtonStyle(size: isRegularSize ? .large : .small))
         .padding([.leading, .trailing])
+    }
+    
+    var cameraZoomFactorUI: some View {
+        Text("\(camera.zoomFactor/2, specifier: "%.1f")x")
+            .padding(12)
+            .background(Material.regular)
+            .clipShape(.buttonBorder)
     }
     
     var imageClassification: some View {

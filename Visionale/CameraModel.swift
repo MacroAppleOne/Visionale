@@ -16,59 +16,270 @@ import Combine
 ///
 /// For SwiftUI previews and Simulator, the app uses `PreviewCameraModel` instead.
 ///
+//@Observable
+//final class CameraModel: Camera {
+//    /// The current status of the camera, such as unauthorized, running, or failed.
+//    private(set) var status = CameraStatus.unknown
+//
+//    /// The current state of photo or movie capture.
+//    private(set) var captureActivity = CaptureActivity.idle
+//
+//    /// The photo features that a person can enable in the user interface.
+//    private(set) var photoFeatures = PhotoFeatures()
+//
+//    /// A Boolean value that indicates whether the app is currently switching video devices.
+//    private(set) var isSwitchingVideoDevices = false
+//
+//    /// A Boolean value that indicates whether the app is currently switching capture modes.
+//    private(set) var isSwitchingModes = false
+//
+//    /// A Boolean value that indicates whether to show visual feedback when capture begins.
+//    private(set) var shouldFlashScreen = false
+//
+//    /// A thumbnail for the last captured photo or video.
+//    private(set) var thumbnail: CGImage?
+//
+//    /// An error that indicates the details of an error during photo or movie capture.
+//    private(set) var error: Error?
+//
+//    /// An object that provides the connection between the capture session and the video preview layer.
+//    var previewSource: PreviewSource { captureService.previewSource }
+//
+//    /// A Boolean that indicates whether the camera supports HDR video recording.
+//    private(set) var isHDRVideoSupported = false
+//
+//    /// An object that saves captured media to a person's Photos library.
+//    private let mediaLibrary = MediaLibrary()
+//
+//    /// An object that manages the app's capture functionality.
+//    private let captureService = CaptureService()
+//
+//    public private(set) var zoomFactor: CGFloat = 2.0
+//
+//    var isTorchOn: Bool = false
+//
+//    var isGridOverlayOn: Bool = false
+//
+//    // Machine learning and composition properties
+//    var mlcLayer: MachineLearningClassificationLayer?
+//    private func loadMLLayer() async {
+//        mlcLayer = await captureService.getMLLayer()
+//    }
+//
+//    var compositions: [Composition]
+//    var activeID: UUID? = nil
+//    var activeComposition: String = "CENTER"
+//
+//    init() {
+//        compositions = [
+//            Composition(name: "CENTER", description: "", image: "center_default", isRecommended: false, imageRecommended: "center_default_recommend", imageSelected: "center_selected", imageSelectedRecommended: "center_selected_recommend"),
+//            Composition(name: "CURVED", description: "", image: "curved_default", isRecommended: false, imageRecommended: "curved_default_recommend", imageSelected: "curved_selected", imageSelectedRecommended: "curved_selected_recommend"),
+//            Composition(name: "DIAGONAL", description: "", image: "diagonal_default", isRecommended: false, imageRecommended: "diagonal_default_recommend", imageSelected: "diagonal_selected", imageSelectedRecommended: "diagonal_selected_recommend"),
+//            Composition(name: "GOLDEN RATIO", description: "", image: "golden_default", isRecommended: false, imageRecommended: "golden_default_recommend", imageSelected: "golden_selected", imageSelectedRecommended: "golden_selected_recommend"),
+//            Composition(name: "RULE OF THIRDS", description: "", image: "rot_default", isRecommended: false, imageRecommended: "rot_default_recommend", imageSelected: "rot_selected", imageSelectedRecommended: "rot_selected_recommend"),
+//            Composition(name: "SYMMETRIC", description: "", image: "symmetric_default", isRecommended: false, imageRecommended: "symmetric_default_recommend", imageSelected: "symmetric_selected", imageSelectedRecommended: "symmetric_selected_recommend"),
+//            Composition(name: "TRIANGLE", description: "", image: "triangle_default", isRecommended: false, imageRecommended: "triangle_default_recommend", imageSelected: "triangle_selected", imageSelectedRecommended: "triangle_selected_recommend")
+//        ]
+//
+//        // Now you can safely access the first composition to initialize activeID
+//        activeID = compositions.first!.id
+//
+//        // Call loadMLLayer asynchronously
+//        Task {
+//            await loadMLLayer()
+//        }
+//    }
+//
+//    func toggleGridOverlay() async {
+//        isGridOverlayOn.toggle()
+//    }
+//    // MARK: - Starting the camera
+//    /// Start the camera and begin the stream of data.
+//    func start() async {
+//        // Verify that the person authorizes the app to use device cameras and microphones.
+//        guard await captureService.isAuthorized else {
+//            status = .unauthorized
+//            return
+//        }
+//        do {
+//            // Start the capture service to start the flow of data.
+//            try await captureService.start()
+//            observeState()
+//            status = .running
+//            await captureService.setZoomLevel(factor: zoomFactor)
+//        } catch {
+//            logger.error("Failed to start capture service. \(error)")
+//            status = .failed
+//        }
+//    }
+//
+//    // MARK: - Changing modes and devices
+//    /// Selects the next available video device for capture.
+//    func switchVideoDevices() async {
+//        isSwitchingVideoDevices = true
+//        defer { isSwitchingVideoDevices = false }
+//        await captureService.selectNextVideoDevice()
+//    }
+//
+//    // MARK: - Photo capture
+//    func toggleTorch() async {
+//        isTorchOn = await captureService.toggleTorch()
+//    }
+//
+//    /// Captures a photo and writes it to the user's Photos library.
+//    func capturePhoto() async {
+//        do {
+//            let photo = try await captureService.capturePhoto(with: photoFeatures.current)
+//            try await mediaLibrary.save(photo: photo)
+//        } catch {
+//            self.error = error
+//        }
+//    }
+//
+//    /// Performs a focus and expose operation at the specified screen point.
+//    func focusAndExpose(at point: CGPoint) async {
+//        await captureService.focusAndExpose(at: point)
+//    }
+//
+//    /// Sets the `showCaptureFeedback` state to indicate that capture is underway.
+//    private func flashScreen() {
+//        shouldFlashScreen = true
+//        withAnimation(.linear(duration: 0.01)) {
+//            shouldFlashScreen = false
+//        }
+//    }
+//
+//    // MARK: - Internal state observations
+//
+//    // Set up camera's state observations.
+//    private func observeState() {
+//        Task {
+//            // Await new thumbnails that the media library generates when saving a file.
+//            for await thumbnail in mediaLibrary.thumbnails.compactMap({ $0 }) {
+//                self.thumbnail = thumbnail
+//            }
+//        }
+//
+//        Task {
+//            // Await new capture activity values from the capture service.
+//            for await activity in await captureService.$captureActivity.values {
+//                if activity.willCapture {
+//                    // Flash the screen to indicate capture is starting.
+//                    flashScreen()
+//                } else {
+//                    // Forward the activity to the UI.
+//                    captureActivity = activity
+//                }
+//            }
+//        }
+//
+//        Task {
+//            // Await updates to the capabilities that the capture service advertises.
+//            for await capabilities in await captureService.$captureCapabilities.values {
+//                isHDRVideoSupported = capabilities.isHDRSupported
+//            }
+//        }
+//    }
+//}
+//
+//extension CameraModel {
+//    // Function to find composition based on ML prediction
+//    func findComposition(withName name: String) {
+//        if let index = compositions.firstIndex(where: { $0.name.lowercased() == name.lowercased() }) {
+//            compositions[index].isRecommended = true
+//
+//            for i in 0..<compositions.count {
+//                if i != index {
+//                    compositions[i].isRecommended = false
+//                }
+//            }
+//        }
+//    }
+//
+//    func zoom(factor: CGFloat) async {
+//        // Get min and max zoom factors from the device
+//        let (minZoom, maxZoom) = await captureService.getZoomFactors()
+//        // Calculate the new zoom factor
+//        let newZoomFactor = zoomFactor * factor
+//        // Clamp the zoom factor within allowed range
+//        let clampedZoomFactor = max(minZoom, min(newZoomFactor, maxZoom))
+//        // Update the zoom factor
+//        zoomFactor = clampedZoomFactor
+//        // Set the zoom level on the device
+//        await captureService.setZoomLevel(factor: clampedZoomFactor)
+//    }
+//
+//    // Update the active composition based on selected UUID
+//    func updateActiveComposition(id: UUID?) {
+//        if let id = id {
+//            if let composition = compositions.first(where: { $0.id == id }) {
+//                activeComposition = composition.name
+//                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+//            }
+//        }
+//    }
+//}
+
+import SwiftUI
+import Combine
+import os.log
+
 @Observable
 final class CameraModel: Camera {
-    /// The current status of the camera, such as unauthorized, running, or failed.
+    // MARK: - Properties
+    
+    /// The current status of the camera.
     private(set) var status = CameraStatus.unknown
     
-    /// The current state of photo or movie capture.
+    /// The current state of photo capture.
     private(set) var captureActivity = CaptureActivity.idle
     
-    /// The photo features that a person can enable in the user interface.
+    /// The photo features that can be enabled in the UI.
     private(set) var photoFeatures = PhotoFeatures()
     
-    /// A Boolean value that indicates whether the app is currently switching video devices.
+    /// Indicates if the app is switching video devices.
     private(set) var isSwitchingVideoDevices = false
     
-    /// A Boolean value that indicates whether the app is currently switching capture modes.
+    /// Indicates if the app is switching capture modes.
     private(set) var isSwitchingModes = false
     
-    /// A Boolean value that indicates whether to show visual feedback when capture begins.
+    /// Indicates if visual feedback should be shown when capture begins.
     private(set) var shouldFlashScreen = false
     
-    /// A thumbnail for the last captured photo or video.
+    /// A thumbnail for the last captured photo.
     private(set) var thumbnail: CGImage?
     
-    /// An error that indicates the details of an error during photo or movie capture.
+    /// An error that indicates details of an error during photo capture.
     private(set) var error: Error?
     
-    /// An object that provides the connection between the capture session and the video preview layer.
+    /// Connects the preview view with the capture session.
     var previewSource: PreviewSource { captureService.previewSource }
     
-    /// A Boolean that indicates whether the camera supports HDR video recording.
+    /// Indicates if HDR video recording is supported.
     private(set) var isHDRVideoSupported = false
     
-    /// An object that saves captured media to a person's Photos library.
+    /// Saves captured media to the user's Photos library.
     private let mediaLibrary = MediaLibrary()
     
-    /// An object that manages the app's capture functionality.
+    /// Manages the app's capture functionality.
     private let captureService = CaptureService()
     
-    public private(set) var zoomFactor: CGFloat = 2.0
-    
+    /// Indicates if the torch (flashlight) is on.
     var isTorchOn: Bool = false
     
-    var isGridOverlayOn: Bool = false
+    /// Number of camera zoom factor
+    private(set) var zoomFactor: CGFloat = 2.0
     
-    // Machine learning and composition properties
+    /// Machine Learning Layer
     var mlcLayer: MachineLearningClassificationLayer?
-    private func loadMLLayer() async {
-        mlcLayer = await captureService.getMLLayer()
-    }
+    
+    // MARK: - Compositions
     
     var compositions: [Composition]
     var activeID: UUID? = nil
     var activeComposition: String = "CENTER"
+    
+    // MARK: - Initialization
     
     init() {
         compositions = [
@@ -81,39 +292,35 @@ final class CameraModel: Camera {
             Composition(name: "TRIANGLE", description: "", image: "triangle_default", isRecommended: false, imageRecommended: "triangle_default_recommend", imageSelected: "triangle_selected", imageSelectedRecommended: "triangle_selected_recommend")
         ]
         
-        // Now you can safely access the first composition to initialize activeID
+        // Initialize active composition ID.
         activeID = compositions.first!.id
         
-        // Call loadMLLayer asynchronously
+        // Load machine learning layer asynchronously.
         Task {
             await loadMLLayer()
         }
     }
     
-    func toggleGridOverlay() async {
-        isGridOverlayOn.toggle()
-    }
-    // MARK: - Starting the camera
-    /// Start the camera and begin the stream of data.
+    // MARK: - Starting the Camera
+    
+    /// Starts the camera and begins the stream of data.
     func start() async {
-        // Verify that the person authorizes the app to use device cameras and microphones.
         guard await captureService.isAuthorized else {
             status = .unauthorized
             return
         }
         do {
-            // Start the capture service to start the flow of data.
             try await captureService.start()
             observeState()
             status = .running
-            await captureService.setZoomLevel(factor: zoomFactor)
         } catch {
             logger.error("Failed to start capture service. \(error)")
             status = .failed
         }
     }
     
-    // MARK: - Changing modes and devices
+    // MARK: - Changing Modes and Devices
+    
     /// Selects the next available video device for capture.
     func switchVideoDevices() async {
         isSwitchingVideoDevices = true
@@ -121,7 +328,9 @@ final class CameraModel: Camera {
         await captureService.selectNextVideoDevice()
     }
     
-    // MARK: - Photo capture
+    // MARK: - Photo Capture
+    
+    /// Toggles the torch (flashlight) on or off.
     func toggleTorch() async {
         isTorchOn = await captureService.toggleTorch()
     }
@@ -141,7 +350,7 @@ final class CameraModel: Camera {
         await captureService.focusAndExpose(at: point)
     }
     
-    /// Sets the `showCaptureFeedback` state to indicate that capture is underway.
+    /// Provides visual feedback indicating that capture is starting.
     private func flashScreen() {
         shouldFlashScreen = true
         withAnimation(.linear(duration: 0.01)) {
@@ -149,45 +358,47 @@ final class CameraModel: Camera {
         }
     }
     
-    // MARK: - Internal state observations
+    // MARK: - Internal State Observations
     
-    // Set up camera's state observations.
+    /// Sets up camera's state observations.
     private func observeState() {
         Task {
-            // Await new thumbnails that the media library generates when saving a file.
             for await thumbnail in mediaLibrary.thumbnails.compactMap({ $0 }) {
                 self.thumbnail = thumbnail
             }
         }
         
         Task {
-            // Await new capture activity values from the capture service.
             for await activity in await captureService.$captureActivity.values {
                 if activity.willCapture {
-                    // Flash the screen to indicate capture is starting.
                     flashScreen()
                 } else {
-                    // Forward the activity to the UI.
                     captureActivity = activity
                 }
             }
         }
         
         Task {
-            // Await updates to the capabilities that the capture service advertises.
             for await capabilities in await captureService.$captureCapabilities.values {
                 isHDRVideoSupported = capabilities.isHDRSupported
             }
         }
     }
+    
+    /// Loads the machine learning classification layer.
+    private func loadMLLayer() async {
+        mlcLayer = await captureService.getMLLayer()
+    }
 }
 
+// MARK: - Extensions
+
 extension CameraModel {
-    // Function to find composition based on ML prediction
+    
+    /// Finds a composition based on the machine learning prediction.
     func findComposition(withName name: String) {
         if let index = compositions.firstIndex(where: { $0.name.lowercased() == name.lowercased() }) {
             compositions[index].isRecommended = true
-            
             for i in 0..<compositions.count {
                 if i != index {
                     compositions[i].isRecommended = false
@@ -196,20 +407,17 @@ extension CameraModel {
         }
     }
     
+    /// Adjusts the zoom based on the given factor.
     func zoom(factor: CGFloat) async {
-        // Get min and max zoom factors from the device
+        let currentZoomFactor = await captureService.getZoomFactor()
         let (minZoom, maxZoom) = await captureService.getZoomFactors()
-        // Calculate the new zoom factor
-        let newZoomFactor = zoomFactor * factor
-        // Clamp the zoom factor within allowed range
+        let newZoomFactor = currentZoomFactor * factor
         let clampedZoomFactor = max(minZoom, min(newZoomFactor, maxZoom))
-        // Update the zoom factor
+        await captureService.setZoomFactor(clampedZoomFactor)
         zoomFactor = clampedZoomFactor
-        // Set the zoom level on the device
-        await captureService.setZoomLevel(factor: clampedZoomFactor)
     }
     
-    // Update the active composition based on selected UUID
+    /// Updates the active composition based on the selected UUID.
     func updateActiveComposition(id: UUID?) {
         if let id = id {
             if let composition = compositions.first(where: { $0.id == id }) {
@@ -219,4 +427,3 @@ extension CameraModel {
         }
     }
 }
-

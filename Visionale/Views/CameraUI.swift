@@ -34,21 +34,11 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
         }
     }
     
-    var cameraZoomFactorUI: some View {
-        Text("\(camera.zoomFactor/2, specifier: "%.1f")x")
-            .padding(12)
-            .background(Material.regular)
-            .clipShape(.circle)
-            .offset(y: 24)
-    }
-    
     /// This view arranges UI elements vertically.
     @ViewBuilder
     var compactUI: some View {
         VStack(spacing: 0) {
             FeaturesToolbar(camera: camera)
-            //            zoomSliderUI
-            cameraZoomFactorUI
             Spacer()
             VStack {
                 ZStack {
