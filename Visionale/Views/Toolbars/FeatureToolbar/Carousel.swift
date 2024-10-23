@@ -130,3 +130,7 @@ extension Composition {
         }
     }
 }
+
+#Preview {
+    Carousel(camera: CameraModel())
+}
