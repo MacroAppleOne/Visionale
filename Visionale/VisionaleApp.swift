@@ -5,19 +5,23 @@
 //  Created by Kyrell Leano Siauw on 10/10/24.
 //
 
-import SwiftUI
 import os
+import SwiftUI
 
 @main
+/// The AVCam app's main entry point.
 struct VisionaleApp: App {
-    // AppStorage for onboarding
-    @StateObject private var session = OnboardingService()
+    @State private var camera = CameraModel()
     var body: some Scene {
         WindowGroup {
-            MainView()
-                .environmentObject(session)
+            CameraView(camera: camera)
+                .statusBarHidden(true)
+                .task {
+                    await camera.start()
+                }
         }
     }
 }
 
+/// A global logger for the app.
 let logger = Logger()
