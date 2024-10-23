@@ -42,6 +42,3 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     }
 }
 
-#Preview {
-    CameraView(camera: PreviewCameraModel())
-}

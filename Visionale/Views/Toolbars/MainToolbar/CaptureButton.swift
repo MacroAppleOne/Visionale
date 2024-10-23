@@ -31,14 +31,6 @@ struct CaptureButton<CameraModel: Camera>: View {
     }
 }
 
-#Preview("Photo") {
-    CaptureButton(camera: PreviewCameraModel(captureMode: .photo))
-}
-
-#Preview("Video") {
-    CaptureButton(camera: PreviewCameraModel(captureMode: .video))
-}
-
 private struct PhotoCaptureButton: View {
     private let action: () -> Void
     private let lineWidth = CGFloat(4.0)

@@ -34,8 +34,3 @@ struct MainToolbar<CameraModel: Camera>: PlatformView {
     var height: CGFloat? { 80 }
 }
 
-#Preview {
-    Group {
-        MainToolbar(camera: PreviewCameraModel())
-    }
-}

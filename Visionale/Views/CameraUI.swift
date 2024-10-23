@@ -34,16 +34,6 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
         }
     }
     
-    //    @ViewBuilder
-    //    var zoomSliderUI: some View {
-    //        Slider(value: $camera.zoomLevel, in: 1.0...6.0)
-    //            .onChange(of: camera.zoomLevel) { _, newZoomLevel in
-    //                Task {
-    //                    await camera.zoom(factor: newZoomLevel)
-    //                }
-    //            }
-    //    }
-    
     var cameraZoomFactorUI: some View {
         Text("\(camera.zoomFactor/2, specifier: "%.1f")x")
             .padding(12)
@@ -97,6 +87,3 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
     }
 }
 
-#Preview {
-    CameraUI(camera: PreviewCameraModel())
-}
