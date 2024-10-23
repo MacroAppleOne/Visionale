@@ -8,21 +8,17 @@
 import Foundation
 import AVFoundation
 import Combine
-import Vision
-import CoreML
 
 /// An actor that manages the capture pipeline, which includes the capture session, device inputs, and capture outputs.
 /// The app defines it as an `actor` type to ensure that all camera operations happen off of the `@MainActor`.
-final class CaptureService {
-    static let shared = CaptureService()
+actor CaptureService {
+    
     /// A value that indicates whether the capture service is idle or capturing a photo or movie.
     @Published private(set) var captureActivity: CaptureActivity = .idle
     /// A value that indicates the current capture capabilities of the service.
     @Published private(set) var captureCapabilities = CaptureCapabilities.unknown
     /// A Boolean value that indicates whether a higher priority event, like receiving a phone call, interrupts the app.
     @Published private(set) var isInterrupted = false
-    /// A Boolean value that indicates whether the user enables HDR video capture.
-    @Published var isHDRVideoEnabled = false
     
     /// A type that connects a preview destination with the capture session.
     nonisolated let previewSource: PreviewSource
@@ -39,23 +35,33 @@ final class CaptureService {
     // The video input for the currently selected device camera.
     private var activeVideoInput: AVCaptureDeviceInput?
     
-    // An object the service uses to retrieve capture devices.
-    let deviceLookup = DeviceLookup()
+    // The mode of capture, either photo or video. Defaults to photo.
+    private(set) var captureMode = CaptureMode.photo
     
-    // An object that monitors the state of the system-preferred camera.
-    private let systemPreferredCamera = SystemPreferredCameraObserver()
+    // An object the service uses to retrieve capture devices.
+    private let deviceLookup = DeviceLookup()
     
     // An object that monitors video device rotations.
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator!
     private var rotationObservers = [AnyObject]()
     
-    // An object to call the MLCLayer instance
-    var mlcLayer = MachineLearningClassificationLayer()
-    private var MLVideoOutput = AVCaptureVideoDataOutput()
+    // Machine learning layer for classification
+    private let mlClassificationLayer = MachineLearningClassificationLayer()
     
+    // Expose the ML layer to the outside world via a public method or computed property
+    var mlLayer: MachineLearningClassificationLayer {
+        return mlClassificationLayer
+    }
+    
+    // Video data output for frame-by-frame analysis
+    private let videoDataOutput = AVCaptureVideoDataOutput()
     
     // A Boolean value that indicates whether the actor finished its required configuration.
     private var isSetUp = false
+    
+    private var currentDevice: AVCaptureDevice? {
+        return activeVideoInput?.device
+    }
     
     init() {
         // Create a source object to connect the preview view with the capture session.
@@ -64,7 +70,7 @@ final class CaptureService {
     
     // MARK: - Authorization
     /// A Boolean value that indicates whether a person authorizes this app to use
-    /// device cameras. If they haven't previously authorized the
+    /// device cameras and microphones. If they haven't previously authorized the
     /// app, querying this property prompts them for authorization.
     var isAuthorized: Bool {
         get async {
@@ -79,6 +85,7 @@ final class CaptureService {
             return isAuthorized
         }
     }
+    
     // MARK: - Capture session life cycle
     func start() async throws {
         // Exit early if not authorized or the session is already running.
@@ -86,6 +93,7 @@ final class CaptureService {
         // Configure the session and start it.
         try setUpSession()
         captureSession.startRunning()
+        setInitialZoom()
     }
     
     // MARK: - Capture setup
@@ -99,20 +107,19 @@ final class CaptureService {
         observeNotifications()
         
         do {
-            // Retrieve the default camera.
+            // Retrieve the default camera and microphone.
             let defaultCamera = deviceLookup.cameras.first!
-            // Add inputs for the default camera devices.
+            
+            // Add inputs for the default camera and microphone devices.
             activeVideoInput = try addInput(for: defaultCamera)
             
-            //            print(defaultCamera.virtualDeviceSwitchOverVideoZoomFactors)
             // Configure the session for photo capture by default.
             captureSession.sessionPreset = .photo
             // Add the photo capture output as the default output type.
             try addOutput(photoCapture.output)
             
-            // ML Output
-            MLVideoOutput.setSampleBufferDelegate(self.mlcLayer, queue: DispatchQueue(label: "videoQueue"))
-            try addOutput(MLVideoOutput)
+            // Add video output for machine learning frame processing
+            addVideoOutput()
             
             // Configure a rotation coordinator for the default video device.
             createRotationCoordinator(for: defaultCamera)
@@ -149,29 +156,12 @@ final class CaptureService {
     }
     
     // The device for the active video input.
-    var currentDevice: AVCaptureDevice {
-        guard let device = activeVideoInput?.device else {
-            fatalError("No device found for current video input.")
-        }
-        return device
-    }
-    
-    // MARK: - Capture mode selection
-    
-    /// Changes the mode of capture, which can be `photo` or `video`.
-    ///
-    /// - Parameter `captureMode`: The capture mode to enable.
-    func setCaptureMode() throws {
-        // Change the configuration atomically.
-        captureSession.beginConfiguration()
-        defer { captureSession.commitConfiguration() }
-        
-        // Configure the capture session for the selected capture mode.
-        captureSession.sessionPreset = .photo
-        
-        // Update the advertised capabilities after reconfiguration.
-        updateCaptureCapabilities()
-    }
+//    private var currentDevice: AVCaptureDevice {
+//        guard let device = activeVideoInput?.device else {
+//            fatalError("No device found for current video input.")
+//        }
+//        return device
+//    }
     
     // MARK: - Device selection
     
@@ -180,11 +170,49 @@ final class CaptureService {
     /// The app calls this method in response to the user tapping the button in the UI to change cameras.
     /// The implementation switches between the front and back cameras and, in iPadOS,
     /// connected external cameras.
+
+    private func setInitialZoom() {
+        guard let device = currentDevice else { return }
+
+        do {
+            try device.lockForConfiguration()
+            // Set initial zoom factor to 2.0 (2x zoom)
+            let desiredZoomFactor: CGFloat = 2.0
+            let maxZoomFactor = min(device.activeFormat.videoMaxZoomFactor, 6.0) // Limit to 6x for stability
+            let clampedZoomFactor = min(desiredZoomFactor, maxZoomFactor)
+            device.videoZoomFactor = clampedZoomFactor
+            device.unlockForConfiguration()
+        } catch {
+            print("Failed to set initial zoom level: \(error)")
+        }
+    }
+
+    func setZoomLevel(factor: CGFloat) {
+        guard let device = currentDevice else { return }
+        do {
+            try device.lockForConfiguration()
+            let zoomFactor = max(device.minAvailableVideoZoomFactor,
+                                 min(factor, device.activeFormat.videoMaxZoomFactor))
+            device.videoZoomFactor = zoomFactor
+            device.unlockForConfiguration()
+        } catch {
+            print("Failed to set zoom level: \(error)")
+        }
+    }
+    
+    func getZoomFactors() -> (min: CGFloat, max: CGFloat) {
+         guard let device = currentDevice else {
+             return (1.0, 1.0)
+         }
+         return (device.minAvailableVideoZoomFactor, device.activeFormat.videoMaxZoomFactor)
+     }
+
     func selectNextVideoDevice() {
         // The array of available video capture devices.
         let videoDevices = deviceLookup.cameras
+        
         // Find the index of the currently selected video device.
-        let selectedIndex = videoDevices.firstIndex(of: currentDevice) ?? 0
+        let selectedIndex = videoDevices.firstIndex(of: currentDevice!) ?? 0
         // Get the next index.
         var nextIndex = selectedIndex + 1
         // Wrap around if the next index is invalid.
@@ -226,25 +254,6 @@ final class CaptureService {
             captureSession.addInput(currentInput)
         }
     }
-    
-    /// Monitors changes to the system's preferred camera selection.
-    ///
-    /// iPadOS supports external cameras. When someone connects an external camera to their iPad,
-    /// they're signaling the intent to use the device. The system responds by updating the
-    /// system-preferred camera (SPC) selection to this new device. When this occurs, if the SPC
-    /// isn't the currently selected camera, switch to the new device.
-    //    private func monitorSystemPreferredCamera() {
-    //        Task {
-    //            // An object monitors changes to system-preferred camera (SPC) value.
-    //            for await camera in systemPreferredCamera.changes {
-    //                // If the SPC isn't the currently selected camera, attempt to change to that device.
-    //                if let camera, currentDevice != camera {
-    //                    logger.debug("Switching camera selection to the system-preferred camera.")
-    //                    changeCaptureDevice(to: camera)
-    //                }
-    //            }
-    //        }
-    //    }
     
     // MARK: - Rotation handling
     
@@ -331,7 +340,7 @@ final class CaptureService {
     
     private func focusAndExpose(at devicePoint: CGPoint, isUserInitiated: Bool) throws {
         // Configure the current device.
-        let device = deviceLookup.cameras.first!
+        let device = currentDevice!
         
         // The following mode and point of interest configuration requires obtaining an exclusive lock on the device.
         try device.lockForConfiguration()
@@ -369,15 +378,17 @@ final class CaptureService {
     /// determine which features to enable in the user interface.
     private func updateCaptureCapabilities() {
         // Update the output service configuration.
-        outputServices.forEach { $0.updateConfiguration(for: deviceLookup.cameras.first!) }
-        // Set the capture service's capabilities for the selected mode.
+        outputServices.forEach { $0.updateConfiguration(for: currentDevice!) }
+        
+        // Set the capture service's capabilities for photo mode only.
         captureCapabilities = photoCapture.capabilities
     }
     
     /// Merge the `captureActivity` values of the photo and movie capture services,
     /// and assign the value to the actor's property.`
     private func observeOutputServices() {
-        captureActivity = photoCapture.captureActivity
+        photoCapture.$captureActivity
+            .assign(to: &$captureActivity)
     }
     
     /// Observe capture-related notifications.
@@ -409,5 +420,46 @@ final class CaptureService {
                 }
             }
         }
+    }
+}
+
+
+extension CaptureService {
+    func toggleTorch() -> Bool {
+        guard (currentDevice!.hasTorch) else { return false }
+        if currentDevice!.torchMode == .on {
+            try! currentDevice!.lockForConfiguration()
+            currentDevice!.torchMode = .off
+            currentDevice!.unlockForConfiguration()
+            return false
+        } else {
+            try! currentDevice!.lockForConfiguration()
+            currentDevice!.torchMode = .on
+            currentDevice!.unlockForConfiguration()
+            return true
+        }
+    }
+}
+
+// MARK: Machine Learning extension for Capture Service
+extension CaptureService {
+    // Adds video output to capture session for frame processing by machine learning
+    private func addVideoOutput() {
+        // Set the delegate for frame processing
+        videoDataOutput.setSampleBufferDelegate(mlClassificationLayer, queue: DispatchQueue(label: "video_frame_queue"))
+        
+        // Ensure the format is compatible with your model's input
+        videoDataOutput.videoSettings = [kCVPixelBufferPixelFormatTypeKey as String: kCVPixelFormatType_32BGRA]
+        
+        if captureSession.canAddOutput(videoDataOutput) {
+            captureSession.addOutput(videoDataOutput)
+        } else {
+            fatalError("Failed to add video output for ML processing.")
+        }
+    }
+    
+    // Expose ML Classification Layer
+    func getMLLayer() -> MachineLearningClassificationLayer {
+        return mlClassificationLayer
     }
 }

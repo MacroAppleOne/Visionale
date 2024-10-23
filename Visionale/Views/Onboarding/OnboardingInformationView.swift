@@ -1,8 +1,8 @@
 //
-//  OnboardingRecommendationView.swift
-//  Visionale
+//  OnboardingInformationView.swift
+//  Visionalé
 //
-//  Created by Kyrell Leano Siauw on 17/10/24.
+//  Created by Kyrell Leano Siauw on 23/10/24.
 //
 
 import SwiftUI
@@ -82,7 +82,7 @@ struct OnboardingInformationView: View {
                     }
                     
                     TabView(selection: $currentStep){
-                        ForEach(0..<onBoardingSteps.count){ it in
+                        ForEach(0..<onBoardingSteps.count, id: \.self){ it in
                             VStack(alignment: .leading){
                                 Text(onBoardingSteps[it].title)
                                     .font(.title)
@@ -101,7 +101,7 @@ struct OnboardingInformationView: View {
                     
                     VStack{
                         HStack{
-                            ForEach(0..<onBoardingSteps.count){ index in
+                            ForEach(0..<onBoardingSteps.count, id: \.self){ index in
                                 if index == currentStep {
                                     Rectangle()
                                         .frame(width: 25, height: 5)
@@ -118,14 +118,14 @@ struct OnboardingInformationView: View {
                             
                             Spacer()
                             Button(action: {
-                                withAnimation{
+                                withAnimation {
                                     if self.currentStep < onBoardingSteps.count - 1 {
                                         self.currentStep += 1
                                     } else {
                                         session.completeOnboarding()
                                     }
                                 }
-                            }){
+                            }) {
                                 Image(systemName: "arrow.right.circle")
                                     .resizable()
                                     .frame(width: 55, height: 55)
@@ -133,7 +133,7 @@ struct OnboardingInformationView: View {
                             }
                             .padding(.leading, 45)
                         }.padding(.bottom, 150)
-                            
+                        
                     }
                     .padding(.horizontal, 40)
                     .edgesIgnoringSafeArea(.all)

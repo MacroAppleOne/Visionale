@@ -1,120 +1,66 @@
 //
-//  SessionManager.swift
-//  Visionale
+//  OnboardingService.swift
+//  Visionalé
 //
-//  Created by Kyrell Leano Siauw on 17/10/24.
+//  Created by Kyrell Leano Siauw on 23/10/24.
 //
 
-import Foundation
+import SwiftUI
 import AVFoundation
 import Photos
-import UIKit
+
 
 final class OnboardingService: ObservableObject {
-    enum CurrentState {
-        case onboarding
-        case cameraPermissionRequest
-        case photoLibraryPermissionRequest
-        case app
-    }
-    
-    @Published private(set) var currentState: CurrentState
-    
+    @Published var hasCompletedOnboarding: Bool
+    @Published var cameraPermissionGranted: Bool
+    @Published var photoLibraryPermissionGranted: Bool
+
     init() {
-        self.currentState = .onboarding
-        checkPermissions()
+        // Check if onboarding has been completed
+        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        
+        // Initialize permissions
+        self.cameraPermissionGranted = false
+        self.photoLibraryPermissionGranted = false
+        
+        // Check current permissions
+        checkCameraPermission()
+        checkPhotoLibraryPermission()
     }
     
-    func checkPermissions() {
-        DispatchQueue.main.async { [weak self] in
-            guard let self = self else { return }
-            
-            if !UserDefaults.standard.bool(forKey: "hasSeenOnboarding") {
-                self.currentState = .onboarding
-            } else if AVCaptureDevice.authorizationStatus(for: .video) != .authorized {
-                self.currentState = .cameraPermissionRequest
-            } else if PHPhotoLibrary.authorizationStatus() != .authorized {
-                self.currentState = .photoLibraryPermissionRequest
-            } else {
-                self.currentState = .app
-            }
-        }
-    }
-    
+    // MARK: - Onboarding Completion
     func completeOnboarding() {
-        UserDefaults.standard.set(true, forKey: "hasSeenOnboarding")
-        checkPermissions()
+        self.hasCompletedOnboarding = true
+        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
     }
     
-    // Request Camera Permission
-    func requestCameraPermission() {
+    // MARK: - Camera Permission
+    func checkCameraPermission() {
         let status = AVCaptureDevice.authorizationStatus(for: .video)
-        
-        switch status {
-        case .notDetermined:
-            // Request permission if it hasn't been determined yet
-            AVCaptureDevice.requestAccess(for: .video) { [weak self] granted in
-                DispatchQueue.main.async {
-                    self?.checkPermissions()
-                }
+        self.cameraPermissionGranted = (status == .authorized)
+    }
+    
+    func requestCameraPermission(completion: (() -> Void)? = nil) {
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            DispatchQueue.main.async {
+                self.cameraPermissionGranted = granted
+                completion?()
             }
-            
-        case .denied, .restricted:
-            // Permission is denied, show the alert to guide user to settings
-            showSettingsAlert(for: "Camera")
-            
-        case .authorized:
-            // Permission is already granted, proceed with camera access
-            checkPermissions()
-            
-        @unknown default:
-            break
         }
     }
-
-    // Request Photo Library Permission
-    func requestPhotoLibraryPermission() {
+    
+    // MARK: - Photo Library Permission
+    func checkPhotoLibraryPermission() {
         let status = PHPhotoLibrary.authorizationStatus()
-        
-        switch status {
-        case .notDetermined:
-            // Request permission if it hasn't been determined yet
-            PHPhotoLibrary.requestAuthorization { [weak self] status in
-                DispatchQueue.main.async {
-                    self?.checkPermissions()
-                }
-            }
-            
-        case .denied, .restricted:
-            // Show alert prompting the user to go to settings
-            showSettingsAlert(for: "Photo Library")
-            
-        case .authorized, .limited:
-            // Permission is already granted or limited, proceed with using the photo library
-            checkPermissions()
-            
-        @unknown default:
-            break
-        }
+        self.photoLibraryPermissionGranted = (status == .authorized || status == .limited)
     }
-
-    // Show Settings Alert when permission is denied
-    func showSettingsAlert(for feature: String) {
-        guard let topController = UIApplication.shared.windows.first?.rootViewController else { return }
-        
-        let alert = UIAlertController(
-            title: "\(feature) Permission",
-            message: "You have previously denied access to the \(feature). Please go to settings to allow access.",
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "Cancel", style: .cancel, handler: nil))
-        alert.addAction(UIAlertAction(title: "Go to Settings", style: .default) { _ in
-            if let appSettings = URL(string: UIApplication.openSettingsURLString) {
-                UIApplication.shared.open(appSettings)
+    
+    func requestPhotoLibraryPermission(completion: (() -> Void)? = nil) {
+        PHPhotoLibrary.requestAuthorization { status in
+            DispatchQueue.main.async {
+                self.photoLibraryPermissionGranted = (status == .authorized || status == .limited)
+                completion?()
             }
-        })
-        
-        topController.present(alert, animated: true, completion: nil)
+        }
     }
 }

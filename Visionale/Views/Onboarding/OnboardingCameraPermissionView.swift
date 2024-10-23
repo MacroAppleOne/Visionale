@@ -1,10 +1,17 @@
+//
+//  OnboardingCameraPermissionView.swift
+//  Visionalé
+//
+//  Created by Kyrell Leano Siauw on 23/10/24.
+//
+
 import SwiftUI
 import AVFoundation
 
 struct OnboardingCameraPermissionView: View {
     @EnvironmentObject var session: OnboardingService
     @State private var showPermissionAlert = false
-
+    
     var body: some View {
         ZStack {
             VStack {
@@ -53,7 +60,11 @@ struct OnboardingCameraPermissionView: View {
                         .foregroundColor(.lightGradient)
                     
                     Button(action: {
-                        session.requestCameraPermission()
+                        session.requestCameraPermission {
+                            if !session.cameraPermissionGranted {
+                                showPermissionAlert = true
+                            }
+                        }
                     }) {
                         HStack {
                             Image(systemName: "camera.fill")

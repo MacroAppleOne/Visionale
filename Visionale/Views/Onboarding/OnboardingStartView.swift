@@ -1,15 +1,15 @@
 //
 //  OnboardingStartView.swift
-//  Visionale
+//  Visionalé
 //
-//  Created by Kyrell Leano Siauw on 17/10/24.
+//  Created by Kyrell Leano Siauw on 23/10/24.
 //
 
 import SwiftUI
 
 struct OnboardingStartView: View {
     @EnvironmentObject var session: OnboardingService
-
+    
     @State private var isActive = false
     var body: some View {
         if isActive{
@@ -68,8 +68,8 @@ struct OnboardingStartView: View {
             }
             .edgesIgnoringSafeArea(.all)
             .onAppear {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5){
-                    withAnimation{
+                DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+                    withAnimation {
                         self.isActive = true
                     }
                 }

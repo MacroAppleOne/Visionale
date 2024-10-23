@@ -1,3 +1,10 @@
+//
+//  OnboardingGalleryPermissionView.swift
+//  Visionalé
+//
+//  Created by Kyrell Leano Siauw on 23/10/24.
+//
+
 import SwiftUI
 import Photos
 
@@ -52,7 +59,11 @@ struct OnboardingGalleryPermissionView: View {
                         .font(.footnote)
                         .foregroundColor(.lightGradient)
                     Button(action: {
-                        checkPhotoLibraryPermission()
+                        session.requestPhotoLibraryPermission {
+                            if !session.photoLibraryPermissionGranted {
+                                showPermissionAlert = true
+                            }
+                        }
                     }) {
                         HStack {
                             Image(systemName: "photo.fill.on.rectangle.fill")
@@ -87,33 +98,6 @@ struct OnboardingGalleryPermissionView: View {
                     .padding(.horizontal, 35)
             }
             .edgesIgnoringSafeArea(.all)
-        }
-    }
-    
-    // Check and request permission
-    func checkPhotoLibraryPermission() {
-        let status = PHPhotoLibrary.authorizationStatus()
-        
-        switch status {
-        case .notDetermined:
-            // Request permission
-            PHPhotoLibrary.requestAuthorization { newStatus in
-                DispatchQueue.main.async {
-                    if newStatus == .denied {
-                        showPermissionAlert = true
-                    }
-                }
-            }
-        case .denied, .restricted:
-            // Permission is denied, show the alert to guide user to settings
-            showPermissionAlert = true
-            
-        case .authorized, .limited:
-            // Permission is granted, proceed with gallery access
-            session.requestPhotoLibraryPermission() // Use your service to proceed with access
-            
-        @unknown default:
-            break
         }
     }
 }
