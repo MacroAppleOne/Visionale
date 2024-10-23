@@ -89,8 +89,8 @@ final class CameraViewModel: Camera {
     
     // MARK: - Changing modes and devices
     /// Toggles the torch on and off
-    func toggleTorch() {
-        let device = captureService.currentDevice
+    func toggleTorch() async {
+        let device = await captureService.currentDevice
         guard device.hasTorch else { return }
         
         do {
@@ -133,6 +133,7 @@ final class CameraViewModel: Camera {
         do {
             let photo = try await captureService.capturePhoto(with: photoFeatures.current)
             try await mediaLibrary.save(photo: photo)
+            flashScreen()
         } catch {
             self.error = error
         }
@@ -149,6 +150,7 @@ final class CameraViewModel: Camera {
         withAnimation(.linear(duration: 0.01)) {
             shouldFlashScreen = false
         }
+        print("flashing screen")
     }
     
     

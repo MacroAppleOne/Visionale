@@ -61,8 +61,8 @@ struct OnboardingInformationView: View {
                         Rectangle()
                             .fill(.darkGradient) // Change this color to whatever you want
                             .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2) // Half screen height
-                        Image("systemVideoName")
-                            .resizable()
+//                        Image("systemVideoName")
+//                            .resizable()
                         VStack{
                             HStack{
                                 Spacer()

@@ -26,7 +26,7 @@ protocol Camera: AnyObject, ObservableObject {
     /// Starts the camera capture pipeline.
     func start() async
     
-    func toggleTorch ()
+    func toggleTorch () async 
     
     var isTorchOn: Bool { get }
     
