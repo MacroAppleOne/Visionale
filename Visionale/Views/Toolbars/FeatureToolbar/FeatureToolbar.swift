@@ -23,13 +23,12 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                 livePhotoButton
                 torchButton
                 Spacer()
-                gridOverlayButton
                 imageClassification
             } else {
                 Spacer()
                 livePhotoButton
                 torchButton
-                gridOverlayButton
+                
             }
         }
         .buttonStyle(DefaultButtonStyle(size: isRegularSize ? .large : .small))
@@ -54,25 +53,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
-    
-    // A button to toggle the information sheet
-    var gridOverlayButton: some View {
-        Button {
-            Task {
-                await camera.toggleGridOverlay()
-            }
-        } label: {
-            VStack{
-                Image(systemName: camera.isGridOverlayOn ? "viewfinder.circle.fill" : "viewfinder.circle")
-                    .symbolRenderingMode(camera.isGridOverlayOn ? .monochrome : .hierarchical  )
-                    .fontWeight(.thin)
-                    .font(.title2)
-                    .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
-                    .foregroundColor(camera.isGridOverlayOn ? .accentColor: .primary)
-            }
-        }
-        .frame(width: smallButtonSize.width, height: smallButtonSize.height)
-    }
+
     
     // A button to toggle the torch in the device
     var torchButton: some View {

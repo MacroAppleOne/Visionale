@@ -39,8 +39,27 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     var body: some View {
         // On compact devices, show a view finder rectangle around the video preview bounds.
         if horizontalSizeClass == .compact {
-            ZStack {
-                previewView
+            GeometryReader { gr in
+                ZStack {
+                    previewView
+                }
+                .clipped()
+                // Apply an appropriate aspect ratio based on the selected capture mode.
+                .aspectRatio(aspectRatio, contentMode: .fit)
+                // In photo mode, adjust the vertical offset of the preview area to better fit the UI.
+                .offset(y: photoModeOffset)
+                .overlay {
+                    switch camera.activeComposition {
+                    case "CENTER": CenterGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
+                    case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
+                    case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
+                    case "RULE OF THIRDS": RuleOfThirdsGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
+                    case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
+                    case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
+                    default:
+                        EmptyView()
+                    }
+                }
             }
             .clipped()
             // Apply an appropriate aspect ratio based on the selected capture mode.
