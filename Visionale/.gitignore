@@ -3,6 +3,8 @@
 ## User settings
 *xcworkspace/xcuserdata/*
 **/.DS_Store
+*/.DS_Store
+*./DS_Store
 
 Visionale.xcodeproj/project.xcworkspace/xcuserdata/cologne.xcuserdatad/UserInterfaceState.xcuserstate
 
