@@ -11,11 +11,6 @@ import Combine
 
 /// An actor that manages the capture pipeline, which includes the capture session, device inputs, and capture outputs.
 /// The app defines it as an `actor` type to ensure that all camera operations happen off of the `@MainActor`.
-import AVFoundation
-import SwiftUI
-import Combine
-import os.log
-
 /// An actor that manages the camera capture session and related functionalities.
 actor CaptureService {
     
