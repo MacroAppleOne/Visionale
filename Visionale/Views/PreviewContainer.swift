@@ -34,6 +34,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     
     // Binding to lastZoomFactor
     @Binding var lastZoomFactor: CGFloat
+    @State private var dragOffset: CGFloat = 0.0
     
     // Timer for hiding the slider after inactivity
     @State private var hideSliderWorkItem: DispatchWorkItem?
@@ -59,16 +60,17 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                             }
                     )
                     .overlay(alignment: .bottomLeading) {
-                        ZStack(alignment: .bottomLeading) {
+                        HStack {
+                            cameraZoomButton
                             if showZoomSlider {
                                 zoomSlider
-                                    .transition(.move(edge: .trailing))
-                            } else {
-                                cameraZoomButton
-                                    .transition(.move(edge: .leading))
                             }
                         }
-                        .animation(.default, value: showZoomSlider)
+                        .padding(12)
+                        .background(Material.ultraThin)
+                        .clipShape(.capsule)
+                        .padding(12)
+                        .animation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3), value: showZoomSlider)
                     }
                     .overlay {
                         switch camera.activeComposition {
@@ -117,44 +119,49 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     }
     
     var cameraZoomButton: some View {
-        Button(action: {
-            toggleZoomSlider()
-        }) {
-            Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))x")                    .font(.caption)
-                .padding()
-                .background(Material.thin)
-                .clipShape(Circle())
-                .padding(8)
-        }
-        .gesture(
-            DragGesture(minimumDistance: 0)
-                .onChanged { _ in
-                    if !showZoomSlider {
-                        toggleZoomSlider()
+        Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))×")
+            .font(.caption)
+            .fontWeight(.medium)
+            .frame(width: 32, height: 32, alignment: .center)
+            .gesture(
+                DragGesture()
+                    .onChanged { value in
+                        if !showZoomSlider {
+                            toggleZoomSlider()
+                        }
+                        adjustZoom(dragOffset: value.translation.width)
+                        resetHideSliderTimer()
                     }
-                    resetHideSliderTimer()
-                }
-        )
+                    .onEnded { _ in
+                        lastZoomFactor = camera.zoomFactor
+                        resetHideSliderTimer()
+                    }
+            )
+    }
+    
+    func adjustZoom(dragOffset: CGFloat) {
+        let scaleAdjustment = dragOffset / 300 // Adjust this for sensitivity
+        let newZoomFactor = lastZoomFactor + scaleAdjustment * (camera.maxZoomFactor - camera.minZoomFactor)
+        let clampedZoomFactor = max(camera.minZoomFactor, min(newZoomFactor, camera.maxZoomFactor))
+        Task {
+            await camera.setZoom(factor: clampedZoomFactor)
+        }
     }
     
     var zoomSlider: some View {
-        HStack {
-            Slider(value: Binding(
-                get: { camera.zoomFactor },
-                set: { newValue in
-                    Task {
-                        await camera.setZoom(factor: newValue)
-                    }
+        Slider(value: Binding(
+            get: { camera.zoomFactor },
+            set: { newValue in
+                Task {
+                    await camera.setZoom(factor: newValue)
                 }
-            ), in: camera.minZoomFactor...camera.maxZoomFactor)
-            .padding()
-            .onChange(of: camera.zoomFactor) {
+            }
+        ), in: camera.minZoomFactor...camera.maxZoomFactor)
+        .onChange(of: camera.zoomFactor) {
+            DispatchQueue.main.async{
                 resetHideSliderTimer()
             }
         }
-        .background(Material.ultraThin)
-        .cornerRadius(.infinity)
-        .padding(8)
     }
     
     func toggleZoomSlider() {
