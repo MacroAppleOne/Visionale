@@ -13,7 +13,6 @@ import Combine
 /// The app defines it as an `actor` type to ensure that all camera operations happen off of the `@MainActor`.
 /// An actor that manages the camera capture session and related functionalities.
 actor CaptureService {
-    
     // MARK: - Published Properties
     
     /// Indicates the current capture activity (idle or capturing a photo).
@@ -136,18 +135,9 @@ actor CaptureService {
         setZoomFactor(zoomFactor)
     }
     
-    /// Returns the recommended maximum zoom factor for the current device.
-    func getRecommendedMaxZoomFactor(for device: AVCaptureDevice) -> CGFloat {
-        if let lastZoomFactor = device.virtualDeviceSwitchOverVideoZoomFactors.last as? CGFloat {
-            return lastZoomFactor * 10
-        } else {
-            return min(device.activeFormat.videoMaxZoomFactor, 6.0)
-        }
-    }
-    
     /// Sets the zoom factor, enforcing limits.
-    func setZoomFactor(_ factor: CGFloat) {
-        guard let device = currentDevice else { return }
+    func setZoomFactor(_ factor: CGFloat) -> CGFloat {
+        guard let device = currentDevice else { return zoomFactor }
         do {
             try device.lockForConfiguration()
             let minZoom = device.minAvailableVideoZoomFactor
@@ -156,8 +146,19 @@ actor CaptureService {
             device.videoZoomFactor = clampedZoomFactor
             zoomFactor = clampedZoomFactor
             device.unlockForConfiguration()
+            return zoomFactor
         } catch {
             print("Failed to set zoom level: \(error)")
+        }
+        return zoomFactor
+    }
+    
+    /// Returns the recommended maximum zoom factor for the current device.
+    func getRecommendedMaxZoomFactor(for device: AVCaptureDevice) -> CGFloat {
+        if let lastZoomFactor = device.virtualDeviceSwitchOverVideoZoomFactors.last as? CGFloat {
+            return lastZoomFactor * 10
+        } else {
+            return min(device.activeFormat.videoMaxZoomFactor, 6.0)
         }
     }
     

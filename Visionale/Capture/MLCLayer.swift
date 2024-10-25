@@ -129,8 +129,8 @@ extension MachineLearningClassificationLayer: AVCaptureVideoDataOutputSampleBuff
         let currentTime = Date()
 
         // Check if at least 1 second has passed since last processing
-        if currentTime.timeIntervalSince(lastProcessingTime) < 1.0 {
-            // Less than 1 second has passed, skip processing
+        if currentTime.timeIntervalSince(lastProcessingTime) < 0.5 {
+            // Less than 0.5 second has passed, skip processing
             return
         }
 

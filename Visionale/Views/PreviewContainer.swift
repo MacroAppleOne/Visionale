@@ -9,8 +9,6 @@ import SwiftUI
 
 // Portrait-orientation aspect ratios.
 typealias AspectRatio = CGSize
-let photoAspectRatio = AspectRatio(width: 3.0, height: 4.0)
-
 /// A view that provides a container view around the camera preview.
 ///
 /// This view applies transition effects when changing capture modes or switching devices.
@@ -26,6 +24,10 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // State values for transition effects.
     @State private var blurRadius = CGFloat.zero
     
+    // New State Variables for Zoom Control
+    @State private var showZoomSlider: Bool = false
+    @State private var hideSliderWorkItem: DispatchWorkItem?
+    
     // When running in photo capture mode on a compact device size, move the preview area
     // update by the offset amount so that it's better centered between the top and bottom bars.
     private let photoModeOffset = CGFloat(-44)
@@ -39,31 +41,37 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     var body: some View {
         // On compact devices, show a view finder rectangle around the video preview bounds.
         if horizontalSizeClass == .compact {
-            GeometryReader { gr in
-                ZStack {
-                    previewView
-                }
-                .clipped()
-                // Apply an appropriate aspect ratio based on the selected capture mode.
-                .aspectRatio(aspectRatio, contentMode: .fit)
-                // In photo mode, adjust the vertical offset of the preview area to better fit the UI.
-                .offset(y: photoModeOffset)
-                .overlay {
-                    switch camera.activeComposition {
-                    case "CENTER": CenterGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "RULE OF THIRDS": RuleOfThirdsGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3).offset(y: photoModeOffset)
-                    default:
-                        EmptyView()
+            GeometryReader{ gr in
+                previewView
+                    .overlay(alignment: .bottomLeading) {
+                        ZStack(alignment: .bottomLeading) {
+                            if showZoomSlider {
+                                zoomSlider
+                                    .transition(.move(edge: .trailing))
+                            } else {
+                                cameraZoomButton
+                                    .transition(.move(edge: .leading))
+                            }
+                        }
+                        .animation(.default, value: showZoomSlider)
                     }
-                }
+                
+                    .overlay {
+                        switch camera.activeComposition {
+                        case "CENTER": CenterGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        case "RULE OF THIRDS": RuleOfThirdsGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        default:
+                            EmptyView()
+                        }
+                    }
             }
             .clipped()
             // Apply an appropriate aspect ratio based on the selected capture mode.
-            .aspectRatio(aspectRatio, contentMode: .fit)
+            .aspectRatio(camera.aspectRatio, contentMode: .fit)
             // In photo mode, adjust the vertical offset of the preview area to better fit the UI.
             .offset(y: photoModeOffset)
         } else {
@@ -85,7 +93,64 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         }
     }
     
-    var aspectRatio: AspectRatio {
-        photoAspectRatio
+    //    var cameraZoomButton: some View {
+    //        Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))x")
+    //            .font(.caption)
+    //            .padding()
+    //            .background(Material.thin)
+    //            .clipShape(Circle())
+    //            .padding(8)
+    //    }
+    
+    var cameraZoomButton: some View {
+        Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))x")
+            .font(.caption)
+            .padding()
+            .background(Material.thin)
+            .clipShape(Circle())
+            .padding(8)
+            .onTapGesture {
+                withAnimation {
+                    showZoomSlider = true
+                }
+                scheduleHideSlider()
+            }
+            .gesture(
+                DragGesture()
+                    .onChanged { _ in
+                        withAnimation {
+                            showZoomSlider = true
+                        }
+                        scheduleHideSlider()
+                    }
+            )
+    }
+    
+    var zoomSlider: some View {
+        GeometryReader { geometry in
+            Slider(value: Binding(
+                get: { camera.zoomFactor },
+                set: { newValue in
+                    Task { await camera.setZoomFactor(newValue) }
+                    scheduleHideSlider()
+                }
+            ), in: camera.minZoomFactor...camera.maxZoomFactor)
+            .padding()
+            .background(Material.thin)
+            .frame(width: geometry.size.width)
+        }
+    }
+    
+    func scheduleHideSlider() {
+        hideSliderWorkItem?.cancel()
+        let workItem = DispatchWorkItem {
+            withAnimation {
+                showZoomSlider = false
+            }
+        }
+        hideSliderWorkItem = workItem
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
     }
 }
+
+

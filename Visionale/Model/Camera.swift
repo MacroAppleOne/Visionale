@@ -26,13 +26,26 @@ protocol Camera: AnyObject {
     /// Starts the camera capture pipeline.
     func start() async
     
-    func zoom(factor: CGFloat) async
+    func zoom(factor: CGFloat) async -> CGFloat
+    
+    func setZoomFactor(_ factor: CGFloat) async -> CGFloat 
     
     var zoomFactor: CGFloat { get }
     
     func toggleTorch() async
     
+    var aspectRatio: AspectRatio { get set }
+    
     var isTorchOn: Bool { get }
+    
+    var isFramingCarouselEnabled: Bool { get }
+    
+    func toggleFramingCarousel()
+    
+    /// The minimum zoom factor.
+    var minZoomFactor: CGFloat {get}
+    /// The maximum zoom factor.
+    var maxZoomFactor: CGFloat {get}
     
     /// Switches between video devices available on the host system.
     func switchVideoDevices() async

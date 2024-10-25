@@ -15,7 +15,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     @State var camera: CameraModel
-    @StateObject var mlLayer = MachineLearningClassificationLayer()
+    
+
+    
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
@@ -40,5 +42,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             CameraUI<CameraModel>(camera: camera)
         }
     }
+}
+
+#Preview {
+    CameraView(camera: PreviewCameraModel())
 }
 
