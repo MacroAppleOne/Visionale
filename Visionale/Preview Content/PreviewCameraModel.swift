@@ -17,6 +17,10 @@ import SwiftUI
 
 @Observable
 class PreviewCameraModel: Camera {
+    func setZoom(factor: CGFloat) async {
+        logger.info("mantap")
+    }
+    
     func zoom(factor: CGFloat) async -> CGFloat {
         return 0.0
     }

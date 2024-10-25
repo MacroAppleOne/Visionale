@@ -26,12 +26,14 @@ protocol Camera: AnyObject {
     /// Starts the camera capture pipeline.
     func start() async
     
-    func zoom(factor: CGFloat) async -> CGFloat
+//    func zoom(factor: CGFloat) async -> CGFloat
     
-    func setZoomFactor(_ factor: CGFloat) async -> CGFloat 
+//    func setZoomFactor(_ factor: CGFloat) async -> CGFloat 
     
     var zoomFactor: CGFloat { get }
     
+    func setZoom(factor: CGFloat) async
+
     func toggleTorch() async
     
     var aspectRatio: AspectRatio { get set }

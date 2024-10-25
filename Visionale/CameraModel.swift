@@ -63,15 +63,15 @@ final class CameraModel: Camera {
     
     /// Machine Learning Layer
     var mlcLayer: MachineLearningClassificationLayer?
-   
+    
     /// The boolean value of framing carousel
     var isFramingCarouselEnabled: Bool = false
     
     /// The minimum zoom factor.
     var minZoomFactor: CGFloat = 1.0
-
+    
     /// The maximum zoom factor.
-    var maxZoomFactor: CGFloat = 10.0
+    var maxZoomFactor: CGFloat = 6.0
     
     /// The current aspect ratio
     var aspectRatio: AspectRatio = CGSize(width: 3, height: 4)
@@ -101,7 +101,6 @@ final class CameraModel: Camera {
         // Load machine learning layer asynchronously.
         Task {
             await loadMLLayer()
-            await updateZoomFactors()
         }
     }
     
@@ -115,7 +114,7 @@ final class CameraModel: Camera {
         }
         do {
             try await captureService.start()
-            await updateZoomFactors() // Update zoom factors
+            await updateMaxZoomFactors()
             observeState()
             status = .running
         } catch {
@@ -230,27 +229,13 @@ extension CameraModel {
 
 extension CameraModel {
     /// Adjusts the zoom based on the given factor.
-    func zoom(factor: CGFloat) async -> CGFloat {
-        let currentZoomFactor = await captureService.getZoomFactor()
-        let (minZoom, maxZoom) = await captureService.getZoomFactors()
-        let newZoomFactor = currentZoomFactor * factor
-        let clampedZoomFactor = max(minZoom, min(newZoomFactor, maxZoom))
-        await zoomFactor = captureService.setZoomFactor(clampedZoomFactor)
-        return clampedZoomFactor
+    func setZoom(factor: CGFloat) async {
+        let clampedFactor = max(minZoomFactor, min(factor, maxZoomFactor))
+        zoomFactor = await captureService.setZoomFactor(clampedFactor)
     }
-
-    /// Sets the zoom factor directly.
-    func setZoomFactor(_ factor: CGFloat) async -> CGFloat {
-        let (minZoom, maxZoom) = await captureService.getZoomFactors()
-        let clampedZoomFactor = max(minZoom, min(factor, maxZoom))
-        await zoomFactor = captureService.setZoomFactor(clampedZoomFactor)
-        return clampedZoomFactor
-    }
-
-    /// Updates the minimum and maximum zoom factors from the capture service.
-    func updateZoomFactors() async {
-        let (minZoom, maxZoom) = await captureService.getZoomFactors()
-        minZoomFactor = minZoom
-        maxZoomFactor = maxZoom
+    
+    /// Updates the maximum zoom factor from the capture service.
+    func updateMaxZoomFactors() async {
+        maxZoomFactor = await captureService.getRecommendedMaxZoomFactor()
     }
 }

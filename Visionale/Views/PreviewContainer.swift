@@ -24,17 +24,23 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // State values for transition effects.
     @State private var blurRadius = CGFloat.zero
     
-    // New State Variables for Zoom Control
-    @State private var showZoomSlider: Bool = false
-    @State private var hideSliderWorkItem: DispatchWorkItem?
-    
     // When running in photo capture mode on a compact device size, move the preview area
     // update by the offset amount so that it's better centered between the top and bottom bars.
     private let photoModeOffset = CGFloat(-44)
     private let content: Content
     
-    init(camera: CameraModel, @ViewBuilder content: () -> Content) {
+    // State for zoom slider visibility
+    @State private var showZoomSlider = false
+    
+    // Binding to lastZoomFactor
+    @Binding var lastZoomFactor: CGFloat
+    
+    // Timer for hiding the slider after inactivity
+    @State private var hideSliderWorkItem: DispatchWorkItem?
+    
+    init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content) {
         self.camera = camera
+        self._lastZoomFactor = lastZoomFactor
         self.content = content()
     }
     
@@ -43,6 +49,15 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         if horizontalSizeClass == .compact {
             GeometryReader{ gr in
                 previewView
+                    .gesture(
+                        MagnificationGesture()
+                            .onChanged { value in
+                                handlePinchGesture(scale: value)
+                            }
+                            .onEnded { _ in
+                                lastZoomFactor = camera.zoomFactor
+                            }
+                    )
                     .overlay(alignment: .bottomLeading) {
                         ZStack(alignment: .bottomLeading) {
                             if showZoomSlider {
@@ -55,7 +70,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         }
                         .animation(.default, value: showZoomSlider)
                     }
-                
                     .overlay {
                         switch camera.activeComposition {
                         case "CENTER": CenterGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
@@ -80,6 +94,15 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         }
     }
     
+    func handlePinchGesture(scale: CGFloat) {
+        let delta = scale - 1.0
+        let newZoomFactor = lastZoomFactor + delta * (camera.maxZoomFactor - camera.minZoomFactor)
+        let clampedZoomFactor = max(camera.minZoomFactor, min(newZoomFactor, camera.maxZoomFactor))
+        Task {
+            await camera.setZoom(factor: clampedZoomFactor)
+        }
+    }
+    
     /// Attach animations to the camera preview.
     var previewView: some View {
         content
@@ -93,56 +116,60 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         }
     }
     
-    //    var cameraZoomButton: some View {
-    //        Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))x")
-    //            .font(.caption)
-    //            .padding()
-    //            .background(Material.thin)
-    //            .clipShape(Circle())
-    //            .padding(8)
-    //    }
-    
     var cameraZoomButton: some View {
-        Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))x")
-            .font(.caption)
-            .padding()
-            .background(Material.thin)
-            .clipShape(Circle())
-            .padding(8)
-            .onTapGesture {
-                withAnimation {
-                    showZoomSlider = true
-                }
-                scheduleHideSlider()
-            }
-            .gesture(
-                DragGesture()
-                    .onChanged { _ in
-                        withAnimation {
-                            showZoomSlider = true
-                        }
-                        scheduleHideSlider()
+        Button(action: {
+            toggleZoomSlider()
+        }) {
+            Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))x")                    .font(.caption)
+                .padding()
+                .background(Material.thin)
+                .clipShape(Circle())
+                .padding(8)
+        }
+        .gesture(
+            DragGesture(minimumDistance: 0)
+                .onChanged { _ in
+                    if !showZoomSlider {
+                        toggleZoomSlider()
                     }
-            )
+                    resetHideSliderTimer()
+                }
+        )
     }
     
     var zoomSlider: some View {
-        GeometryReader { geometry in
+        HStack {
             Slider(value: Binding(
                 get: { camera.zoomFactor },
                 set: { newValue in
-                    Task { await camera.setZoomFactor(newValue) }
-                    scheduleHideSlider()
+                    Task {
+                        await camera.setZoom(factor: newValue)
+                    }
                 }
             ), in: camera.minZoomFactor...camera.maxZoomFactor)
             .padding()
-            .background(Material.thin)
-            .frame(width: geometry.size.width)
+            .onChange(of: camera.zoomFactor) {
+                resetHideSliderTimer()
+            }
+        }
+        .background(Material.ultraThin)
+        .cornerRadius(.infinity)
+        .padding(8)
+    }
+    
+    func toggleZoomSlider() {
+        withAnimation {
+            showZoomSlider.toggle()
+        }
+        if showZoomSlider {
+            resetHideSliderTimer()
+        } else {
+            cancelHideSliderTimer()
         }
     }
     
-    func scheduleHideSlider() {
-        hideSliderWorkItem?.cancel()
+    func resetHideSliderTimer() {
+        cancelHideSliderTimer()
         let workItem = DispatchWorkItem {
             withAnimation {
                 showZoomSlider = false
@@ -150,6 +177,11 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         }
         hideSliderWorkItem = workItem
         DispatchQueue.main.asyncAfter(deadline: .now() + 2, execute: workItem)
+    }
+    
+    func cancelHideSliderTimer() {
+        hideSliderWorkItem?.cancel()
+        hideSliderWorkItem = nil
     }
 }
 
