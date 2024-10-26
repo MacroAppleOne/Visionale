@@ -15,22 +15,17 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     @State var camera: CameraModel
-    @StateObject var mlLayer = MachineLearningClassificationLayer()
+    
+    @State private var lastZoomFactor: CGFloat = 1.0
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
-            PreviewContainer(camera: camera) {
+            PreviewContainer(camera: camera, lastZoomFactor: $lastZoomFactor) {
                 CameraPreview(source: camera.previewSource)
                     .onTapGesture { location in
                         // Focus and expose at the tapped point.
                         Task { await camera.focusAndExpose(at: location) }
                     }
-                    .gesture(
-                        MagnificationGesture()
-                            .onChanged { value in
-                                Task { await camera.zoom(factor: value) }
-                            }
-                    )
                 /// The value of `shouldFlashScreen` changes briefly to `true` when capture
                 /// starts, then immediately changes to `false`. Use this to
                 /// flash the screen to provide visual feedback.
@@ -40,5 +35,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             CameraUI<CameraModel>(camera: camera)
         }
     }
+}
+
+#Preview {
+    CameraView(camera: PreviewCameraModel())
 }
 

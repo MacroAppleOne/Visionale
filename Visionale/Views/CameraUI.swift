@@ -40,14 +40,8 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
         VStack(spacing: 0) {
             FeaturesToolbar(camera: camera)
             Spacer()
-            VStack {
-                ZStack {
-                    Carousel(camera: camera)
-                        .padding(.bottom, padding - 50)
-                    MainToolbar(camera: camera)
-                        .padding(.top, padding + 200)
-                }
-            }
+            MainToolbar(camera: camera)
+                .padding(.bottom, padding)
         }
     }
     
@@ -72,8 +66,11 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
     var padding: CGFloat {
         // Dynamically calculate the offset for the bottom toolbar in iOS.
         let bounds = UIScreen.main.bounds
-        let rect = AVMakeRect(aspectRatio: photoAspectRatio, insideRect: bounds)
+        let rect = AVMakeRect(aspectRatio: camera.aspectRatio, insideRect: bounds)
         return (rect.minY.rounded() / 2) - 36
     }
 }
 
+#Preview {
+    CameraUI(camera: PreviewCameraModel())
+}

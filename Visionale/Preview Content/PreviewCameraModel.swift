@@ -1,3 +1,10 @@
+//
+//  PreviewCameraModel.swift
+//  Visionalé
+//
+//  Created by Kyrell Leano Siauw on 25/10/24.
+//
+
 /*
  See the LICENSE.txt file for this sample’s licensing information.
  
@@ -10,11 +17,32 @@ import SwiftUI
 
 @Observable
 class PreviewCameraModel: Camera {
+    func setZoom(factor: CGFloat) async {
+        logger.info("mantap")
+    }
+    
+    func zoom(factor: CGFloat) async -> CGFloat {
+        return 0.0
+    }
+    func setZoomFactor(_ factor: CGFloat) async -> CGFloat {
+        return 0.0
+    }
+    var aspectRatio: AspectRatio =  CGSize(width: 3, height: 4)
+    var minZoomFactor: CGFloat = 0.0
+    
+    var maxZoomFactor: CGFloat = 0.0
+    
+    var isFramingCarouselEnabled: Bool = false
+    
+    func toggleFramingCarousel() {
+        logger.info("mantap")
+    }
+    
     var activeComposition: String = ""
     
     var activeID: UUID? = UUID()
     
-
+    
     func findComposition(withName name: String) {
         logger.info("mantap")
     }
@@ -71,8 +99,6 @@ class PreviewCameraModel: Camera {
     
     
     var shouldFlashScreen = false
-    var isHDRVideoSupported = false
-    var isHDRVideoEnabled = false
     
     struct PreviewSourceStub: PreviewSource {
         // Stubbed out for test purposes.

@@ -71,7 +71,7 @@ struct OnboardingInformationView: View {
                                 }){
                                     Text("Skip")
                                         .padding(16)
-                                        .foregroundStyle(.base)
+                                        .foregroundStyle(.accent)
                                 }
                             }.padding(.top, 50)
                                 .padding(.trailing, 10)

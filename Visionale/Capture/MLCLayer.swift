@@ -12,13 +12,10 @@ import AVFoundation
 /// A class responsible for handling machine learning classification tasks.
 @Observable
 final class MachineLearningClassificationLayer: NSObject, ObservableObject {
-    
-    var predictionLabels: String?
-    
-    
+    var predictionLabel: String?
     /// The CoreML model used for image classification.
     let model: ImageClassificationModel?
-    
+    private var lastProcessingTime: Date = Date(timeIntervalSince1970: 0)
     override init() {
         do {
             self.model = try ImageClassificationModel(configuration:.init())
@@ -38,7 +35,7 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject {
             
             // Update the prediction label which will notify the UI via @Published
             DispatchQueue.main.async {
-                self.predictionLabels = self.convertPredictionIntoLabel(in: prediction?.var_1120)
+                self.predictionLabel = self.convertPredictionIntoLabel(in: prediction?.var_1120)
             }
         } catch {
             print("Error making prediction: \(error)")
@@ -123,12 +120,29 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject {
 
 // MARK: - ML
 extension MachineLearningClassificationLayer: AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
+    func captureOutput(
+        _ output: AVCaptureOutput,
+        didOutput sampleBuffer: CMSampleBuffer,
+        from connection: AVCaptureConnection
+    ) {
+        // Get current time
+        let currentTime = Date()
+
+        // Check if at least 1 second has passed since last processing
+        if currentTime.timeIntervalSince(lastProcessingTime) < 0.5 {
+            // Less than 0.5 second has passed, skip processing
+            return
+        }
+
+        // Update last processing time
+        lastProcessingTime = currentTime
+
+        // Proceed with processing
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-        
+
         // Resize and process the pixel buffer
         guard let resizedBuffer = self.resizePixelBuffer(pixelBuffer, targetSize: CGSize(width: 256, height: 256)) else { return }
-        
+
         // Convert to MLMultiArray
         if let multiArray = self.pixelBufferToMultiArray(resizedBuffer) {
             // Pass the MLMultiArray to your Core ML model
