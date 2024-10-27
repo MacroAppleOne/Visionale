@@ -15,7 +15,7 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject, AVCa
     var frameRecommendation: FrameRecommendation = FrameRecommendation()
     var guidanceSystem: GuidanceSystem? = CenterGuidance()
     
-    var predictionLabels: String? = ""
+    var predictionLabel: String? = ""
     private var lastProcessingTime: Date = Date(timeIntervalSince1970: 0)
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
@@ -32,7 +32,7 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject, AVCa
         lastProcessingTime = currentTime
         
         // Frame Recommendation
-        self.predictionLabels = self.frameRecommendation.processFrame(sampleBuffer)
+        self.predictionLabel = self.frameRecommendation.processFrame(sampleBuffer)
         
         // Guidance System
         self.guidanceSystem?.guide(buffer: sampleBuffer)

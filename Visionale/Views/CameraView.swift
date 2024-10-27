@@ -29,12 +29,12 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             // Focus and expose at the tapped point.
                             Task { await camera.focusAndExpose(at: location) }
                         }
-                        .gesture(
-                            MagnificationGesture()
-                                .onChanged { value in
-                                    Task { await camera.zoom(factor: value) }
-                                }
-                        )
+//                        .gesture(
+//                            MagnificationGesture()
+//                                .onChanged { value in
+//                                    Task { await camera.zoom(factor: value) }
+//                                }
+//                        )
                     /// The value of `shouldFlashScreen` changes briefly to `true` when capture
                     /// starts, then immediately changes to `false`. Use this to
                     /// flash the screen to provide visual feedback.
