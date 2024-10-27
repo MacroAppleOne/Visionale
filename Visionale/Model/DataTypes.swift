@@ -6,6 +6,7 @@ Supporting data types for the app.
 */
 
 import AVFoundation
+import Vision
 
 // MARK: - Supporting types
 
@@ -157,4 +158,30 @@ extension OutputService {
         output.connection(with: .video)?.videoRotationAngle = angle
     }
     func updateConfiguration(for device: AVCaptureDevice) {}
+}
+
+enum SaliencyType {
+    case objectness
+    case attention
+}
+
+enum FrameType: String {
+    case center = "Center"
+    case curved = "Curved"
+    case leadingLine = "Leading Line"
+    case goldenRatio = "Golden Ratio"
+    case ruleOfThirds = "Rule Of Thirds"
+    case symmetric = "Symmetric"
+    case triangle = "Triangle"
+}
+
+protocol GuidanceSystem {
+    var saliencyHandler: SaliencyHandler { get }
+    var bestShotPoint: CGPoint? { get set }
+    var isAligned: Bool { get }
+    
+    func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?)
+    func checkAlignment(shotPoint: CGPoint)
+    func guide(buffer: CMSampleBuffer)
+    func getBoundingBox(buffer: CMSampleBuffer)
 }

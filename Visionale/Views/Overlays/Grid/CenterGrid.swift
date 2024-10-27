@@ -7,7 +7,9 @@
 
 import SwiftUI
 
-struct CenterGrid: View {
+struct CenterGrid<CameraModel: Camera>: View {
+    @State var camera: CameraModel
+    
     var body: some View {
         GeometryReader { geometry in
             let width = geometry.size.width
@@ -23,11 +25,11 @@ struct CenterGrid: View {
                 // Draw the center rectangle
                 path.addRect(CGRect(x: xOffset, y: yOffset, width: centerRectWidth, height: centerRectHeight))
             }
-            .stroke(Color.white.opacity(0.7), lineWidth: 2) // Adjust color and width as needed
+            .stroke(camera.mlcLayer?.guidanceSystem?.isAligned ?? false ? Color.accent.opacity(0.7) : Color.white.opacity(0.7), lineWidth: 2) // Adjust color and width as needed
         }
     }
 }
 
-#Preview {
-    CenterGrid()
-}
+//#Preview {
+//    CenterGrid(isAligned: .constant(false))
+//}

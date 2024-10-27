@@ -57,6 +57,15 @@ struct Carousel<CameraModel: Camera>: View {
             .scrollPosition(id: $camera.activeID)
             .onChange(of: camera.activeID) { _, newID in
                 camera.updateActiveComposition(id: newID)
+                
+                switch camera.activeComposition {
+                    case "CENTER": camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
+                    case "DIAGONAL": camera.mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
+                    case "GOLDEN RATIO": camera.mlcLayer?.setGuidanceSystem(GoldenRatioGuidance())
+                    case "RULE OF THIRDS": camera.mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
+                    case "SYMMETRIC": camera.mlcLayer?.setGuidanceSystem(SymmetricGuidance())
+                    default: camera.mlcLayer?.setGuidanceSystem(nil)
+                }
             }
             .onChange(of: (camera.mlcLayer?.predictionLabels) ?? "Unknown") { _, newComposition in
                 camera.findComposition(withName: newComposition)

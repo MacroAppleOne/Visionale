@@ -15,26 +15,55 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     @State var camera: CameraModel
-    @StateObject var mlLayer = MachineLearningClassificationLayer()
+    @State var bestShotPoint: CGPoint = .zero
+    @State var boundingBox: CGRect = .zero
+    
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
             PreviewContainer(camera: camera) {
-                CameraPreview(source: camera.previewSource)
-                    .onTapGesture { location in
-                        // Focus and expose at the tapped point.
-                        Task { await camera.focusAndExpose(at: location) }
-                    }
-                    .gesture(
-                        MagnificationGesture()
-                            .onChanged { value in
-                                Task { await camera.zoom(factor: value) }
+                GeometryReader { gr in
+                    CameraPreview(source: camera.previewSource)
+                        .onTapGesture { location in
+                            // Focus and expose at the tapped point.
+                            Task { await camera.focusAndExpose(at: location) }
+                        }
+                        .gesture(
+                            MagnificationGesture()
+                                .onChanged { value in
+                                    Task { await camera.zoom(factor: value) }
+                                }
+                        )
+                    /// The value of `shouldFlashScreen` changes briefly to `true` when capture
+                    /// starts, then immediately changes to `false`. Use this to
+                    /// flash the screen to provide visual feedback.
+                        .opacity(camera.shouldFlashScreen ? 0 : 1)
+                        .overlay(alignment: .topLeading) {
+//                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
+                            
+//                            Path { path in
+//                                path.addRect(self.boundingBox, transform: transform)
+//                            }
+//                            .stroke(Color.red, lineWidth: 1)
+                            Circle()
+                                .offset(
+                                    x: bestShotPoint.x * gr.size.width,
+                                    y: bestShotPoint.y * gr.size.height
+//                                    x: bestShotPoint.x,
+//                                    y: bestShotPoint.y
+                                )
+                                .foregroundStyle(Color.accent).opacity(0.5)
+                                .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
+                        }
+                        .onChange(of: camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero) {
+                            Task {
+                                withAnimation {
+                                    bestShotPoint = camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero
+//                                    boundingBox = camera.mlcLayer?.boundingBox ?? .zero
+                                }
                             }
-                    )
-                /// The value of `shouldFlashScreen` changes briefly to `true` when capture
-                /// starts, then immediately changes to `false`. Use this to
-                /// flash the screen to provide visual feedback.
-                    .opacity(camera.shouldFlashScreen ? 0 : 1)
+                        }
+                }
             }
             // The main camera user interface.
             CameraUI<CameraModel>(camera: camera)
