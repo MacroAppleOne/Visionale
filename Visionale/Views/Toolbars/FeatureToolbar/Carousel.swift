@@ -67,17 +67,16 @@ struct Carousel<CameraModel: Camera>: View {
                     default: camera.mlcLayer?.setGuidanceSystem(nil)
                 }
             }
-            .onChange(of: (camera.mlcLayer?.predictionLabels) ?? "Unknown") { _, newComposition in
+            .onChange(of: (camera.mlcLayer?.predictionLabel) ?? "Unknown") { _, newComposition in
                 camera.findComposition(withName: newComposition)
             }
             
-            // Use camera.activeComposition directly
             Text(camera.activeComposition)
                 .foregroundColor(.darkGradient)
                 .font(.subheadline)
                 .fontWeight(.semibold)
                 .padding(8)
-                .background(Color.base)
+                .background(.base)
                 .background(Material.thin)
                 .cornerRadius(4)
                 .offset(y: -100)

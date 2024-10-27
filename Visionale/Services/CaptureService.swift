@@ -13,7 +13,6 @@ import Combine
 /// The app defines it as an `actor` type to ensure that all camera operations happen off of the `@MainActor`.
 /// An actor that manages the camera capture session and related functionalities.
 actor CaptureService {
-    
     // MARK: - Published Properties
     
     /// Indicates the current capture activity (idle or capturing a photo).
@@ -81,6 +80,7 @@ actor CaptureService {
         try setUpSession()
         captureSession.startRunning()
         setInitialZoom()
+//        print(currentDevice?.activeFormat.videoMaxZoomFactor ?? "Blm ada")
     }
     
     // MARK: - Capture Setup
@@ -129,53 +129,75 @@ actor CaptureService {
         }
     }
     
-    // MARK: - Zoom Handling
-    
-    /// Sets the initial zoom factor.
-    private func setInitialZoom() {
-        setZoomFactor(zoomFactor)
-    }
-    
-    /// Returns the recommended maximum zoom factor for the current device.
-    func getRecommendedMaxZoomFactor(for device: AVCaptureDevice) -> CGFloat {
-        if let lastZoomFactor = device.virtualDeviceSwitchOverVideoZoomFactors.last as? CGFloat {
-            return lastZoomFactor * 10
-        } else {
-            return min(device.activeFormat.videoMaxZoomFactor, 6.0)
-        }
-    }
-    
-    /// Sets the zoom factor, enforcing limits.
-    func setZoomFactor(_ factor: CGFloat) {
-        guard let device = currentDevice else { return }
+    // MARK: Camera Controls
+    func setZoomLevel(_ zoom: CGFloat) {
+        guard let device = activeVideoInput?.device else { return }
         do {
             try device.lockForConfiguration()
-            let minZoom = device.minAvailableVideoZoomFactor
-            let maxZoom = getRecommendedMaxZoomFactor(for: device)
-            let clampedZoomFactor = max(minZoom, min(factor, maxZoom))
-            device.videoZoomFactor = clampedZoomFactor
-            zoomFactor = clampedZoomFactor
+            device.videoZoomFactor = max(1.0, min(zoom, device.activeFormat.videoMaxZoomFactor))
             device.unlockForConfiguration()
         } catch {
             print("Failed to set zoom level: \(error)")
         }
     }
     
-    /// Gets the current zoom factor.
-    func getZoomFactor() -> CGFloat {
-        return zoomFactor
-    }
     
-    /// Gets the minimum and maximum zoom factors.
-    func getZoomFactors() -> (min: CGFloat, max: CGFloat) {
-        guard let device = currentDevice else {
-            return (1.0, 1.0)
+    /// Set initial zoom level after the session is running
+    private func setInitialZoom() {
+        guard let device = activeVideoInput?.device else { return }
+        
+        do {
+            try device.lockForConfiguration()
+            // Ensure the zoom factor doesn't exceed the camera's maximum zoom level
+            device.videoZoomFactor = max(1.0, min(2.0, device.activeFormat.videoMaxZoomFactor))
+            device.unlockForConfiguration()
+        } catch {
+            print("Failed to set initial zoom level: \(error)")
         }
-        let minZoom = device.minAvailableVideoZoomFactor
-        let maxZoom = getRecommendedMaxZoomFactor(for: device)
-        return (minZoom, maxZoom)
     }
     
+    /// Returns the recommended maximum zoom factor for the current device.
+    func getRecommendedMaxZoomFactor() -> CGFloat {
+        guard let currentDevice = currentDevice else { return 0.0 }
+        if let lastZoomFactor = currentDevice.virtualDeviceSwitchOverVideoZoomFactors.last as? CGFloat {
+            return lastZoomFactor * 10
+        } else {
+            return min(currentDevice.activeFormat.videoMaxZoomFactor, 6.0)
+        }
+    }
+    
+//    func setZoomFactor(_ factor: CGFloat) -> CGFloat{
+//        guard let currentDevice = currentDevice else { return factor }
+//        do {
+//            try currentDevice.lockForConfiguration()
+//            let minZoom = currentDevice.minAvailableVideoZoomFactor
+//            let maxZoom = getRecommendedMaxZoomFactor()
+//            let clampedZoomFactor = max(minZoom, min(factor, maxZoom))
+//            currentDevice.videoZoomFactor = clampedZoomFactor
+//            currentDevice.unlockForConfiguration()
+//            return clampedZoomFactor
+//        } catch {
+//            print("Failed to set zoom level: \(error)")
+//        }
+//        return currentDevice.videoZoomFactor
+//    }
+    
+    func setZoomFactor(_ factor: CGFloat) -> CGFloat {
+        guard let currentDevice = currentDevice else { return factor }
+        do {
+            try currentDevice.lockForConfiguration()
+            let minZoom = currentDevice.minAvailableVideoZoomFactor
+            let maxZoom = getRecommendedMaxZoomFactor()
+            let clampedZoomFactor = max(minZoom, min(factor, maxZoom))
+            currentDevice.videoZoomFactor = clampedZoomFactor
+            currentDevice.unlockForConfiguration()
+            return clampedZoomFactor
+        } catch {
+            print("Failed to set zoom level: \(error)")
+            return currentDevice.videoZoomFactor
+        }
+    }
+
     // MARK: - Device Selection
     
     /// Changes the capture device that provides video input.
@@ -208,6 +230,14 @@ actor CaptureService {
         } catch {
             captureSession.addInput(currentInput)
         }
+    }
+    
+    func minMaxCameraDeviceZoomFactor() -> (min: CGFloat, max: CGFloat) {
+        guard let device = activeVideoInput?.device else { return (0, 0) }
+        return (
+            device.minAvailableVideoZoomFactor,
+            device.maxAvailableVideoZoomFactor
+        )
     }
     
     // MARK: - Rotation Handling

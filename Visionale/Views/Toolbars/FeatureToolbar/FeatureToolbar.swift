@@ -17,38 +17,60 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
     
     var body: some View {
         @Bindable var features = camera.photoFeatures
-        
-        HStack(spacing: 30) {
-            if isCompactSize {
-                livePhotoButton
-                torchButton
+        ZStack{
+            HStack(spacing: 30) {
+                if isCompactSize {
+                    torchButton
+                    livePhotoButton
+                    Spacer()
+                    otherIcontoggle
+                } else {
+                    Spacer()
+                    livePhotoButton
+                    torchButton
+                }
+            }
+            HStack{
                 Spacer()
-                cameraZoomFactorUI
-                imageClassification
-            } else {
+                carouselToggleButton
                 Spacer()
-                livePhotoButton
-                torchButton
-                
             }
         }
         .buttonStyle(DefaultButtonStyle(size: isRegularSize ? .large : .small))
         .padding([.leading, .trailing])
     }
     
-    var cameraZoomFactorUI: some View {
-        Text("\(camera.zoomFactor/2, specifier: "%.1f")x")
-            .padding(12)
-            .background(Material.regular)
-            .clipShape(.buttonBorder)
+    var carouselToggleButton: some View {
+        Button{
+            camera.toggleFramingCarousel()
+        } label: {
+            Image(systemName: camera.isFramingCarouselEnabled ?  "chevron.down.circle.fill" :  "chevron.up.circle.fill")
+                .font(.title2)
+                .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
+                .foregroundStyle(camera.isFramingCarouselEnabled ? .accent:.primary , .secondary, .tertiary)
+        }
+        .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
     
-    var imageClassification: some View {
-        Text(camera.mlcLayer?.predictionLabels ?? "Unknown")
-            .padding(12)
-            .background(.base)
-            .clipShape(.buttonBorder)
+//    var imageClassification: some View {
+//        Text(camera.mlcLayer?.predictionLabel ?? "Unknown")
+//            .padding(12)
+//            .background(.base)
+//            .clipShape(.buttonBorder)
+//    }
+    
+    var otherIcontoggle: some View {
+        Button {
+            
+        } label: {
+            Image(systemName: "ellipsis.circle")
+                .font(.title2)
+                .fontWeight(.thin)
+            
+        }
+        .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
+    
     //  A button to toggle the enabled state of Live Photo capture.
     var livePhotoButton: some View {
         Button {
@@ -61,7 +83,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
-
+    
     
     // A button to toggle the torch in the device
     var torchButton: some View {

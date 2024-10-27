@@ -25,7 +25,7 @@ struct CenterGrid<CameraModel: Camera>: View {
                 // Draw the center rectangle
                 path.addRect(CGRect(x: xOffset, y: yOffset, width: centerRectWidth, height: centerRectHeight))
             }
-            .stroke(camera.mlcLayer?.guidanceSystem?.isAligned ?? false ? Color.accent.opacity(0.7) : Color.white.opacity(0.7), lineWidth: 2) // Adjust color and width as needed
+            .stroke(camera.mlcLayer?.guidanceSystem?.isAligned ?? false ? Color.accent.opacity(0.7) : Color.white.opacity(0.7), lineWidth: 1) // Adjust color and width as needed
         }
     }
 }

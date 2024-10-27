@@ -17,11 +17,12 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @State var camera: CameraModel
     @State var bestShotPoint: CGPoint = .zero
     @State var boundingBox: CGRect = .zero
+    @State private var lastZoomFactor: CGFloat = 1.0
     
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
-            PreviewContainer(camera: camera) {
+            PreviewContainer(camera: camera, lastZoomFactor: $lastZoomFactor) {
                 GeometryReader { gr in
                     CameraPreview(source: camera.previewSource)
                         .onTapGesture { location in
@@ -69,5 +70,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             CameraUI<CameraModel>(camera: camera)
         }
     }
+}
+
+#Preview {
+    CameraView(camera: PreviewCameraModel())
 }
 

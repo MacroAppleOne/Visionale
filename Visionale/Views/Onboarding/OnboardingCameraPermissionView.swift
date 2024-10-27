@@ -77,7 +77,7 @@ struct OnboardingCameraPermissionView: View {
                         }
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 15)
-                        .background(Color.base)
+                        .background(.accent)
                         .cornerRadius(50)
                         .shadow(radius: 5)
                     }
