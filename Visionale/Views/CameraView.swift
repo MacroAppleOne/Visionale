@@ -64,6 +64,11 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 }
                             }
                         }
+                        .onChange(of: camera.mlcLayer?.guidanceSystem?.isAligned) { _, isAligned in
+                            if (isAligned == true ) {
+                                UIImpactFeedbackGenerator(style: .medium).impactOccurred()
+                            }
+                        }
                 }
             }
             // The main camera user interface.

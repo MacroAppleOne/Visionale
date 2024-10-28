@@ -17,11 +17,11 @@ class CenterGuidance: GuidanceSystem {
     var boundingBoxes: [CGRect]? = []
     
     func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?) {
-        self.bestShotPoint = self.getAttentionCenterPoint(from: observation) ?? .zero
+        self.bestShotPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
     }
     
     func checkAlignment(shotPoint: CGPoint) {
-        let min = 0.5 * 0.2
+        let min = 0.5 * 0.8
         let max = 0.5 * 1.2
         
         if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
@@ -41,7 +41,7 @@ class CenterGuidance: GuidanceSystem {
         })
     }
     
-    func getAttentionCenterPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
+    func getAttentionFocusPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
         // Extract the pixel buffer from the observation
         guard let pixelBuffer = observation?.pixelBuffer else {
             logger.debug("Can't extract pixel buffer from observation")
