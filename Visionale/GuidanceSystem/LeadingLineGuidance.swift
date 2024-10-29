@@ -10,11 +10,15 @@ import UIKit
 
 @Observable
 class LeadingLineGuidance: GuidanceSystem {
+    var selectedKeypoint: Int = -1
+    var keypoints: [CGPoint] = []
     var saliencyHandler: SaliencyHandler = SaliencyHandler()
-    
     var bestShotPoint: CGPoint? = .zero
-    
     var isAligned: Bool = false
+    
+    func guide(buffer: CMSampleBuffer) {
+        
+    }
     
     func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?) {
         
@@ -24,13 +28,7 @@ class LeadingLineGuidance: GuidanceSystem {
         
     }
     
-    func guide(buffer: CMSampleBuffer) {
+    func getBoundingBoxes(buffer: CMSampleBuffer, saliencyType: SaliencyType) {
         
     }
-    
-    func getBoundingBox(buffer: CMSampleBuffer) {
-        
-    }
-    
-    
 }

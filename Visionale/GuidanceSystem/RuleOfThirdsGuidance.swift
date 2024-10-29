@@ -10,6 +10,7 @@ import UIKit
 
 @Observable
 class RuleOfThirdsGuidance: GuidanceSystem {
+    
     var saliencyHandler: SaliencyHandler = SaliencyHandler()
     var bestShotPoint: CGPoint? = .zero
     var isAligned: Bool = false
@@ -20,32 +21,54 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         CGPoint(x: 0.33, y: 0.67),
         CGPoint(x: 0.67, y: 0.67),
     ]
+    var selectedKeypoint: Int = -1
     
     func guide(buffer: CMSampleBuffer) {
         guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
         
-        saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center, completion: { result in
-            self.findBestShotPoint(buffer: cvPixelBuffer, observation: result)
-            self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
-        })
+        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center)
+        self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
+        self.findBestShotPoint(buffer: cvPixelBuffer, observation: result)
+        self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?) {
-        self.bestShotPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
+        let focusPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
+        let distance = keypoints.map({distanceBetween($0, and: focusPoint)})
+        
+        guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return }
+        
+        self.selectedKeypoint = selectedKeyPoint
+        
+//        print("focus point: \(focusPoint)")
+//        print("keypoint: \(self.keypoints[selectedKeyPoint])")
+//        print("best shot point: \(self.bestShotPoint ?? .zero)")
+        
+        let adjustmentNeededX = -(keypoints[selectedKeyPoint].x - focusPoint.x)
+        let adjustmentNeededY = -(keypoints[selectedKeyPoint].y - focusPoint.y)
+        
+        self.bestShotPoint = CGPoint(x: focusPoint.x + adjustmentNeededX, y: focusPoint.y + adjustmentNeededY)
     }
     
     func checkAlignment(shotPoint: CGPoint) {
+        let min = 0.5 * 0.8
+        let max = 0.5 * 1.2
         
+        if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
+            self.isAligned = true
+        }
+        else {
+            self.isAligned = false
+        }
     }
     
-    func getBoundingBox(buffer: CMSampleBuffer) {
+    func getBoundingBoxes(buffer: CMSampleBuffer, saliencyType: SaliencyType) {
         guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else {
             return
         }
         
-        saliencyHandler.detectSalientRegions(in: cvPixelBuffer, frameType: .center, completion: { result in
-            self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
-        })
+        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: saliencyType, frameType: .center)
+        self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
     }
     
     func getAttentionFocusPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
@@ -119,5 +142,12 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         }
         
         return maxPoint
+    }
+    
+    func distanceBetween(_ point: CGPoint, and otherPoint: CGPoint) -> CGFloat {
+        let dx = otherPoint.x - point.x
+        let dy = otherPoint.y - point.y
+        
+        return sqrt(dx * dx + dy * dy)
     }
 }

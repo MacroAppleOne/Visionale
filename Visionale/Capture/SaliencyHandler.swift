@@ -43,7 +43,7 @@ class SaliencyHandler {
         return context.createCGImage(ciImage, from: ciImage.extent)
     }
     
-    func detectSalientRegions(in pixelBuffer: CVPixelBuffer, saliencyType: SaliencyType = .attention, frameType: FrameType, completion: @escaping (VNSaliencyImageObservation?) -> Void) {
+    func detectSalientRegions(in pixelBuffer: CVPixelBuffer, saliencyType: SaliencyType = .attention, frameType: FrameType) -> VNSaliencyImageObservation? {
         
         // Create the appropriate VNRequest for the saliency type
         let request: VNImageBasedRequest = (saliencyType == .attention) ? VNGenerateAttentionBasedSaliencyImageRequest() : VNGenerateObjectnessBasedSaliencyImageRequest()
@@ -55,20 +55,18 @@ class SaliencyHandler {
             // Check if the request result contains a VNSaliencyImageObservation
             guard let observation = request.results?.first as? VNSaliencyImageObservation else {
                 logger.debug("Could not get saliency result")
-                completion(nil)
-                return
+                return nil
             }
             
             guard observation.salientObjects != nil else {
                 logger.debug("No salient object detected")
-                completion(nil)
-                return
+                return nil
             }
             
-            completion(observation)
+            return observation
         } catch {
             logger.debug("Error processing saliency: \(error)")
-            completion(nil)
+            return nil
         }
     }
 }

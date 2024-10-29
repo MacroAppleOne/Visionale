@@ -36,7 +36,6 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject, AVCa
         
         // Guidance System
         self.guidanceSystem?.guide(buffer: sampleBuffer)
-        self.guidanceSystem?.getBoundingBox(buffer: sampleBuffer)
     }
     
     func setGuidanceSystem(_ guidanceSystem: GuidanceSystem?) {

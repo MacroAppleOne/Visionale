@@ -77,7 +77,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * 4 / 3)
                         case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
                         case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
-                        case "RULE OF THIRDS": RuleOfThirdsGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        case "RULE OF THIRDS": RuleOfThirdsGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * 4 / 3)
                         case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
                         case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
                         default:
