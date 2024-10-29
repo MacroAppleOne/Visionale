@@ -27,7 +27,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                     torchButton
                     livePhotoButton
                     Spacer()
-                    aspectRatioButton
+//                    aspectRatioButton
                     otherIcontoggle
                 } else {
                     Spacer()
