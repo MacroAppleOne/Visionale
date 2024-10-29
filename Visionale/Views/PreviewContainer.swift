@@ -140,7 +140,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     }
     
     func adjustZoom(dragOffset: CGFloat) {
-        let scaleAdjustment = dragOffset / 300 // Adjust this for sensitivity
+        let scaleAdjustment = dragOffset / 1000 // Adjust this for sensitivity
         let newZoomFactor = lastZoomFactor + scaleAdjustment * (camera.maxZoomFactor - camera.minZoomFactor)
         let clampedZoomFactor = max(camera.minZoomFactor, min(newZoomFactor, camera.maxZoomFactor))
         Task {
