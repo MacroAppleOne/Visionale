@@ -18,6 +18,7 @@ import Combine
 ///
 @Observable
 final class CameraModel: Camera {
+    
     // MARK: - Properties
     /// The current status of the camera.
     private(set) var status = CameraStatus.unknown
@@ -74,7 +75,13 @@ final class CameraModel: Camera {
     var maxZoomFactor: CGFloat = 6.0
     
     /// The current aspect ratio
-    var aspectRatio: AspectRatio = CGSize(width: 3, height: 4)
+    var aspectRatio: AspectRatio = .ratio4_3
+
+    var isAspectRatioOptionEnabled: Bool = false
+
+    func toggleAspectRatioOption() {
+        isAspectRatioOptionEnabled.toggle()
+    }
     
     // MARK: - Compositions
     
@@ -85,6 +92,7 @@ final class CameraModel: Camera {
     // MARK: - Initialization
     
     init() {
+        
         compositions = [
             Composition(name: "CENTER", description: "", image: "center_default", isRecommended: false, imageRecommended: "center_default_recommend", imageSelected: "center_selected", imageSelectedRecommended: "center_selected_recommend"),
             Composition(name: "CURVED", description: "", image: "curved_default", isRecommended: false, imageRecommended: "curved_default_recommend", imageSelected: "curved_selected", imageSelectedRecommended: "curved_selected_recommend"),
@@ -237,5 +245,50 @@ extension CameraModel {
     /// Updates the maximum zoom factor from the capture service.
     func updateMaxZoomFactors() async {
         maxZoomFactor = await captureService.getRecommendedMaxZoomFactor()
+    }
+}
+
+extension CameraModel {
+    func toggleAspectRatio() {
+        aspectRatio = AspectRatio.next(after: aspectRatio)
+    }
+    
+}
+/// Supported aspect ratios.
+enum AspectRatio: CaseIterable {
+    case ratio4_3
+    case ratio16_9
+    case ratio1_1
+
+    var size: CGSize {
+        switch self {
+        case .ratio4_3:
+            return CGSize(width: 3, height: 4)
+        case .ratio16_9:
+            return CGSize(width: 9, height: 16)
+        case .ratio1_1:
+            return CGSize(width: 1, height: 1)
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .ratio4_3:
+            return "4:3"
+        case .ratio16_9:
+            return "16:9"
+        case .ratio1_1:
+            return "1:1"
+        }
+    }
+
+    /// Get the next aspect ratio in the sequence.
+    static func next(after current: AspectRatio) -> AspectRatio {
+        let all = AspectRatio.allCases
+        if let index = all.firstIndex(of: current), index + 1 < all.count {
+            return all[index + 1]
+        } else {
+            return all.first!
+        }
     }
 }

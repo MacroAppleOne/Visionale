@@ -34,18 +34,10 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
                         .overlay(alignment: .topLeading) {
-//                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
-                            
-//                            Path { path in
-//                                path.addRect(self.boundingBox, transform: transform)
-//                            }
-//                            .stroke(Color.red, lineWidth: 1)
                             Circle()
                                 .offset(
                                     x: bestShotPoint.x * gr.size.width,
                                     y: bestShotPoint.y * gr.size.height
-//                                    x: bestShotPoint.x,
-//                                    y: bestShotPoint.y
                                 )
                                 .foregroundStyle(Color.accent).opacity(0.5)
                                 .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
@@ -54,7 +46,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             Task {
                                 withAnimation {
                                     bestShotPoint = camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero
-//                                    boundingBox = camera.mlcLayer?.boundingBox ?? .zero
                                 }
                             }
                         }

@@ -17,6 +17,18 @@ import SwiftUI
 
 @Observable
 class PreviewCameraModel: Camera {
+    var aspectRatio: AspectRatio = .ratio4_3
+    
+    func toggleAspectRatio() {
+        logger.info("gg")
+    }
+    
+    var isAspectRatioOptionEnabled: Bool = false
+    
+    func toggleAspectRatioOption() {
+        logger.info("gg")
+    }
+    
     func setZoom(factor: CGFloat) async {
         logger.info("mantap")
     }
@@ -27,7 +39,6 @@ class PreviewCameraModel: Camera {
     func setZoomFactor(_ factor: CGFloat) async -> CGFloat {
         return 0.0
     }
-    var aspectRatio: AspectRatio =  CGSize(width: 3, height: 4)
     var minZoomFactor: CGFloat = 0.0
     
     var maxZoomFactor: CGFloat = 0.0

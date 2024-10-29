@@ -8,7 +8,7 @@
 import SwiftUI
 
 // Portrait-orientation aspect ratios.
-typealias AspectRatio = CGSize
+//typealias AspectRatio = CGSize
 /// A view that provides a container view around the camera preview.
 ///
 /// This view applies transition effects when changing capture modes or switching devices.
@@ -74,12 +74,12 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                     }
                     .overlay {
                         switch camera.activeComposition {
-                        case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * 4 / 3)
-                        case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
-                        case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
-                        case "RULE OF THIRDS": RuleOfThirdsGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * 4 / 3)
-                        case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
-                        case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * 4 / 3)
+                        case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "RULE OF THIRDS": RuleOfThirdsGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         default:
                             EmptyView()
                         }
@@ -87,7 +87,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
             }
             .clipped()
             // Apply an appropriate aspect ratio based on the selected capture mode.
-            .aspectRatio(camera.aspectRatio, contentMode: .fit)
+            .aspectRatio(camera.aspectRatio.size, contentMode: .fit)
             // In photo mode, adjust the vertical offset of the preview area to better fit the UI.
             .offset(y: photoModeOffset)
         } else {
@@ -140,7 +140,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     }
     
     func adjustZoom(dragOffset: CGFloat) {
-        let scaleAdjustment = dragOffset / 1000 // Adjust this for sensitivity
+        let scaleAdjustment = dragOffset / 1000
         let newZoomFactor = lastZoomFactor + scaleAdjustment * (camera.maxZoomFactor - camera.minZoomFactor)
         let clampedZoomFactor = max(camera.minZoomFactor, min(newZoomFactor, camera.maxZoomFactor))
         Task {
