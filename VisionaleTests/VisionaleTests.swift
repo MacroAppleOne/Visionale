@@ -6,7 +6,7 @@
 //
 
 import XCTest
-@testable import Visionalé
+@testable import Visionale
 
 final class VisionaleTests: XCTestCase {
 
