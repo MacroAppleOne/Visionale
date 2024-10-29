@@ -11,7 +11,7 @@ import AVFoundation
 
 /// A class responsible for handling machine learning classification tasks.
 @Observable
-final class MachineLearningClassificationLayer: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+final class ImageClassificationHandler: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     var frameRecommendation: FrameRecommendation = FrameRecommendation()
     var guidanceSystem: GuidanceSystem? = CenterGuidance()
     
@@ -24,7 +24,7 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject, AVCa
 
         // Check if at least 1 second has passed since last processing
         if currentTime.timeIntervalSince(lastProcessingTime) < 0.5 {
-            // Less than 1 second has passed, skip processing
+            // Less than 0.5 second has passed, skip processing
             return
         }
 
@@ -36,7 +36,6 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject, AVCa
         
         // Guidance System
         self.guidanceSystem?.guide(buffer: sampleBuffer)
-        self.guidanceSystem?.getBoundingBox(buffer: sampleBuffer)
     }
     
     func setGuidanceSystem(_ guidanceSystem: GuidanceSystem?) {

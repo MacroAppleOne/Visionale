@@ -15,15 +15,14 @@ struct CenterGrid<CameraModel: Camera>: View {
             let width = geometry.size.width
             let height = geometry.size.height
             
-            let centerRectWidth = width / 3
-            let centerRectHeight = height / 3
+            let rectSize = width / 4
             
-            let xOffset = (width - centerRectWidth) / 2
-            let yOffset = (height - centerRectHeight) / 2
+            let xOffset = (width - rectSize) / 2
+            let yOffset = (height - rectSize) / 2
             
             Path { path in
                 // Draw the center rectangle
-                path.addRect(CGRect(x: xOffset, y: yOffset, width: centerRectWidth, height: centerRectHeight))
+                path.addRect(CGRect(x: xOffset, y: yOffset, width: rectSize, height: rectSize))
             }
             .stroke(camera.mlcLayer?.guidanceSystem?.isAligned ?? false ? Color.accent.opacity(0.7) : Color.white.opacity(0.7), lineWidth: 1) // Adjust color and width as needed
         }

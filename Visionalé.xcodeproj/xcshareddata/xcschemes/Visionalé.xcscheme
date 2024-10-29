@@ -91,6 +91,15 @@
             ReferencedContainer = "container:Visionale&#x301;.xcodeproj">
          </BuildableReference>
       </BuildableProductRunnable>
+      <MacroExpansion>
+         <BuildableReference
+            BuildableIdentifier = "primary"
+            BlueprintIdentifier = "93AB6A332CB6FEBE0030095E"
+            BuildableName = "Visionale&#x301;.app"
+            BlueprintName = "Visionale&#x301;"
+            ReferencedContainer = "container:Visionale&#x301;.xcodeproj">
+         </BuildableReference>
+      </MacroExpansion>
    </ProfileAction>
    <AnalyzeAction
       buildConfiguration = "Debug">

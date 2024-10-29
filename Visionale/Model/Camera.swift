@@ -74,7 +74,7 @@ protocol Camera: AnyObject {
     var error: Error? { get }
     
     // Machine learning and composition related properties
-    var mlcLayer: MachineLearningClassificationLayer? { get }
+    var mlcLayer: ImageClassificationHandler? { get }
     
     var compositions: [Composition] { get }
     

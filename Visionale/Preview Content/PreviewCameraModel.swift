@@ -62,7 +62,7 @@ class PreviewCameraModel: Camera {
         logger.info("Zoom ended")
     }
     
-    var mlcLayer: MachineLearningClassificationLayer? = MachineLearningClassificationLayer()
+    var mlcLayer: ImageClassificationHandler? = ImageClassificationHandler()
     
     var compositions: [Composition] = [
         Composition(name: "GG", description: "", image: "", isRecommended: true)

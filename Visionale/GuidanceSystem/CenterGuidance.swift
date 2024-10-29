@@ -11,17 +11,45 @@ import UIKit
 @Observable
 class CenterGuidance: GuidanceSystem {
     
+    var selectedKeypoint: Int = -1
+    var keypoints: [CGPoint] = []
     var bestShotPoint: CGPoint? = .zero
     var isAligned: Bool = false
     var saliencyHandler: SaliencyHandler = SaliencyHandler()
     var boundingBoxes: [CGRect]? = []
+
+    func guide(buffer: CMSampleBuffer) {
+        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
+        guard let attentionResult = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center) else { return }
+        
+        self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
+        self.findBestShotPoint(buffer: cvPixelBuffer, observation: attentionResult)
+        self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
+    }
     
     func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?) {
-        self.bestShotPoint = self.getAttentionCenterPoint(from: observation) ?? .zero
+        let focusPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
+        
+        let rect = self.boundingBoxes?.filter({ isInRect(rect: $0, point: focusPoint) })
+        if rect?.count ?? 0 > 0 {
+            let width = rect?[0].width
+            let height = rect?[0].height
+            
+            // If the object is large, such as multiple person, use the bounding box center instead
+            if width ?? 0 > 0.5 || height ?? 0 > 0.5 {
+                self.bestShotPoint = CGPoint(x: rect?[0].midX ?? 0, y: rect?[0].midY ?? 0)
+            }
+            else {
+                self.bestShotPoint = focusPoint
+            }
+        }
+        else {
+            self.bestShotPoint = focusPoint
+        }
     }
     
     func checkAlignment(shotPoint: CGPoint) {
-        let min = 0.5 * 0.2
+        let min = 0.5 * 0.8
         let max = 0.5 * 1.2
         
         if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
@@ -32,16 +60,16 @@ class CenterGuidance: GuidanceSystem {
         }
     }
     
-    func guide(buffer: CMSampleBuffer) {
-        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
+    func getBoundingBoxes(buffer: CMSampleBuffer, saliencyType: SaliencyType) {
+        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else {
+            return
+        }
         
-        saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center, completion: { result in
-            self.findBestShotPoint(buffer: cvPixelBuffer, observation: result)
-            self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
-        })
+        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .objectness, frameType: .center)
+        self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
     }
     
-    func getAttentionCenterPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
+    func getAttentionFocusPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
         // Extract the pixel buffer from the observation
         guard let pixelBuffer = observation?.pixelBuffer else {
             logger.debug("Can't extract pixel buffer from observation")
@@ -89,38 +117,43 @@ class CenterGuidance: GuidanceSystem {
             return nil
         }
         
-        var maxBrightness: UInt8 = 0
-        var maxPoint: CGPoint?
+        // Define the center point of the image
+        let centerX = width / 2
+        let centerY = height / 2
+        
+        // Variables to keep track of the best pixel
+        var maxScore: Double = 0
+        var bestPoint: CGPoint?
 
-        // Iterate through each pixel
+        // Iterate over each pixel
         for y in 0..<height {
             for x in 0..<width {
                 let pixelOffset = y * bytesPerRow + x * bytesPerPixel
                 let red = data[pixelOffset]
                 let green = data[pixelOffset + 1]
                 let blue = data[pixelOffset + 2]
-
-                // Calculate brightness (we assume full white as max brightness)
+                
+                // Calculate brightness as the maximum of RGB components
                 let brightness = max(red, green, blue)
 
-                // Update if this pixel has a higher brightness
-                if brightness > maxBrightness {
-                    maxBrightness = brightness
-                    maxPoint = CGPoint(x: CGFloat(x) / CGFloat(saliencyHandler.originalWidth), y: CGFloat(y) / CGFloat(saliencyHandler.originalHeight))
+                // Calculate distance to center, scaled between 0 and 1 (0 = center, 1 = farthest point)
+                let distanceToCenter = sqrt(pow(Double(x - centerX), 2) + pow(Double(y - centerY), 2)) / sqrt(pow(Double(centerX), 2) + pow(Double(centerY), 2))
+                
+                // Define a score that favors brightness and proximity to the center (lower distance)
+                let score = Double(brightness) * (1.0 - distanceToCenter)
+                
+                // Update if this pixel has a higher score
+                if score > maxScore {
+                    maxScore = score
+                    bestPoint = CGPoint(x: CGFloat(x) / CGFloat(saliencyHandler.originalWidth), y: CGFloat(y) / CGFloat(saliencyHandler.originalHeight))
                 }
             }
         }
         
-        return maxPoint
+        return bestPoint
     }
     
-    func getBoundingBox(buffer: CMSampleBuffer) {
-        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else {
-            return
-        }
-        
-        saliencyHandler.detectSalientRegions(in: cvPixelBuffer, frameType: .center, completion: { result in
-            self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
-        })
+    func isInRect(rect: CGRect, point: CGPoint) -> Bool {
+        return rect.contains(point)
     }
 }
