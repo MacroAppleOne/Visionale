@@ -21,7 +21,7 @@ class SaliencyHandler {
         if originalWidth == 0 && originalHeight == 0 {
             CVPixelBufferLockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
             
-            guard let baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer) else {
+            guard CVPixelBufferGetBaseAddress(pixelBuffer) != nil else {
                 logger.debug("can't get base address")
                 CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
                 return nil
