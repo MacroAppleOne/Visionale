@@ -37,7 +37,6 @@ class CenterGuidance: GuidanceSystem {
             
             // If the object is large, such as multiple person, use the bounding box center instead
             if width ?? 0 > 0.5 || height ?? 0 > 0.5 {
-                logger.debug("Large object detected, using bounding box center")
                 self.bestShotPoint = CGPoint(x: rect?[0].midX ?? 0, y: rect?[0].midY ?? 0)
             }
             else {
