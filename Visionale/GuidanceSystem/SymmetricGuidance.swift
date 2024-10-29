@@ -2,33 +2,42 @@
 //  SymmetricGuidance.swift
 //  Visionalé
 //
-//  Created by Nico Samuelson on 27/10/24.
+//  Created by Nico Samuelson on 29/10/24.
 //
 
 import Vision
-import UIKit
+//import CoreML
 
-@Observable
 class SymmetricGuidance: GuidanceSystem {
-    var selectedKeypoint: Int = -1
-    var keypoints: [CGPoint] = []
-    var saliencyHandler: SaliencyHandler = SaliencyHandler()
+//    var sequenceHandler: VNSequenceRequestHandler = .init()
+    var saliencyHandler: SaliencyHandler = .init()
+    
     var bestShotPoint: CGPoint? = .zero
+    
     var isAligned: Bool = false
+    var shouldReset: Bool = true
+    
+    var selectedKeypoints: [Int] = []
+    var keypoints: [CGPoint] = []
+    var trackedObjects: [VNDetectedObjectObservation]? = []
     
     func guide(buffer: CMSampleBuffer) {
         
     }
     
-    func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?) {
-        
+    func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
+        return nil
     }
     
-    func checkAlignment(shotPoint: CGPoint) {
-        
+    func checkAlignment(shotPoint: CGPoint) -> Bool {
+        return false
     }
     
-    func getBoundingBoxes(buffer: CMSampleBuffer, saliencyType: SaliencyType) {
-        
+    func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]? {
+        return nil
+    }
+    
+    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
+        return nil
     }
 }

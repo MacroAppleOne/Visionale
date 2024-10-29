@@ -41,9 +41,16 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
                         .overlay(alignment: .topLeading) {
 //                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
-                            
+//                            
+//                            let adjustedX = boundingBox.origin.x
+//                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
+//                            let adjustedWidth = boundingBox.width
+//                            let adjustedHeight = boundingBox.height
+//                            
+//                            let rect = CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight)
+//                            
 //                            Path { path in
-//                                path.addRect(self.boundingBox, transform: transform)
+//                                path.addRect(rect, transform: transform)
 //                            }
 //                            .stroke(Color.red, lineWidth: 1)
                             Circle()
@@ -60,7 +67,8 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             Task {
                                 withAnimation {
                                     bestShotPoint = camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero
-//                                    boundingBox = camera.mlcLayer?.boundingBox ?? .zero
+                                    self.boundingBox = camera.mlcLayer?.guidanceSystem?.trackedObjects?.first?.boundingBox ?? .zero
+//                                    self.boundingBox = camera.mlcLayer?.guidanceSystem?.boundingBoxes?[0] ?? .zero
                                 }
                             }
                         }

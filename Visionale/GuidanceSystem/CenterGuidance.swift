@@ -10,75 +10,142 @@ import UIKit
 
 @Observable
 class CenterGuidance: GuidanceSystem {
+    var saliencyHandler: SaliencyHandler = .init()
     
-    var selectedKeypoint: Int = -1
-    var keypoints: [CGPoint] = []
     var bestShotPoint: CGPoint? = .zero
+    
     var isAligned: Bool = false
-    var saliencyHandler: SaliencyHandler = SaliencyHandler()
-    var boundingBoxes: [CGRect]? = []
+    var shouldReset: Bool = true
+    
+    var trackedObjects: [VNDetectedObjectObservation]? = []
+    var selectedKeypoints: [Int] = []
+    var keypoints: [CGPoint] = []
 
     func guide(buffer: CMSampleBuffer) {
         guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
-        guard let attentionResult = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center) else { return }
         
-        self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
-        self.findBestShotPoint(buffer: cvPixelBuffer, observation: attentionResult)
-        self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
+        self.bestShotPoint = self.findBestShotPoint(buffer: cvPixelBuffer)
+        self.isAligned = self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
     }
     
-    func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?) {
-        let focusPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
-        
-        let rect = self.boundingBoxes?.filter({ isInRect(rect: $0, point: focusPoint) })
-        if rect?.count ?? 0 > 0 {
-            let width = rect?[0].width
-            let height = rect?[0].height
+    func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
+        // SALIENCY
+        if shouldReset {
+            self.trackedObjects?.removeAll()
+            let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
+            let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
             
-            // If the object is large, such as multiple person, use the bounding box center instead
-            if width ?? 0 > 0.5 || height ?? 0 > 0.5 {
-                logger.debug("Large object detected, using bounding box center")
-                self.bestShotPoint = CGPoint(x: rect?[0].midX ?? 0, y: rect?[0].midY ?? 0)
+            guard let rect = boundingBoxes?.filter({ $0.contains(focusPoint) }) else {
+                logger.debug("No bounding boxes found, resetting guidance system")
+                self.shouldReset = true
+                return nil
+            }
+            
+            // if the focus point is inside a rectangle
+            if rect.count > 0 {
+                let width = rect[0].width
+                let height = rect[0].height
+                
+                // If the object in focus is large such as crowds, use the bounding box center instead
+                if width > 0.5 || height > 0.5 {
+                    self.trackedObjects =  [VNDetectedObjectObservation(boundingBox: rect[0])]
+                }
+                
+                else {
+                    let origin = CGPoint(
+                        x: focusPoint.x - 0.2,
+                        y: focusPoint.y - 0.2
+                    )
+                    let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
+                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: rect)]
+                }
+                
             }
             else {
-                self.bestShotPoint = focusPoint
+                let origin = CGPoint(
+                    x: focusPoint.x - 0.2,
+                    y: focusPoint.y - 0.2
+                )
+                let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
+                self.trackedObjects = [VNDetectedObjectObservation(boundingBox: rect)]
             }
+            
+            self.shouldReset = false
         }
-        else {
-            self.bestShotPoint = focusPoint
+        
+        // OBJECT TRACKING
+        guard let mainObject = self.trackedObjects?.first else {
+            logger.debug("No main object detected, resetting guidance system")
+            self.shouldReset = true
+            return nil
         }
+        
+        guard let trackResult = self.startTrackingObject(buffer: buffer, initialObservation: mainObject) else {
+            self.shouldReset = true
+            return nil
+        }
+        
+        // reset tracked object coordinate
+        self.trackedObjects?.removeAll()
+        self.trackedObjects?.append(trackResult)
+        
+        return CGPoint(x: trackResult.boundingBox.midX, y: 1 - trackResult.boundingBox.midY)
     }
     
-    func checkAlignment(shotPoint: CGPoint) {
+    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
+        // create new tracker
+        let trackHandler = VNTrackObjectRequest(detectedObjectObservation: initialObservation)
+        trackHandler.trackingLevel = .accurate
+        let sequenceHandler: VNImageRequestHandler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: saliencyHandler.imageOrientationFromDeviceOrientation(), options: [:])
+
+        // Track the object in subsequent frames
+        do {
+            // Pass the frame and request to the handler
+            try sequenceHandler.perform([trackHandler])
+            
+            // Check the results after performing the request
+            if let result = trackHandler.results?.first as? VNDetectedObjectObservation {
+                if result.confidence > 0.5 {  // Adjust confidence threshold as needed
+                    self.shouldReset = false
+                    return result
+                } else {
+                    self.shouldReset = true
+                    logger.debug("Tracking lost with low confidence")
+                    return nil
+                }
+            }
+        } catch {
+            logger.debug("Tracking error: \(error)")
+            self.shouldReset = true
+            return nil
+        }
+        
+        self.shouldReset = true
+        return nil
+    }
+    
+    func checkAlignment(shotPoint: CGPoint) -> Bool {
         let min = 0.5 * 0.8
         let max = 0.5 * 1.2
         
         if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
-            self.isAligned = true
+            return true
         }
         else {
-            self.isAligned = false
+            return false
         }
     }
     
-    func getBoundingBoxes(buffer: CMSampleBuffer, saliencyType: SaliencyType) {
-        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else {
-            return
-        }
-        
-        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .objectness, frameType: .center)
-        self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
+    func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]? {
+        let result = saliencyHandler.detectSalientRegions(in: buffer, saliencyType: .objectness, frameType: .center)
+        return result?.salientObjects?.map({$0.boundingBox})
     }
     
-    func getAttentionFocusPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
-        // Extract the pixel buffer from the observation
-        guard let pixelBuffer = observation?.pixelBuffer else {
-            logger.debug("Can't extract pixel buffer from observation")
-            return nil
-        }
+    func getAttentionFocusPoint(from cvPixelBuffer: CVPixelBuffer) -> CGPoint? {
+        guard let observation = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center) else { return nil }
         
         var attentionCenterPoint: CGPoint? = .zero
-        if let heatmapCGImage = saliencyHandler.convertPixelBufferToCGImage(pixelBuffer),
+        if let heatmapCGImage = saliencyHandler.convertPixelBufferToCGImage(observation.pixelBuffer),
            let upsampledHeatmap = upsampleSaliencyHeatmap(heatmapCGImage, to: CGSize(width: saliencyHandler.originalWidth, height: saliencyHandler.originalHeight)),
            let mostWhitePixel = getMostWhitePixel(in: upsampledHeatmap) {
             attentionCenterPoint = mostWhitePixel
@@ -152,9 +219,5 @@ class CenterGuidance: GuidanceSystem {
         }
         
         return bestPoint
-    }
-    
-    func isInRect(rect: CGRect, point: CGPoint) -> Bool {
-        return rect.contains(point)
     }
 }
