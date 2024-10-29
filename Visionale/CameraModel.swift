@@ -86,13 +86,13 @@ final class CameraModel: Camera {
     
     init() {
         compositions = [
-            Composition(name: "CENTER", description: "", image: "center_default", isRecommended: false, imageRecommended: "center_default_recommend", imageSelected: "center_selected", imageSelectedRecommended: "center_selected_recommend"),
-            Composition(name: "CURVED", description: "", image: "curved_default", isRecommended: false, imageRecommended: "curved_default_recommend", imageSelected: "curved_selected", imageSelectedRecommended: "curved_selected_recommend"),
-            Composition(name: "DIAGONAL", description: "", image: "diagonal_default", isRecommended: false, imageRecommended: "diagonal_default_recommend", imageSelected: "diagonal_selected", imageSelectedRecommended: "diagonal_selected_recommend"),
-            Composition(name: "GOLDEN RATIO", description: "", image: "golden_default", isRecommended: false, imageRecommended: "golden_default_recommend", imageSelected: "golden_selected", imageSelectedRecommended: "golden_selected_recommend"),
-            Composition(name: "RULE OF THIRDS", description: "", image: "rot_default", isRecommended: false, imageRecommended: "rot_default_recommend", imageSelected: "rot_selected", imageSelectedRecommended: "rot_selected_recommend"),
-            Composition(name: "SYMMETRIC", description: "", image: "symmetric_default", isRecommended: false, imageRecommended: "symmetric_default_recommend", imageSelected: "symmetric_selected", imageSelectedRecommended: "symmetric_selected_recommend"),
-            Composition(name: "TRIANGLE", description: "", image: "triangle_default", isRecommended: false, imageRecommended: "triangle_default_recommend", imageSelected: "triangle_selected", imageSelectedRecommended: "triangle_selected_recommend")
+            Composition(name: "CENTER", description: "", image: "center", isRecommended: false),
+            Composition(name: "CURVED", description: "", image: "curved", isRecommended: false),
+            Composition(name: "DIAGONAL", description: "", image: "diagonal", isRecommended: false),
+            Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
+            Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
+            Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
+            Composition(name: "TRIANGLE", description: "", image: "triangle", isRecommended: false)
         ]
         
         // Initialize active composition ID.

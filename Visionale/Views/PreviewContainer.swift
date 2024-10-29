@@ -28,6 +28,9 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // update by the offset amount so that it's better centered between the top and bottom bars.
     private let photoModeOffset = CGFloat(-44)
     private let content: Content
+
+
+    
     
     // State for zoom slider visibility
     @State private var showZoomSlider = false
@@ -39,10 +42,16 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // Timer for hiding the slider after inactivity
     @State private var hideSliderWorkItem: DispatchWorkItem?
     
-    init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content) {
+    @State private var hideZoomButton: Bool = false
+    
+    var onCarouselAction: ((Bool) -> Void)?
+    
+    init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content, onCarouselAction: ((Bool) -> Void)? = nil) {
         self.camera = camera
         self._lastZoomFactor = lastZoomFactor
         self.content = content()
+        self.onCarouselAction = onCarouselAction
+//        self.carousel = carousel
     }
     
     var body: some View {
@@ -61,16 +70,18 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                     )
                     .overlay(alignment: .bottomLeading) {
                         HStack {
-                            cameraZoomButton
-                            if showZoomSlider {
-                                zoomSlider
-                            }
+                                cameraZoomButton
+                                if showZoomSlider {
+                                    zoomSlider
+                                }
+
                         }
                         .padding(12)
                         .background(Material.ultraThin)
                         .clipShape(.capsule)
                         .padding(12)
                         .animation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3), value: showZoomSlider)
+                        .opacity(hideZoomButton ? 0 : 1)
                     }
                     .overlay {
                         switch camera.activeComposition {
@@ -83,6 +94,11 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         default:
                             EmptyView()
                         }
+                    }
+                    .overlay {
+                        Carousel(camera: camera, onAction: { state in
+                            hideZoomButton = state
+                        })
                     }
             }
             .clipped()
@@ -117,6 +133,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
             blurRadius = isSwitching ? 30 : 0
         }
     }
+    
     
     var cameraZoomButton: some View {
         Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))×")

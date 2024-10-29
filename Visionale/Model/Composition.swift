@@ -6,9 +6,6 @@ struct Composition: Identifiable {
     let description: String
     let image: String
     var isRecommended: Bool
-    let imageRecommended: String
-    let imageSelected: String
-    let imageSelectedRecommended: String
 }
 
 

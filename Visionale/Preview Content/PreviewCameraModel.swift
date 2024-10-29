@@ -65,11 +65,11 @@ class PreviewCameraModel: Camera {
     var mlcLayer: MachineLearningClassificationLayer? = MachineLearningClassificationLayer()
     
     var compositions: [Composition] = [
-        Composition(name: "GG", description: "", image: "", isRecommended: true, imageRecommended: "", imageSelected: "", imageSelectedRecommended: "")
+        Composition(name: "GG", description: "", image: "", isRecommended: true)
     ]
     
     var recommendedCompositions: [Composition] = [
-        Composition(name: "GG", description: "", image: "", isRecommended: true, imageRecommended: "", imageSelected: "", imageSelectedRecommended: "")
+        Composition(name: "GG", description: "", image: "", isRecommended: true)
     ]
     
     func findComposition(withName name: String) -> String? {
