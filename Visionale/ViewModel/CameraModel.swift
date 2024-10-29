@@ -18,6 +18,7 @@ import Combine
 ///
 @Observable
 final class CameraModel: Camera {
+    
     // MARK: - Properties
     /// The current status of the camera.
     private(set) var status = CameraStatus.unknown
@@ -62,7 +63,7 @@ final class CameraModel: Camera {
     private(set) var zoomFactor: CGFloat = 2.0
     
     /// Machine Learning Layer
-    var mlcLayer: MachineLearningClassificationLayer?
+    var mlcLayer: ImageClassificationHandler?
     
     /// The boolean value of framing carousel
     var isFramingCarouselEnabled: Bool = false
@@ -74,7 +75,13 @@ final class CameraModel: Camera {
     var maxZoomFactor: CGFloat = 6.0
     
     /// The current aspect ratio
-    var aspectRatio: AspectRatio = CGSize(width: 3, height: 4)
+    var aspectRatio: AspectRatio = .ratio4_3
+
+    var isAspectRatioOptionEnabled: Bool = false
+
+    func toggleAspectRatioOption() {
+        isAspectRatioOptionEnabled.toggle()
+    }
     
     // MARK: - Compositions
     
@@ -85,14 +92,15 @@ final class CameraModel: Camera {
     // MARK: - Initialization
     
     init() {
+        
         compositions = [
-            Composition(name: "CENTER", description: "", image: "center_default", isRecommended: false, imageRecommended: "center_default_recommend", imageSelected: "center_selected", imageSelectedRecommended: "center_selected_recommend"),
-            Composition(name: "CURVED", description: "", image: "curved_default", isRecommended: false, imageRecommended: "curved_default_recommend", imageSelected: "curved_selected", imageSelectedRecommended: "curved_selected_recommend"),
-            Composition(name: "DIAGONAL", description: "", image: "diagonal_default", isRecommended: false, imageRecommended: "diagonal_default_recommend", imageSelected: "diagonal_selected", imageSelectedRecommended: "diagonal_selected_recommend"),
-            Composition(name: "GOLDEN RATIO", description: "", image: "golden_default", isRecommended: false, imageRecommended: "golden_default_recommend", imageSelected: "golden_selected", imageSelectedRecommended: "golden_selected_recommend"),
-            Composition(name: "RULE OF THIRDS", description: "", image: "rot_default", isRecommended: false, imageRecommended: "rot_default_recommend", imageSelected: "rot_selected", imageSelectedRecommended: "rot_selected_recommend"),
-            Composition(name: "SYMMETRIC", description: "", image: "symmetric_default", isRecommended: false, imageRecommended: "symmetric_default_recommend", imageSelected: "symmetric_selected", imageSelectedRecommended: "symmetric_selected_recommend"),
-            Composition(name: "TRIANGLE", description: "", image: "triangle_default", isRecommended: false, imageRecommended: "triangle_default_recommend", imageSelected: "triangle_selected", imageSelectedRecommended: "triangle_selected_recommend")
+            Composition(name: "CENTER", description: "", image: "center", isRecommended: false),
+            Composition(name: "CURVED", description: "", image: "curved", isRecommended: false),
+            Composition(name: "DIAGONAL", description: "", image: "diagonal", isRecommended: false),
+            Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
+            Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
+            Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
+            Composition(name: "TRIANGLE", description: "", image: "triangle", isRecommended: false)
         ]
         
         // Initialize active composition ID.
@@ -237,5 +245,50 @@ extension CameraModel {
     /// Updates the maximum zoom factor from the capture service.
     func updateMaxZoomFactors() async {
         maxZoomFactor = await captureService.getRecommendedMaxZoomFactor()
+    }
+}
+
+extension CameraModel {
+    func toggleAspectRatio() {
+        aspectRatio = AspectRatio.next(after: aspectRatio)
+    }
+    
+}
+/// Supported aspect ratios.
+enum AspectRatio: CaseIterable {
+    case ratio4_3
+    case ratio16_9
+    case ratio1_1
+
+    var size: CGSize {
+        switch self {
+        case .ratio4_3:
+            return CGSize(width: 3, height: 4)
+        case .ratio16_9:
+            return CGSize(width: 9, height: 16)
+        case .ratio1_1:
+            return CGSize(width: 1, height: 1)
+        }
+    }
+
+    var description: String {
+        switch self {
+        case .ratio4_3:
+            return "4:3"
+        case .ratio16_9:
+            return "16:9"
+        case .ratio1_1:
+            return "1:1"
+        }
+    }
+
+    /// Get the next aspect ratio in the sequence.
+    static func next(after current: AspectRatio) -> AspectRatio {
+        let all = AspectRatio.allCases
+        if let index = all.firstIndex(of: current), index + 1 < all.count {
+            return all[index + 1]
+        } else {
+            return all.first!
+        }
     }
 }

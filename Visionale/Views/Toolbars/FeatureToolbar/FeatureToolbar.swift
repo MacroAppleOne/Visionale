@@ -15,14 +15,19 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
     
     @State var camera: CameraModel
     
+//    var listOfAspectRatios: [AspectRatio] = [
+//        AspectRatio(width: 3, height: 4),
+//        AspectRatio(width: 9, height: 16),
+//        AspectRatio(width: 1, height: 1)
+//    ]
     var body: some View {
-        @Bindable var features = camera.photoFeatures
         ZStack{
             HStack(spacing: 30) {
                 if isCompactSize {
                     torchButton
                     livePhotoButton
                     Spacer()
+//                    aspectRatioButton
                     otherIcontoggle
                 } else {
                     Spacer()
@@ -52,12 +57,6 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
     
-//    var imageClassification: some View {
-//        Text(camera.mlcLayer?.predictionLabel ?? "Unknown")
-//            .padding(12)
-//            .background(.base)
-//            .clipShape(.buttonBorder)
-//    }
     
     var otherIcontoggle: some View {
         Button {
@@ -76,10 +75,8 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         Button {
             camera.photoFeatures.isLivePhotoEnabled.toggle()
         } label: {
-            VStack {
-                Image(systemName: "livephoto")
-                    .foregroundColor(camera.photoFeatures.isLivePhotoEnabled ? .accentColor : .primary)
-            }
+            Image(systemName: "livephoto")
+                .foregroundColor(camera.photoFeatures.isLivePhotoEnabled ? .accentColor : .primary)
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
@@ -92,16 +89,54 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                 await camera.toggleTorch()
             }
         } label: {
-            VStack{
-                Image(systemName: camera.isTorchOn ? "bolt.circle.fill" : "bolt.slash.circle")
-                    .symbolRenderingMode(camera.isTorchOn ? .monochrome : .hierarchical)
-                    .fontWeight(.thin)
-                    .font(.title2)
-                    .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
-                    .foregroundColor(camera.isTorchOn ? .accentColor: .primary)
-            }
+            Image(systemName: camera.isTorchOn ? "bolt.circle.fill" : "bolt.slash.circle")
+                .symbolRenderingMode(camera.isTorchOn ? .monochrome : .hierarchical)
+                .fontWeight(.thin)
+                .font(.title2)
+                .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
+                .foregroundColor(camera.isTorchOn ? .accentColor: .primary)
         }
     }
+    
+    // A button to toggle aspect-ratio changer
+//    var aspectRatioButton: some View {
+//        //        Button {
+//        //            Task {
+//        //                // Add your button action here
+//        //            }
+//        //        } label: {
+//        //            Image(systemName: "custom.aspectratio.circle")
+//        //        }
+//        ////        .frame(width: smallButtonSize.width, height: smallButtonSize.height)
+//        //
+//        //
+//        Menu("\(camera.aspectRatio)") {
+//            ForEach(listOfAspectRatios, id: \.self) { item in
+//                Button("\(item)", action: {
+//                    camera.aspectRatio = item
+//                })
+//            }
+//        }
+//    }
+    
+    var aspectRatioButton: some View {
+        Button {
+            camera.toggleAspectRatio()
+        } label: {
+            ZStack {
+                Image("custom.aspectratio.circle")
+                    .symbolRenderingMode(.hierarchical)
+                    .fontWeight(.thin)
+                // Overlay the aspect ratio text
+//                Text(camera.aspectRatio.description)
+//                    .font(.system(size: 8))
+//                    .foregroundColor(.primary)
+//                    .offset(y: 12) // Adjust position as needed
+            }
+        }
+        .frame(width: smallButtonSize.width, height: smallButtonSize.height)
+    }
+
     
     @ViewBuilder
     var compactSpacer: some View {

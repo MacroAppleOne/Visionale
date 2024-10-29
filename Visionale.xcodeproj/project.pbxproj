@@ -30,6 +30,26 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		04507F3A2CCA7EAD00354629 /* Exceptions for "Visionale" folder in "VisionaléTests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CompositionClassifier.mlmodel,
+				FrameRecom3C.mlmodel,
+				"FrameRecom6C 2.mlmodel",
+				FrameRecom6C.mlmodel,
+			);
+			target = 93AB6A432CB6FEC00030095E /* VisionaléTests */;
+		};
+		04507F3B2CCA7EAD00354629 /* Exceptions for "Visionale" folder in "VisionaléUITests" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				CompositionClassifier.mlmodel,
+				FrameRecom3C.mlmodel,
+				"FrameRecom6C 2.mlmodel",
+				FrameRecom6C.mlmodel,
+			);
+			target = 93AB6A4D2CB6FEC00030095E /* VisionaléUITests */;
+		};
 		93D9601F2CC8EFC20066E04B /* Exceptions for "Visionale" folder in "Visionalé" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -44,6 +64,8 @@
 			isa = PBXFileSystemSynchronizedRootGroup;
 			exceptions = (
 				93D9601F2CC8EFC20066E04B /* Exceptions for "Visionale" folder in "Visionalé" target */,
+				04507F3A2CCA7EAD00354629 /* Exceptions for "Visionale" folder in "VisionaléTests" target */,
+				04507F3B2CCA7EAD00354629 /* Exceptions for "Visionale" folder in "VisionaléUITests" target */,
 			);
 			path = Visionale;
 			sourceTree = "<group>";

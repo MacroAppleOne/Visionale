@@ -38,11 +38,17 @@ protocol Camera: AnyObject {
     
     var aspectRatio: AspectRatio { get set }
     
+    func toggleAspectRatio()
+    
     var isTorchOn: Bool { get }
     
     var isFramingCarouselEnabled: Bool { get }
     
     func toggleFramingCarousel()
+    
+    var isAspectRatioOptionEnabled: Bool { get }
+    
+    func toggleAspectRatioOption()
     
     /// The minimum zoom factor.
     var minZoomFactor: CGFloat {get}
@@ -74,7 +80,7 @@ protocol Camera: AnyObject {
     var error: Error? { get }
     
     // Machine learning and composition related properties
-    var mlcLayer: MachineLearningClassificationLayer? { get }
+    var mlcLayer: ImageClassificationHandler? { get }
     
     var compositions: [Composition] { get }
     

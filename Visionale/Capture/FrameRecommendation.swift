@@ -1,44 +1,26 @@
 //
-//  MachineLearning.swift
-//  Visionale
+//  FrameRecommendation.swift
+//  Visionalé
 //
-//  Created by Kyrell Leano Siauw on 10/10/24.
+//  Created by Nico Samuelson on 25/10/24.
 //
 
 import CoreML
 import CoreImage
 import AVFoundation
 
-/// A class responsible for handling machine learning classification tasks.
-@Observable
-final class MachineLearningClassificationLayer: NSObject, ObservableObject {
-    var predictionLabel: String?
-    /// The CoreML model used for image classification.
-    let model: ImageClassificationModel?
-    private var lastProcessingTime: Date = Date(timeIntervalSince1970: 0)
-    override init() {
-        do {
-            self.model = try ImageClassificationModel(configuration:.init())
-        }
-        catch {
-            print("Error loading model: \(error)")
-            self.model = nil
-        }
-        
-        super.init()
-    }
+class FrameRecommendation {
+    let model: FrameRecom3C?
     
-    func processFrame(_ image: MLMultiArray) {
+    init() {
         do {
-            let input = ImageClassificationModelInput(x_1: image)
-            let prediction = try model?.prediction(input: input)
-            
-            // Update the prediction label which will notify the UI via @Published
-            DispatchQueue.main.async {
-                self.predictionLabel = self.convertPredictionIntoLabel(in: prediction?.var_1120)
-            }
+            let config = MLModelConfiguration()
+            config.computeUnits = .cpuAndNeuralEngine
+//            self.model = try CompositionClassifier(configuration: config)
+            self.model = try FrameRecom3C(configuration: config)
         } catch {
-            print("Error making prediction: \(error)")
+            print("Error initializing model: \(error)")
+            self.model = nil
         }
     }
     
@@ -71,8 +53,8 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject {
         let height = CVPixelBufferGetHeight(pixelBuffer)
         let bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer)
         
-        // Create the MLMultiArray with shape (1, 3, 256, 256)
-        guard let multiArray = try? MLMultiArray(shape: [1, 3, 256, 256] as [NSNumber], dataType: .float32) else {
+        // Create the MLMultiArray with shape (1, 224, 224, 3)
+        guard let multiArray = try? MLMultiArray(shape: [1, 224, 224, 3] as [NSNumber], dataType: .float32) else {
             CVPixelBufferUnlockBaseAddress(pixelBuffer, CVPixelBufferLockFlags.readOnly)
             return nil
         }
@@ -102,51 +84,69 @@ final class MachineLearningClassificationLayer: NSObject, ObservableObject {
     func convertPredictionIntoLabel(in multiArray: MLMultiArray?) -> String? {
         guard let multiArray = multiArray else { return nil }
         
+        var maxValue: Double = 0.0
+        var maxIndex: Int = 0
+        for i in 0..<multiArray.count {
+            if let currentValue = multiArray[i] as? Double, currentValue > maxValue {
+                maxValue = currentValue
+                maxIndex = i
+            }
+        }
+        
         // Access the pointer to the underlying data
-        let pointer = multiArray.dataPointer.bindMemory(to: Double.self, capacity: multiArray.count)
+//        let pointer = multiArray.dataPointer.bindMemory(to: Double.self, capacity: multiArray.count)
         
         // Create an array from the pointer
-        let array = Array(UnsafeBufferPointer(start: pointer, count: multiArray.count))
+//        let array = Array(UnsafeBufferPointer(start: pointer, count: multiArray.count))
+        
+//        print(array)
         
         // Create an array of tuples (index, value) and sort by value in descending order
-        let indexedArray = array.enumerated().sorted(by: { $0.element > $1.element })
+//        let indexedArray = array.enumerated().sorted(by: { $0.element > $1.element })
+
+        // Extract the indices of the top 3 elements
+//        let topThreeIndices = indexedArray.prefix(3).map { $0.offset }
         
-        let classes = ["center", "curved", "diagonal", "golden_ratio", "rule_of_thirds", "symmetric", "triangle"]
+//        let classes = ["center", "curved", "golden_ratio", "leading_line", "rule_of_thirds", "symmetric"]
+        let classes = ["center", "curved", "rule of thirds"]
+//        let classes = ["curved", "rule_of_thirds", "leading_line", "center", "golden_ratio", "symmetric"]
         
-        return classes[indexedArray.first!.offset]
+//        print(topThreeIndices)
+        
+        return classes[maxIndex]
+        
+//        return Array(arrayLiteral: classes[topThreeIndices[0]], classes[topThreeIndices[1]], classes[topThreeIndices[2]])
     }
     
-}
-
-// MARK: - ML
-extension MachineLearningClassificationLayer: AVCaptureVideoDataOutputSampleBufferDelegate {
-    func captureOutput(
-        _ output: AVCaptureOutput,
-        didOutput sampleBuffer: CMSampleBuffer,
-        from connection: AVCaptureConnection
-    ) {
-        // Get current time
-        let currentTime = Date()
-
-        // Check if at least 1 second has passed since last processing
-        if currentTime.timeIntervalSince(lastProcessingTime) < 0.5 {
-            // Less than 0.5 second has passed, skip processing
-            return
+    func processFrame(_ buffer: CMSampleBuffer) -> String {
+        var predicted: String = "Unknwon"
+        
+        guard let pixelBuffer = CMSampleBufferGetImageBuffer(buffer) else {
+            logger.debug("Error getting pixel buffer")
+            return predicted
         }
-
-        // Update last processing time
-        lastProcessingTime = currentTime
-
-        // Proceed with processing
-        guard let pixelBuffer = CMSampleBufferGetImageBuffer(sampleBuffer) else { return }
-
+        
         // Resize and process the pixel buffer
-        guard let resizedBuffer = self.resizePixelBuffer(pixelBuffer, targetSize: CGSize(width: 256, height: 256)) else { return }
-
+        guard let resizedBuffer = self.resizePixelBuffer(pixelBuffer, targetSize: CGSize(width: 224, height: 224)) else {
+            print("Error resizing pixel buffer")
+            logger.debug("Error resizing pixel buffer")
+            return predicted
+        }
+        
         // Convert to MLMultiArray
         if let multiArray = self.pixelBufferToMultiArray(resizedBuffer) {
             // Pass the MLMultiArray to your Core ML model
-            self.processFrame(multiArray)
+            do {
+                let input = FrameRecom3CInput(input_12: multiArray)  // Ensure your model's input type matches
+                let prediction = try model?.prediction(input: input)
+                
+                predicted = convertPredictionIntoLabel(in: prediction?.Identity) ?? "Unknown"
+                
+            } catch {
+                logger.debug("Error making prediction: \(error)")
+            }
         }
+        
+        return predicted
     }
 }
