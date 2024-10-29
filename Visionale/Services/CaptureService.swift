@@ -39,7 +39,7 @@ actor CaptureService {
     private let deviceLookup = DeviceLookup()
     private var rotationCoordinator: AVCaptureDevice.RotationCoordinator!
     private var rotationObservers = [AnyObject]()
-    private let mlClassificationLayer = MachineLearningClassificationLayer()
+    private let mlClassificationLayer = ImageClassificationHandler()
     private let videoDataOutput = AVCaptureVideoDataOutput()
     private var isSetUp = false
     private var zoomFactor: CGFloat = 2.0
@@ -408,7 +408,7 @@ actor CaptureService {
     // MARK: - Machine Learning Handling
     
     /// Returns Machine Learning Layer
-    func getMLLayer() -> MachineLearningClassificationLayer {
+    func getMLLayer() -> ImageClassificationHandler {
         return mlClassificationLayer
     }
     

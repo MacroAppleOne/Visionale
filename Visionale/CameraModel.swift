@@ -62,7 +62,7 @@ final class CameraModel: Camera {
     private(set) var zoomFactor: CGFloat = 2.0
     
     /// Machine Learning Layer
-    var mlcLayer: MachineLearningClassificationLayer?
+    var mlcLayer: ImageClassificationHandler?
     
     /// The boolean value of framing carousel
     var isFramingCarouselEnabled: Bool = false

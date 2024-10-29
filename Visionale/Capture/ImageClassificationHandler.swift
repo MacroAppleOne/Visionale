@@ -11,7 +11,7 @@ import AVFoundation
 
 /// A class responsible for handling machine learning classification tasks.
 @Observable
-final class MachineLearningClassificationLayer: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate {
+final class ImageClassificationHandler: NSObject, ObservableObject, AVCaptureVideoDataOutputSampleBufferDelegate {
     var frameRecommendation: FrameRecommendation = FrameRecommendation()
     var guidanceSystem: GuidanceSystem? = CenterGuidance()
     
