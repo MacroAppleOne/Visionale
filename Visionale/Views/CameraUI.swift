@@ -66,7 +66,7 @@ struct CameraUI<CameraModel: Camera>: PlatformView {
     var padding: CGFloat {
         // Dynamically calculate the offset for the bottom toolbar in iOS.
         let bounds = UIScreen.main.bounds
-        let rect = AVMakeRect(aspectRatio: camera.aspectRatio, insideRect: bounds)
+        let rect = AVMakeRect(aspectRatio: camera.aspectRatio.size, insideRect: bounds)
         return (rect.minY.rounded() / 2) - 36
     }
 }

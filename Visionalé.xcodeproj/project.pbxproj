@@ -35,6 +35,7 @@
 			membershipExceptions = (
 				CompositionClassifier.mlmodel,
 				FrameRecom3C.mlmodel,
+				"FrameRecom6C 2.mlmodel",
 				FrameRecom6C.mlmodel,
 			);
 			target = 93AB6A432CB6FEC00030095E /* VisionaléTests */;
@@ -44,6 +45,7 @@
 			membershipExceptions = (
 				CompositionClassifier.mlmodel,
 				FrameRecom3C.mlmodel,
+				"FrameRecom6C 2.mlmodel",
 				FrameRecom6C.mlmodel,
 			);
 			target = 93AB6A4D2CB6FEC00030095E /* VisionaléUITests */;

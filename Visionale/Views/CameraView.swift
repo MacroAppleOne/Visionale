@@ -29,12 +29,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             // Focus and expose at the tapped point.
                             Task { await camera.focusAndExpose(at: location) }
                         }
-//                        .gesture(
-//                            MagnificationGesture()
-//                                .onChanged { value in
-//                                    Task { await camera.zoom(factor: value) }
-//                                }
-//                        )
                     /// The value of `shouldFlashScreen` changes briefly to `true` when capture
                     /// starts, then immediately changes to `false`. Use this to
                     /// flash the screen to provide visual feedback.
@@ -57,8 +51,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 .offset(
                                     x: bestShotPoint.x * gr.size.width,
                                     y: bestShotPoint.y * gr.size.height
-//                                    x: bestShotPoint.x,
-//                                    y: bestShotPoint.y
                                 )
                                 .foregroundStyle(Color.accent).opacity(0.5)
                                 .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
@@ -67,8 +59,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             Task {
                                 withAnimation {
                                     bestShotPoint = camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero
-                                    self.boundingBox = camera.mlcLayer?.guidanceSystem?.trackedObjects?.first?.boundingBox ?? .zero
-//                                    self.boundingBox = camera.mlcLayer?.guidanceSystem?.boundingBoxes?[0] ?? .zero
                                 }
                             }
                         }
