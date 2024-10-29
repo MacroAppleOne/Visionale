@@ -1,86 +1,252 @@
-//
-//  Carousel.swift
-//  AVCam
-//
-//  Created by Kyrell Leano Siauw on 22/10/24.
-//  Copyright © 2024 Apple. All rights reserved.
-//
 
 import SwiftUI
+import Combine
 
 struct Carousel<CameraModel: Camera>: View {
     @State var camera: CameraModel
+    @State private var dragOffset: CGFloat = 0
+    @State private var isRevealed: Bool = false
+    @State private var hideCarousel: DispatchWorkItem?
+    @State private var lastInteraction = Date()
+    @State private var cancellable: AnyCancellable?
+    
+    var onAction: ((Bool) -> Void)?
     
     var body: some View {
-        ZStack {
-            HalfCircleShape()
-                .fill(Color.circle)
-                .opacity(0.7)
-                .frame(
-                    width: UIScreen.main.bounds.width + 10,
-                    height: UIScreen.main.bounds.height / 2 + 35
-                )
-            
-            ScrollView(.horizontal) {
-                HStack(spacing: -7) {
-                    ForEach(camera.compositions) { composition in
-                        Button(action: {
-                            withAnimation(.easeInOut(duration: 0.4)) {
-                                camera.activeID = composition.id
+        VStack {
+            compositionTextView
+            if !isRevealed {
+                // Secondary VStack that appears on swipe down
+                VStack{
+                    carouselImagesHStack
+                        .safeAreaPadding(.all)
+                        .padding(.trailing, 5)
+                    
+                    
+                }
+                .transition(.move(edge: .bottom))
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            dragOffset = value.translation.height
+                            if(abs(value.translation.width) > 5 || abs(value.translation.width) < -5){
+                                withAnimation(.easeIn) {
+                                    isRevealed = true
+                                    onAction?(true)
+                                }
                             }
-                        }) {
-                            VStack {
-                                Image(composition.imageName(isActive: camera.activeID == composition.id))
-                                    .resizable()
-                                    .frame(width: 35, height: 35)
-                            }
-                            .frame(width: 80, height: 150)
-                            .scaleEffect(camera.activeID == composition.id ? 1.24 : 1.0)
-                            .visualEffect {
-                                view, proxy in view
-                                    .offset(y: offset(proxy))
-                                    .offset(y: scale(proxy) * 2)
-                            }
-                            .scrollTransition(.interactive, axis: .horizontal) {
-                                view, phase in view
-                            }
-                            .animation(.easeInOut(duration: 0.4), value: camera.activeID)
+                            dragOffset = 0
                         }
+                        .onEnded { value in
+                            if (value.translation.height < -25) { // Swipe up to hide secondary VStack
+                                withAnimation(.easeIn) {
+                                    isRevealed = true
+                                    onAction?(true)
+                                }
+                            }
+                            dragOffset = 0
+                        }
+                )
+                .onTapGesture {
+                    withAnimation(.easeIn) {
+                        isRevealed = true
+                        onAction?(true)
                     }
                 }
+            } else {
+                compositionCarousel
+                    .transition(.move(edge: .bottom))
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                dragOffset = value.translation.height - 25
+                                lastInteraction = Date()
+                            }
+                            .onEnded { value in
+                                if value.translation.height > 25 { // Swipe down to reveal secondary VStack
+                                    withAnimation(.easeIn) {
+                                        isRevealed = false
+                                        onAction?(false)
+                                    }
+                                }
+                                dragOffset = 0
+                                lastInteraction = Date()
+                            }
+                    )
+                    .onAppear {
+                        // Set the carousel to be revealed when it appears
+                        isRevealed = true
+                        lastInteraction = Date() // Initialize interaction time
+                        
+                        // Start a timer to check for inactivity after a short delay
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                            cancellable = Timer.publish(every: 0.5, on: .main, in: .common)
+                                .autoconnect()
+                                .sink { _ in
+                                    // Check if 2 seconds have passed since last interaction
+                                    if Date().timeIntervalSince(lastInteraction) > 2 {
+                                        withAnimation(.easeOut) {
+                                            isRevealed = false
+                                            onAction?(false)
+                                        }
+                                    }
+                                }
+                        }
+                    }
+                    .onDisappear {
+                        cancellable?.cancel() // Cancel timer on view disappear
+                    }
             }
-            .offset(y: -40)
-            .scrollTargetLayout()
-            .safeAreaPadding((UIScreen.main.bounds.width - 70) / 2)
-            .scrollIndicators(.hidden)
-            .scrollTargetBehavior(.viewAligned)
-            .scrollPosition(id: $camera.activeID)
-            .onChange(of: camera.activeID) { _, newID in
-                camera.updateActiveComposition(id: newID)
+        }
+    }
+    
+    func startHideCarouselTimer() {
+        cancelHideCarouselTimer() // Cancel any existing timer
+        hideCarousel = DispatchWorkItem {
+            withAnimation(.easeOut) {
+                isRevealed = false
+                onAction?(false)
+            }
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: hideCarousel!) // Adjust time as needed
+    }
+    
+    func resetHideCarouselTimer() {
+        startHideCarouselTimer() // Restart the timer
+    }
+    
+    func cancelHideCarouselTimer() {
+        hideCarousel?.cancel()
+        hideCarousel = nil
+    }
+    
+    @ViewBuilder
+    var compositionCarousel: some View {
+        GeometryReader { geometry in
+            ZStack {
+                HalfCircleShape()
+                    .fill(.darkGradient)
+                    .opacity(0.7)
+                    .frame(
+                        width: geometry.size.width + 10,
+                        height: geometry.size.height / 2 + 35
+                    )
                 
-                switch camera.activeComposition {
-                    case "CENTER": camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
-                    case "DIAGONAL": camera.mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
-                    case "GOLDEN RATIO": camera.mlcLayer?.setGuidanceSystem(GoldenRatioGuidance())
-                    case "RULE OF THIRDS": camera.mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
-                    case "SYMMETRIC": camera.mlcLayer?.setGuidanceSystem(SymmetricGuidance())
-                    default: camera.mlcLayer?.setGuidanceSystem(nil)
+                ScrollView(.horizontal) {
+                    HStack(spacing: -7) {
+                        ForEach(camera.compositions) { composition in
+                            compositionButton(for: composition)
+                        }
+                    }
+                    .padding(.horizontal) // Ensure some padding around the content
+                }
+                .offset(y: -135)
+                .scrollTargetLayout()
+                .safeAreaPadding((geometry.size.width - 70) / 2)
+                .scrollIndicators(.hidden)
+                .scrollTargetBehavior(.viewAligned)
+                .scrollPosition(id: $camera.activeID)
+                .onChange(of: camera.activeID) { _, newID in
+                    camera.updateActiveComposition(id: newID)
+                    
+                    switch camera.activeComposition {
+                    case "CENTER":
+                        camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
+                    case "DIAGONAL":
+                        camera.mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
+                    case "GOLDEN RATIO":
+                        camera.mlcLayer?.setGuidanceSystem(GoldenRatioGuidance())
+                    case "RULE OF THIRDS":
+                        camera.mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
+                    case "SYMMETRIC":
+                        camera.mlcLayer?.setGuidanceSystem(SymmetricGuidance())
+                    default:
+                        camera.mlcLayer?.setGuidanceSystem(nil)
+                    }
+                    
+                    lastInteraction = Date()
+                }
+                .onChange(of: (camera.mlcLayer?.predictionLabel) ?? "Unknown") { _, newComposition in
+                    camera.findComposition(withName: newComposition)
+                }
+                
+                // Active composition text view
+                
+            }
+            .offset(y: geometry.size.height - 200)
+            
+        }
+    }
+    
+    // Subview for Carousel Images when isCarouselHidden is true
+    @ViewBuilder
+    var carouselImagesHStack: some View {
+        GeometryReader { geometry in
+            let totalWidth = CGFloat(camera.compositions.count) * 80 // Total width of all compositions
+            let centerOffset = (geometry.size.width - 195) / 2 // Calculate the offset to center the first image
+            
+            HStack(spacing: -25) {
+                ForEach(camera.compositions.indices, id: \.self) { index in
+                    let composition = camera.compositions[index]
+                    
+                    VStack {
+                        Image(composition.imageName(isActive: camera.activeID == composition.id, image: composition.image))
+                            .resizable()
+                            .frame(width: 35, height: 35)
+                            .opacity(1.0 - Double(index) * 0.25)
+                    }
+                    .frame(width: 80, height: 150)
+                    .animation(.easeInOut(duration: 0.3), value: camera.activeID) // Animate only on activeID change
                 }
             }
-            .onChange(of: (camera.mlcLayer?.predictionLabel) ?? "Unknown") { _, newComposition in
-                camera.findComposition(withName: newComposition)
-            }
-            
-            Text(camera.activeComposition)
-                .foregroundColor(.darkGradient)
-                .font(.subheadline)
-                .fontWeight(.semibold)
-                .padding(8)
-                .background(.base)
-                .background(Material.thin)
-                .cornerRadius(4)
-                .offset(y: -100)
+            .frame(width: totalWidth) // Set the total width of the HStack
+            .clipped() // Crop the content to fit within the frame
+            .offset(x: centerOffset, y: geometry.size.height - 100) // Center the HStack by applying the calculated offset
         }
+    }
+    
+    
+    // Subview for each composition's button
+    @ViewBuilder
+    func compositionButton(for composition: Composition) -> some View {
+        Button(action: {
+            withAnimation(.easeInOut(duration: 0.4)) {
+                camera.activeID = composition.id
+            }
+        }) {
+            VStack {
+                Image(composition.imageName(isActive: camera.activeID == composition.id, image: composition.image))
+                    .resizable()
+                    .frame(width: 35, height: 35)
+            }
+            .frame(width: 80, height: 150)
+            .scaleEffect(camera.activeID == composition.id ? 1.24 : 1.0)
+            .visualEffect {
+                view, proxy in
+                view
+                    .offset(y: offset(proxy))
+                    .offset(y: scale(proxy) * 2)
+            }
+            .scrollTransition(.interactive, axis: .horizontal) {
+                view, phase in
+                view
+            }
+            .animation(.easeInOut(duration: 0.4), value: camera.activeID)
+        }
+    }
+    
+    // Subview for active composition text
+    @ViewBuilder
+    var compositionTextView: some View {
+        Text(camera.activeComposition)
+            .foregroundColor(.darkGradient)
+            .font(.subheadline)
+            .fontWeight(.semibold)
+            .padding(8)
+            .background(Color.base)
+            .background(Material.thin)
+            .cornerRadius(4)
+            .offset(y: isRevealed ? 350 : 400)
     }
     
     // Circular Slider View Offset
@@ -99,25 +265,24 @@ struct Carousel<CameraModel: Camera>: View {
         let minX = (proxy.bounds(of: .scrollView)?.minX ?? 0)
         return minX / viewWidth
     }
+    
+    
 }
-
 
 // Custom Half Circle Shape
 struct HalfCircleShape: Shape {
     func path(in rect: CGRect) -> Path {
         var path = Path()
-        path
-            .addArc(
-                center: CGPoint(
-                    x: rect.midX,
-                    y: rect.maxY
-                ),
-                // Center at bottom
-                radius: rect.width * 0.75,
-                startAngle: .degrees(180),
-                endAngle: .degrees(0),
-                clockwise: false
-            )
+        path.addArc(
+            center: CGPoint(
+                x: rect.midX,
+                y: rect.maxY
+            ),
+            radius: rect.width * 0.75,
+            startAngle: .degrees(180),
+            endAngle: .degrees(0),
+            clockwise: false
+        )
         path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
         path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
         return path
@@ -125,19 +290,23 @@ struct HalfCircleShape: Shape {
 }
 
 extension Composition {
-    func imageName(isActive: Bool) -> String {
-        switch (isActive, isRecommended) {
-        case (true, true):
-            return imageSelectedRecommended
-        case (true, false):
-            return imageSelected
-        case (false, true):
-            return imageRecommended
-        case (false, false):
-            return image
+    func imageName(isActive: Bool, image: String) -> String {
+        var imageName = image
+        
+        if isActive && isRecommended {
+            imageName += "_selected_recommend"
+        } else if isActive {
+            imageName += "_selected"
+        } else if isRecommended {
+            imageName += "_default_recommend"
+        } else {
+            imageName += "_default"
         }
+        
+        return imageName
     }
 }
+
 
 #Preview {
     Carousel(camera: CameraModel())
