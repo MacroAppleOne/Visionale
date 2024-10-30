@@ -46,7 +46,7 @@ class SaliencyHandler {
     func detectSalientRegions(in pixelBuffer: CVPixelBuffer, saliencyType: SaliencyType = .attention, frameType: FrameType) -> VNSaliencyImageObservation? {
         // Create the appropriate VNRequest for the saliency type
         let request: VNImageBasedRequest = (saliencyType == .attention) ? VNGenerateAttentionBasedSaliencyImageRequest() : VNGenerateObjectnessBasedSaliencyImageRequest()
-        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: .right, options: [:])
+        let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: imageOrientationFromDeviceOrientation(), options: [:])
         
         do {
             try handler.perform([request])
@@ -66,6 +66,21 @@ class SaliencyHandler {
         } catch {
             logger.debug("Error processing saliency: \(error)")
             return nil
+        }
+    }
+    
+    func imageOrientationFromDeviceOrientation() -> CGImagePropertyOrientation {
+        switch UIDevice.current.orientation {
+        case .portrait:
+            return .right
+        case .portraitUpsideDown:
+            return .left
+        case .landscapeLeft:
+            return .up
+        case .landscapeRight:
+            return .down
+        default:
+            return .right // Default to portrait if unknown
         }
     }
 }

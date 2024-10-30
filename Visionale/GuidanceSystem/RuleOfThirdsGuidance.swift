@@ -10,65 +10,138 @@ import UIKit
 
 @Observable
 class RuleOfThirdsGuidance: GuidanceSystem {
+    var saliencyHandler: SaliencyHandler = .init()
     
-    var saliencyHandler: SaliencyHandler = SaliencyHandler()
     var bestShotPoint: CGPoint? = .zero
+    
     var isAligned: Bool = false
-    var boundingBoxes: [CGRect]? = []
-    let keypoints: [CGPoint] = [
+    var shouldReset: Bool = true
+    
+    var trackedObjects: [VNDetectedObjectObservation]? = []
+    var selectedKeypoints: [Int] = []
+    var keypoints: [CGPoint] = [
         CGPoint(x: 0.33, y: 0.33),
         CGPoint(x: 0.67, y: 0.33),
         CGPoint(x: 0.33, y: 0.67),
         CGPoint(x: 0.67, y: 0.67),
     ]
-    var selectedKeypoint: Int = -1
     
     func guide(buffer: CMSampleBuffer) {
-        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
-        
-        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center)
-        self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
-        self.findBestShotPoint(buffer: cvPixelBuffer, observation: result)
-        self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
+//        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
+//        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center)
+//        
+//        self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
+//        self.findBestShotPoint(buffer: cvPixelBuffer, observation: result)
+//        self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
     }
     
-    func findBestShotPoint(buffer: CVPixelBuffer, observation: VNSaliencyImageObservation?) {
-        let focusPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
-        let distance = keypoints.map({distanceBetween($0, and: focusPoint)})
-        
-        guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return }
-        
-        self.selectedKeypoint = selectedKeyPoint
-        
-//        print("focus point: \(focusPoint)")
-//        print("keypoint: \(self.keypoints[selectedKeyPoint])")
-//        print("best shot point: \(self.bestShotPoint ?? .zero)")
-        
-        let adjustmentNeededX = -(keypoints[selectedKeyPoint].x - focusPoint.x)
-        let adjustmentNeededY = -(keypoints[selectedKeyPoint].y - focusPoint.y)
-        
-        self.bestShotPoint = CGPoint(x: focusPoint.x + adjustmentNeededX, y: focusPoint.y + adjustmentNeededY)
+    func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
+//        self.selectedKeypoint = []
+//        
+//        let focusPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
+//        let distance = keypoints.map({distanceBetween($0, and: focusPoint)})
+//        let rect = self.boundingBoxes?.filter({ isInRect(rect: $0, point: focusPoint) })
+//        
+//        var targetPoint: CGPoint = .zero
+//        var adjustmentNeededX: CGFloat = 0.0
+//        var adjustmentNeededY: CGFloat = 0.0
+//        
+//        if rect?.count ?? 0 > 0 {
+//            let width = rect?[0].width
+//            let height = rect?[0].height
+//            let centerX = rect?[0].midX
+//            let centerY = rect?[0].midY
+//            
+//            print("width: \(width)")
+//            print("height: \(height)")
+//            
+//            // If the object is large, such as crowd, use the bounding box center instead
+//            if height ?? 0 > 0.33 || (height ?? 0 > 0.33 && width ?? 0 > 0.33 && height ?? 0 >= width ?? 0) {
+//                print("height")
+//                let leftDistance = distanceBetween(CGPoint(x: centerX ?? 0, y: 0), and: self.keypoints[0])
+//                let rightDistance = distanceBetween(CGPoint(x: centerX ?? 0, y: 0), and: self.keypoints[1])
+//                
+//                if rightDistance > leftDistance {
+//                    print("left")
+//                    targetPoint = CGPoint(x: 0.33, y: 0.5)
+//                    selectedKeypoint.append(0)
+//                    selectedKeypoint.append(2)
+//                }
+//                else {
+//                    print("right")
+//                    targetPoint = CGPoint(x: 0.67, y: 0.5)
+//                    selectedKeypoint.append(1)
+//                    selectedKeypoint.append(3)
+//                }
+//            }
+//            else if width ?? 0 > 0.33 || (height ?? 0 > 0.33 && width ?? 0 > 0.33 && height ?? 0 < width ?? 0) {
+//                print("width")
+//                let upperVerticalLineDistance = distanceBetween(CGPoint(x: 0, y: centerY ?? 0), and: self.keypoints[0])
+//                let lowerVerticalLineDistance = distanceBetween(CGPoint(x: 0, y: centerY ?? 0), and: self.keypoints[2])
+//                
+//                if upperVerticalLineDistance > lowerVerticalLineDistance {
+//                    targetPoint = CGPoint(x: 0.5, y: 0.67)
+//                    selectedKeypoint.append(2)
+//                    selectedKeypoint.append(3)
+//                }
+//                else {
+//                    targetPoint = CGPoint(x: 0.5, y: 0.33)
+//                    selectedKeypoint.append(0)
+//                    selectedKeypoint.append(1)
+//                }
+//            }
+//            else {
+//                print("small")
+//                guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return }
+//                
+//                targetPoint = keypoints[selectedKeyPoint]
+//                selectedKeypoint.append(selectedKeyPoint)
+//            }
+//        }
+//        else {
+//            print("no rect")
+//            guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return }
+//            
+//            targetPoint = keypoints[selectedKeyPoint]
+//            selectedKeypoint.append(selectedKeyPoint)
+//        }
+//        
+////        print(targetPoint)
+////        print(CGPoint(x: adjustmentNeededX, y: adjustmentNeededY))
+//        adjustmentNeededX = -(targetPoint.x - focusPoint.x)
+//        adjustmentNeededY = -(targetPoint.y - focusPoint.y)
+////        self.bestShotPoint = CGPoint(x: focusPoint.x + adjustmentNeededX, y: focusPoint.y + adjustmentNeededY)
+//        self.bestShotPoint = focusPoint
+        return nil
     }
     
-    func checkAlignment(shotPoint: CGPoint) {
-        let min = 0.5 * 0.8
-        let max = 0.5 * 1.2
+    func checkAlignment(shotPoint: CGPoint) -> Bool {
+//        let min = 0.5 * 0.8
+//        let max = 0.5 * 1.2
+//        
+//        if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
+//            self.isAligned = true
+//        }
+//        else {
+//            self.isAligned = false
+//        }
         
-        if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
-            self.isAligned = true
-        }
-        else {
-            self.isAligned = false
-        }
+        return true
     }
     
-    func getBoundingBoxes(buffer: CMSampleBuffer, saliencyType: SaliencyType) {
-        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else {
-            return
-        }
+    func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]? {
+//        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else {
+//            return
+//        }
+//        
+//        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: saliencyType, frameType: .center)
+//        self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
         
-        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: saliencyType, frameType: .center)
-        self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
+        return nil
+    }
+    
+    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
+        return nil
     }
     
     func getAttentionFocusPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
@@ -149,5 +222,17 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         let dy = otherPoint.y - point.y
         
         return sqrt(dx * dx + dy * dy)
+    }
+    
+    func isInRect(rect: CGRect, point: CGPoint) -> Bool {
+        let newWidth = rect.width * 1.2
+        let newHeight = rect.height * 1.2
+        
+        // Calculate new origin to keep the rectangle centered
+        let newX = rect.origin.x - (newWidth - rect.width) / 2
+        let newY = rect.origin.y - (newHeight - rect.height) / 2
+        
+        let scaledRect = CGRect(x: newX, y: newY, width: newWidth, height: newHeight)
+        return rect.contains(point)
     }
 }

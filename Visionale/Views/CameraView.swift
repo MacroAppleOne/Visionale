@@ -34,6 +34,19 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
                         .overlay(alignment: .topLeading) {
+//                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
+//                            
+//                            let adjustedX = boundingBox.origin.x
+//                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
+//                            let adjustedWidth = boundingBox.width
+//                            let adjustedHeight = boundingBox.height
+//                            
+//                            let rect = CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight)
+//                            
+//                            Path { path in
+//                                path.addRect(rect, transform: transform)
+//                            }
+//                            .stroke(Color.red, lineWidth: 1)
                             Circle()
                                 .offset(
                                     x: bestShotPoint.x * gr.size.width,
