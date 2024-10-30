@@ -28,9 +28,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // update by the offset amount so that it's better centered between the top and bottom bars.
     private let photoModeOffset = CGFloat(-44)
     private let content: Content
-
-
-    
     
     // State for zoom slider visibility
     @State private var showZoomSlider = false
@@ -51,7 +48,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         self._lastZoomFactor = lastZoomFactor
         self.content = content()
         self.onCarouselAction = onCarouselAction
-//        self.carousel = carousel
     }
     
     var body: some View {
@@ -76,7 +72,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                                 }
 
                         }
-                        .padding(12)
+                        .padding(5)
                         .background(Material.ultraThin)
                         .clipShape(.capsule)
                         .padding(12)
@@ -96,9 +92,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         }
                     }
                     .overlay {
-                        Carousel(camera: camera, onAction: { state in
-                            hideZoomButton = state
-                        })
+                        Carousel(camera: camera)
                     }
             }
             .clipped()
@@ -139,7 +133,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))×")
             .font(.caption)
             .fontWeight(.medium)
-            .frame(width: 32, height: 32, alignment: .center)
+            .frame(width: 30, height: 30, alignment: .center)
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -154,6 +148,9 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         resetHideSliderTimer()
                     }
             )
+            .onTapGesture {
+                toggleZoomSlider()
+            }
     }
     
     func adjustZoom(dragOffset: CGFloat) {

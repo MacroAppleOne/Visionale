@@ -314,7 +314,6 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         let newX = rect.origin.x - (newWidth - rect.width) / 2
         let newY = rect.origin.y - (newHeight - rect.height) / 2
         
-        let scaledRect = CGRect(x: newX, y: newY, width: newWidth, height: newHeight)
         return rect.contains(point)
     }
 }

@@ -17,6 +17,8 @@ import SwiftUI
 
 @Observable
 class PreviewCameraModel: Camera {
+    var isZoomSliderEnabled: Bool = false
+    
     var aspectRatio: AspectRatio = .ratio4_3
     
     func toggleAspectRatio() {

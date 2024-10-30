@@ -14,12 +14,6 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
     @State var camera: CameraModel
-    
-//    var listOfAspectRatios: [AspectRatio] = [
-//        AspectRatio(width: 3, height: 4),
-//        AspectRatio(width: 9, height: 16),
-//        AspectRatio(width: 1, height: 1)
-//    ]
     var body: some View {
         ZStack{
             HStack(spacing: 30) {
@@ -27,7 +21,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                     torchButton
                     livePhotoButton
                     Spacer()
-//                    aspectRatioButton
+                    aspectRatioButton
                     otherIcontoggle
                 } else {
                     Spacer()
@@ -47,7 +41,9 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
     
     var carouselToggleButton: some View {
         Button{
-            camera.toggleFramingCarousel()
+            withAnimation(.default){
+                camera.isFramingCarouselEnabled.toggle()
+            }
         } label: {
             Image(systemName: camera.isFramingCarouselEnabled ?  "chevron.down.circle.fill" :  "chevron.up.circle.fill")
                 .font(.title2)
