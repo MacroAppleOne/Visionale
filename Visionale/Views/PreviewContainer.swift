@@ -29,9 +29,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     private let photoModeOffset = CGFloat(-44)
     private let content: Content
     
-    // State for zoom slider visibility
-    @State private var showZoomSlider = false
-    
     // Binding to lastZoomFactor
     @Binding var lastZoomFactor: CGFloat
     @State private var dragOffset: CGFloat = 0.0
@@ -134,7 +131,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         if(!camera.isFramingCarouselEnabled) {
             HStack {
                 cameraZoomButton
-                if showZoomSlider {
+                if camera.isZoomSliderEnabled {
                     zoomSlider
                 }
             }
@@ -142,7 +139,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
             .background(Material.ultraThin)
             .clipShape(.capsule)
             .padding(12)
-            .animation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3), value: showZoomSlider)
+            .animation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3), value: camera.isZoomSliderEnabled)
             .opacity(hideZoomButton ? 0 : 1)
         }
     }
@@ -155,7 +152,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
             .gesture(
                 DragGesture()
                     .onChanged { value in
-                        if !showZoomSlider {
+                        if !camera.isZoomSliderEnabled {
                             toggleZoomSlider()
                         }
                         adjustZoom(dragOffset: value.translation.width)
@@ -195,13 +192,18 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                 resetHideSliderTimer()
             }
         }
+        .onAppear{
+            withAnimation(.easeInOut){
+                camera.isZoomSliderEnabled = true
+            }
+        }
     }
     
     func toggleZoomSlider() {
         withAnimation {
-            showZoomSlider.toggle()
+            camera.isZoomSliderEnabled.toggle()
         }
-        if showZoomSlider {
+        if camera.isZoomSliderEnabled {
             resetHideSliderTimer()
         } else {
             cancelHideSliderTimer()
@@ -212,7 +214,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         cancelHideSliderTimer()
         let workItem = DispatchWorkItem {
             withAnimation {
-                showZoomSlider = false
+                camera.isZoomSliderEnabled = false
             }
         }
         hideSliderWorkItem = workItem
