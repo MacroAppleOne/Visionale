@@ -51,7 +51,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         self._lastZoomFactor = lastZoomFactor
         self.content = content()
         self.onCarouselAction = onCarouselAction
-//        self.carousel = carousel
     }
     
     var body: some View {
@@ -154,6 +153,9 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         resetHideSliderTimer()
                     }
             )
+            .onTapGesture {
+                toggleZoomSlider()
+            }
     }
     
     func adjustZoom(dragOffset: CGFloat) {
