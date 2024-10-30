@@ -28,9 +28,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // update by the offset amount so that it's better centered between the top and bottom bars.
     private let photoModeOffset = CGFloat(-44)
     private let content: Content
-
-
-    
     
     // State for zoom slider visibility
     @State private var showZoomSlider = false
@@ -95,9 +92,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         }
                     }
                     .overlay {
-                        Carousel(camera: camera, onAction: { state in
-                            hideZoomButton = state
-                        })
+                        Carousel(camera: camera)
                     }
             }
             .clipped()

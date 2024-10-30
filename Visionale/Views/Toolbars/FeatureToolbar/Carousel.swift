@@ -4,81 +4,50 @@ import Combine
 
 struct Carousel<CameraModel: Camera>: View {
     @State var camera: CameraModel
-    @State private var dragOffset: CGFloat = 0
-    @State private var isRevealed: Bool = false
     @State private var hideCarousel: DispatchWorkItem?
     @State private var lastInteraction = Date()
     @State private var cancellable: AnyCancellable?
-    
-    var onAction: ((Bool) -> Void)?
-    
+        
     var body: some View {
         VStack {
             compositionTextView
-            if !isRevealed {
-                // Secondary VStack that appears on swipe down
-                VStack{
+            if !camera.isFramingCarouselEnabled {
+                ZStack{
                     carouselImagesHStack
                         .safeAreaPadding(.all)
                         .padding(.trailing, 5)
-                    
-                    
                 }
                 .transition(.move(edge: .bottom))
                 .gesture(
                     DragGesture()
                         .onChanged { value in
-                            dragOffset = value.translation.height
-                            if(abs(value.translation.width) > 5 || abs(value.translation.width) < -5){
+                            if (value.translation.height <= -100) {
                                 withAnimation(.easeIn) {
-                                    isRevealed = true
-                                    onAction?(true)
+                                    camera.isFramingCarouselEnabled = true
                                 }
                             }
-                            dragOffset = 0
-                        }
-                        .onEnded { value in
-                            if (value.translation.height < -25) { // Swipe up to hide secondary VStack
-                                withAnimation(.easeIn) {
-                                    isRevealed = true
-                                    onAction?(true)
-                                }
-                            }
-                            dragOffset = 0
                         }
                 )
-                .onTapGesture {
-                    withAnimation(.easeIn) {
-                        isRevealed = true
-                        onAction?(true)
-                    }
-                }
             } else {
                 compositionCarousel
                     .transition(.move(edge: .bottom))
                     .gesture(
                         DragGesture()
                             .onChanged { value in
-                                dragOffset = value.translation.height - 25
                                 lastInteraction = Date()
-                            }
-                            .onEnded { value in
-                                if value.translation.height > 25 { // Swipe down to reveal secondary VStack
+                                if (value.translation.height <= -100) {
                                     withAnimation(.easeIn) {
-                                        isRevealed = false
-                                        onAction?(false)
+                                        camera.isFramingCarouselEnabled = true
+                                    }
+                                } else if (value.translation.height >= 100) {
+                                    withAnimation(.easeIn) {
+                                        camera.isFramingCarouselEnabled = false
                                     }
                                 }
-                                dragOffset = 0
-                                lastInteraction = Date()
                             }
                     )
                     .onAppear {
-                        // Set the carousel to be revealed when it appears
-                        isRevealed = true
                         lastInteraction = Date() // Initialize interaction time
-                        
-                        // Start a timer to check for inactivity after a short delay
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                             cancellable = Timer.publish(every: 0.5, on: .main, in: .common)
                                 .autoconnect()
@@ -86,38 +55,14 @@ struct Carousel<CameraModel: Camera>: View {
                                     // Check if 2 seconds have passed since last interaction
                                     if Date().timeIntervalSince(lastInteraction) > 2 {
                                         withAnimation(.easeOut) {
-                                            isRevealed = false
-                                            onAction?(false)
+                                            camera.isFramingCarouselEnabled = false
                                         }
                                     }
                                 }
                         }
                     }
-                    .onDisappear {
-                        cancellable?.cancel() // Cancel timer on view disappear
-                    }
             }
         }
-    }
-    
-    func startHideCarouselTimer() {
-        cancelHideCarouselTimer() // Cancel any existing timer
-        hideCarousel = DispatchWorkItem {
-            withAnimation(.easeOut) {
-                isRevealed = false
-                onAction?(false)
-            }
-        }
-        DispatchQueue.main.asyncAfter(deadline: .now() + 3, execute: hideCarousel!) // Adjust time as needed
-    }
-    
-    func resetHideCarouselTimer() {
-        startHideCarouselTimer() // Restart the timer
-    }
-    
-    func cancelHideCarouselTimer() {
-        hideCarousel?.cancel()
-        hideCarousel = nil
     }
     
     @ViewBuilder
@@ -169,9 +114,6 @@ struct Carousel<CameraModel: Camera>: View {
                 .onChange(of: (camera.mlcLayer?.predictionLabel) ?? "Unknown") { _, newComposition in
                     camera.findComposition(withName: newComposition)
                 }
-                
-                // Active composition text view
-                
             }
             .offset(y: geometry.size.height - 200)
             
@@ -246,7 +188,7 @@ struct Carousel<CameraModel: Camera>: View {
             .background(Color.base)
             .background(Material.thin)
             .cornerRadius(4)
-            .offset(y: isRevealed ? 350 : 400)
+            .offset(y: camera.isFramingCarouselEnabled ? 350 : 400)
     }
     
     // Circular Slider View Offset

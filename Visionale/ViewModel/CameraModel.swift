@@ -83,6 +83,8 @@ final class CameraModel: Camera {
         isAspectRatioOptionEnabled.toggle()
     }
     
+    var isZoomSliderEnabled: Bool = false
+    
     // MARK: - Compositions
     
     var compositions: [Composition]
