@@ -18,34 +18,9 @@ struct Carousel<CameraModel: Camera>: View {
                         .padding(.trailing, 5)
                 }
                 .transition(.move(edge: .bottom))
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            if (value.translation.height <= -100) {
-                                withAnimation(.easeIn) {
-                                    camera.isFramingCarouselEnabled = true
-                                }
-                            }
-                        }
-                )
             } else {
                 compositionCarousel
                     .transition(.move(edge: .bottom))
-                    .gesture(
-                        DragGesture()
-                            .onChanged { value in
-                                lastInteraction = Date()
-                                if (value.translation.height <= -100) {
-                                    withAnimation(.easeIn) {
-                                        camera.isFramingCarouselEnabled = true
-                                    }
-                                } else if (value.translation.height >= 100) {
-                                    withAnimation(.easeIn) {
-                                        camera.isFramingCarouselEnabled = false
-                                    }
-                                }
-                            }
-                    )
                     .onAppear {
                         lastInteraction = Date() // Initialize interaction time
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {

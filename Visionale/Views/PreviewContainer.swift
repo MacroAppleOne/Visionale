@@ -56,6 +56,20 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
             GeometryReader{ gr in
                 previewView
                     .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                if (value.translation.height <= -50) {
+                                    withAnimation(.easeInOut) {
+                                        camera.isFramingCarouselEnabled = true
+                                    }
+                                } else if (value.translation.height >= 50) {
+                                    withAnimation(.easeInOut) {
+                                        camera.isFramingCarouselEnabled = false
+                                    }
+                                }
+                            }
+                    )
+                    .gesture(
                         MagnificationGesture()
                             .onChanged { value in
                                 handlePinchGesture(scale: value)
@@ -65,19 +79,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                             }
                     )
                     .overlay(alignment: .bottomLeading) {
-                        HStack {
-                                cameraZoomButton
-                                if showZoomSlider {
-                                    zoomSlider
-                                }
-
-                        }
-                        .padding(5)
-                        .background(Material.ultraThin)
-                        .clipShape(.capsule)
-                        .padding(12)
-                        .animation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3), value: showZoomSlider)
-                        .opacity(hideZoomButton ? 0 : 1)
+                        cameraZoomComponent
                     }
                     .overlay {
                         switch camera.activeComposition {
@@ -86,7 +88,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "RULE OF THIRDS": RuleOfThirdsGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
-                        case "TRIANGLE": TriangleGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         default:
                             EmptyView()
                         }
@@ -128,7 +129,24 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         }
     }
     
-    
+    @ViewBuilder
+    var cameraZoomComponent: some View {
+        if(!camera.isFramingCarouselEnabled) {
+            HStack {
+                cameraZoomButton
+                if showZoomSlider {
+                    zoomSlider
+                }
+            }
+            .padding(5)
+            .background(Material.ultraThin)
+            .clipShape(.capsule)
+            .padding(12)
+            .animation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3), value: showZoomSlider)
+            .opacity(hideZoomButton ? 0 : 1)
+        }
+    }
+    @ViewBuilder
     var cameraZoomButton: some View {
         Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))×")
             .font(.caption)
@@ -151,6 +169,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
             .onTapGesture {
                 toggleZoomSlider()
             }
+        
     }
     
     func adjustZoom(dragOffset: CGFloat) {
