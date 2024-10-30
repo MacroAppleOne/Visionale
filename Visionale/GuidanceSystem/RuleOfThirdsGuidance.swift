@@ -101,13 +101,11 @@ class RuleOfThirdsGuidance: GuidanceSystem {
             let rightDistance = distanceBetween(CGPoint(x: centerX, y: 0), and: self.keypoints[1])
             
             if rightDistance > leftDistance {
-                print("tall left")
                 self.targetPoint = CGPoint(x: 0.33, y: 0.5)
                 self.selectedKeypoints.append(0)
                 self.selectedKeypoints.append(2)
             }
             else {
-                print("tall right")
                 self.targetPoint = CGPoint(x: 0.67, y: 0.5)
                 self.selectedKeypoints.append(1)
                 self.selectedKeypoints.append(3)
@@ -120,13 +118,11 @@ class RuleOfThirdsGuidance: GuidanceSystem {
             let lowerVerticalLineDistance = distanceBetween(CGPoint(x: 0, y: centerY), and: self.keypoints[2])
 
             if upperVerticalLineDistance > lowerVerticalLineDistance {
-                print("wide below")
                 self.targetPoint = CGPoint(x: 0.5, y: 0.67)
                 self.selectedKeypoints.append(2)
                 self.selectedKeypoints.append(3)
             }
             else {
-                print("wide above")
                 self.targetPoint = CGPoint(x: 0.5, y: 0.33)
                 self.selectedKeypoints.append(0)
                 self.selectedKeypoints.append(1)
@@ -135,7 +131,6 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         
         // Small Object
         else {
-            print("small")
             let distance = keypoints.map({distanceBetween($0, and: CGPoint(x: mainObject.boundingBox.midX, y: mainObject.boundingBox.midY))})
             guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return nil }
 
@@ -145,7 +140,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         
         // MARK: OBJECT TRACKING
         guard let trackResult = self.startTrackingObject(buffer: buffer, initialObservation: mainObject) else {
-            logger.debug("Can't track object")
+            logger.debug("Can't get object tracking result")
             resetTrackerAndGuidance()
             return nil
         }
@@ -158,11 +153,9 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         let adjustmentNeededX = -(targetPoint.x - (trackedObjectBoundingBox?.midX ?? 0))
         let adjustmentNeededY = -(targetPoint.y - (trackedObjectBoundingBox?.midY ?? 0))
         
-        print(trackedObjectBoundingBox?.origin.y ?? 0 + adjustmentNeededY)
-        
         return CGPoint(
             x: (trackedObjectBoundingBox?.origin.x ?? 0) + adjustmentNeededX,
-            y: 1 - (trackedObjectBoundingBox?.origin.y ?? 0) - adjustmentNeededY
+            y: 1 - ((trackedObjectBoundingBox?.origin.y ?? 0) + adjustmentNeededY)
         )
     }
     
@@ -270,7 +263,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         guard let dataProvider = image.dataProvider,
               let pixelData = dataProvider.data,
               let data = CFDataGetBytePtr(pixelData) else {
-            print("Failed to get image data.")
+            logger.debug("Failed to get image data.")
             return nil
         }
         

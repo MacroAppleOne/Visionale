@@ -19,7 +19,7 @@ class FrameRecommendation {
 //            self.model = try CompositionClassifier(configuration: config)
             self.model = try FrameRecom3C(configuration: config)
         } catch {
-            print("Error initializing model: \(error)")
+            logger.debug("Error initializing model: \(error)")
             self.model = nil
         }
     }

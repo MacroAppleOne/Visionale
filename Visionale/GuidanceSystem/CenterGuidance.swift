@@ -186,7 +186,7 @@ class CenterGuidance: GuidanceSystem {
         guard let dataProvider = image.dataProvider,
               let pixelData = dataProvider.data,
               let data = CFDataGetBytePtr(pixelData) else {
-            print("Failed to get image data.")
+            logger.debug("Failed to get image data.")
             return nil
         }
         
