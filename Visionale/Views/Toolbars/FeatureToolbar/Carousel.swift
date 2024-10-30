@@ -8,34 +8,37 @@ struct Carousel<CameraModel: Camera>: View {
     @State private var lastInteraction = Date()
     @State private var cancellable: AnyCancellable?
         
+    @ViewBuilder
     var body: some View {
-        VStack {
-            compositionTextView
-            if !camera.isFramingCarouselEnabled {
-                ZStack{
-                    carouselImagesHStack
-                        .safeAreaPadding(.all)
-                        .padding(.trailing, 5)
-                }
-                .transition(.move(edge: .bottom))
-            } else {
-                compositionCarousel
+        if (!camera.isZoomSliderEnabled) {
+            VStack {
+                compositionTextView
+                if !camera.isFramingCarouselEnabled {
+                    ZStack{
+                        carouselImagesHStack
+                            .safeAreaPadding(.all)
+                            .padding(.trailing, 5)
+                    }
                     .transition(.move(edge: .bottom))
-                    .onAppear {
-                        lastInteraction = Date() // Initialize interaction time
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                            cancellable = Timer.publish(every: 0.5, on: .main, in: .common)
-                                .autoconnect()
-                                .sink { _ in
-                                    // Check if 2 seconds have passed since last interaction
-                                    if Date().timeIntervalSince(lastInteraction) > 2 {
-                                        withAnimation(.easeOut) {
-                                            camera.isFramingCarouselEnabled = false
+                } else {
+                    compositionCarousel
+                        .transition(.move(edge: .bottom))
+                        .onAppear {
+                            lastInteraction = Date() // Initialize interaction time
+                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
+                                cancellable = Timer.publish(every: 0.5, on: .main, in: .common)
+                                    .autoconnect()
+                                    .sink { _ in
+                                        // Check if 2 seconds have passed since last interaction
+                                        if Date().timeIntervalSince(lastInteraction) > 2 {
+                                            withAnimation(.easeOut) {
+                                                camera.isFramingCarouselEnabled = false
+                                            }
                                         }
                                     }
-                                }
+                            }
                         }
-                    }
+                }
             }
         }
     }

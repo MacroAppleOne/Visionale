@@ -33,7 +33,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// starts, then immediately changes to `false`. Use this to
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
-                    // INI JANGAN DIHAPUS DULU YA BANG
+                        // INI JANGAN DIHAPUS DULU YA BANG
 //                        .overlay(alignment: .topLeading) {
 //                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
 //                            let adjustedX = boundingBox.origin.x
@@ -47,15 +47,17 @@ struct CameraView<CameraModel: Camera>: PlatformView {
 //                                path.addRect(rect, transform: transform)
 //                            }
 //                            .stroke(Color.red, lineWidth: 1)
-                        }
+//                      }
+                        
                         .overlay(alignment: .topLeading) {
+                            if (bestShotPoint != .zero) {
                                 Circle()
-                                    .offset(
+                                    .foregroundStyle(Color.accent).opacity(0.5)
+                                    .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
+                                    .position(
                                         x: bestShotPoint.x * gr.size.width,
                                         y: bestShotPoint.y * gr.size.height
                                     )
-                                    .foregroundStyle(Color.accent).opacity(0.5)
-                                    .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
                             }
                         }
                         .onChange(of: camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero) {
