@@ -139,7 +139,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
             .background(Material.ultraThin)
             .clipShape(.capsule)
             .padding(12)
-            .animation(.spring(response: 0.5, dampingFraction: 0.7, blendDuration: 0.3), value: camera.isZoomSliderEnabled)
+            .animation(.spring, value: camera.isZoomSliderEnabled)
             .opacity(hideZoomButton ? 0 : 1)
         }
     }

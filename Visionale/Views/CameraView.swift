@@ -33,36 +33,16 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// starts, then immediately changes to `false`. Use this to
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
-                        .overlay(alignment: .topLeading) {
-                            ZStack {
-//                                Circle()
-//                                    .offset(x: 0.62 * gr.size.width, y: 0.45 * gr.size.height)
-//                                    .foregroundStyle(Color.red.opacity(0.5))
-//                                    .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
-                                
+                        .overlay {
+                            if (bestShotPoint != .zero) {
                                 Circle()
-                                    .offset(
+                                    .foregroundStyle(Color.accent).opacity(0.5)
+                                    .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
+                                    .position(
                                         x: bestShotPoint.x * gr.size.width,
                                         y: bestShotPoint.y * gr.size.height
                                     )
-                                    .foregroundStyle(Color.accent).opacity(0.5)
-                                    .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
                             }
-//                            logger.debug(boundingBox)
-//                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
-//                            
-//                            let adjustedX = boundingBox.origin.x
-//                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
-//                            let adjustedWidth = boundingBox.width
-//                            let adjustedHeight = boundingBox.height
-//                            
-//                            let rect = CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight)
-//                            
-//                            Path { path in
-//                                path.addRect(rect, transform: transform)
-//                            }
-//                            .stroke(Color.red, lineWidth: 1)
-                            
                         }
                         .onChange(of: camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero) {
                             Task {
