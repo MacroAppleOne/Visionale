@@ -72,14 +72,26 @@ class RuleOfThirdsGuidance: GuidanceSystem {
                 if trackedObjectCandidate.width > 0.33 || trackedObjectCandidate.height > 0.33 {
                     self.trackedObjects = [VNDetectedObjectObservation(boundingBox: trackedObjectCandidate)]
                 }
+                else {
+                    let origin = CGPoint(
+                        x: focusPoint.x - 0.2,
+                        y: focusPoint.y - 0.2
+                    )
+                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
+                }
+                self.shouldReset = false
             }
-            
-            let origin = CGPoint(
-                x: focusPoint.x - 0.2,
-                y: focusPoint.y - 0.2
-            )
-            self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
-            self.shouldReset = false
+            else if !boundingBoxes.isEmpty {
+                let origin = CGPoint(
+                    x: focusPoint.x - 0.2,
+                    y: focusPoint.y - 0.2
+                )
+                self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
+                self.shouldReset = false
+            }
+            else {
+                resetTrackerAndGuidance()
+            }
         }
         
         

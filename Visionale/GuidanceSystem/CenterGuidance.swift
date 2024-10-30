@@ -29,7 +29,7 @@ class CenterGuidance: GuidanceSystem {
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
-        // SALIENCY
+        // MARK: SALIENCY
         if shouldReset {
             self.trackedObjects?.removeAll()
             let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
@@ -61,20 +61,24 @@ class CenterGuidance: GuidanceSystem {
                     let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
                     self.trackedObjects = [VNDetectedObjectObservation(boundingBox: rect)]
                 }
+                
+                self.shouldReset = false
             }
-            else {
+            else if !boundingBoxes.isEmpty {
                 let origin = CGPoint(
                     x: focusPoint.x - 0.2,
                     y: focusPoint.y - 0.2
                 )
                 let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
                 self.trackedObjects = [VNDetectedObjectObservation(boundingBox: rect)]
+                self.shouldReset = false
             }
-            
-            self.shouldReset = false
+            else {
+                self.shouldReset = true
+            }
         }
         
-        // OBJECT TRACKING
+        // MARK: OBJECT TRACKING
         guard let mainObject = self.trackedObjects?.first else {
             logger.debug("No main object detected, resetting guidance system")
             self.shouldReset = true
