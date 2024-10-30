@@ -27,15 +27,25 @@ class RuleOfThirdsGuidance: GuidanceSystem {
     ]
     
     func guide(buffer: CMSampleBuffer) {
-//        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
-//        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center)
-//        
-//        self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
-//        self.findBestShotPoint(buffer: cvPixelBuffer, observation: result)
-//        self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
+        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
+        
+        self.bestShotPoint = self.findBestShotPoint(buffer: cvPixelBuffer)
+        self.isAligned = self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
+        if shouldReset {
+            self.trackedObjects?.removeAll()
+            
+            let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
+            let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
+            
+//            guard let rect = boundingBoxes.filter({ $0.contains(focusPoint) }) else {
+//                logger.debug("No bounding boxes")
+//                
+//            }
+        }
+        
 //        self.selectedKeypoint = []
 //        
 //        let focusPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
@@ -144,15 +154,14 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         return nil
     }
     
-    func getAttentionFocusPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
-        // Extract the pixel buffer from the observation
-        guard let pixelBuffer = observation?.pixelBuffer else {
-            logger.debug("Can't extract pixel buffer from observation")
+    func getAttentionFocusPoint(from cvPixelBuffer: CVPixelBuffer) -> CGPoint? {
+        guard let observation = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .ruleOfThirds) else {
+            logger.debug("Error doing saliency detection")
             return nil
         }
         
         var focusPoint: CGPoint? = .zero
-        if let heatmapCGImage = saliencyHandler.convertPixelBufferToCGImage(pixelBuffer),
+        if let heatmapCGImage = saliencyHandler.convertPixelBufferToCGImage(observation.pixelBuffer),
            let upsampledHeatmap = upsampleSaliencyHeatmap(heatmapCGImage, to: CGSize(width: saliencyHandler.originalWidth, height: saliencyHandler.originalHeight)),
            let mostWhitePixel = getMostWhitePixel(in: upsampledHeatmap) {
             focusPoint = mostWhitePixel
@@ -192,29 +201,40 @@ class RuleOfThirdsGuidance: GuidanceSystem {
             return nil
         }
         
-        var maxBrightness: UInt8 = 0
-        var maxPoint: CGPoint?
+        // Define the center point of the image
+        let centerX = width / 2
+        let centerY = height / 2
+        
+        // Variables to keep track of the best pixel
+        var maxScore: Double = 0
+        var bestPoint: CGPoint?
 
-        // Iterate through each pixel
+        // Iterate over each pixel
         for y in 0..<height {
             for x in 0..<width {
                 let pixelOffset = y * bytesPerRow + x * bytesPerPixel
                 let red = data[pixelOffset]
                 let green = data[pixelOffset + 1]
                 let blue = data[pixelOffset + 2]
-
-                // Calculate brightness (we assume full white as max brightness)
+                
+                // Calculate brightness as the maximum of RGB components
                 let brightness = max(red, green, blue)
 
-                // Update if this pixel has a higher brightness
-                if brightness > maxBrightness {
-                    maxBrightness = brightness
-                    maxPoint = CGPoint(x: CGFloat(x) / CGFloat(saliencyHandler.originalWidth), y: CGFloat(y) / CGFloat(saliencyHandler.originalHeight))
+                // Calculate distance to center, scaled between 0 and 1 (0 = center, 1 = farthest point)
+                let distanceToCenter = sqrt(pow(Double(x - centerX), 2) + pow(Double(y - centerY), 2)) / sqrt(pow(Double(centerX), 2) + pow(Double(centerY), 2))
+                
+                // Define a score that favors brightness and proximity to the center (lower distance)
+                let score = Double(brightness) * (1.0 - distanceToCenter)
+                
+                // Update if this pixel has a higher score
+                if score > maxScore {
+                    maxScore = score
+                    bestPoint = CGPoint(x: CGFloat(x) / CGFloat(saliencyHandler.originalWidth), y: CGFloat(y) / CGFloat(saliencyHandler.originalHeight))
                 }
             }
         }
         
-        return maxPoint
+        return bestPoint
     }
     
     func distanceBetween(_ point: CGPoint, and otherPoint: CGPoint) -> CGFloat {

@@ -35,11 +35,13 @@ class CenterGuidance: GuidanceSystem {
             let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
             let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
             
-            guard let rect = boundingBoxes?.filter({ $0.contains(focusPoint) }) else {
+            guard let boundingBoxes else {
                 logger.debug("No bounding boxes found, resetting guidance system")
                 self.shouldReset = true
                 return nil
             }
+            
+            let rect = boundingBoxes.filter({ $0.contains(focusPoint) })
             
             // if the focus point is inside a rectangle
             if rect.count > 0 {
