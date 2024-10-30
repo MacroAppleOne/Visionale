@@ -128,10 +128,10 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                     .symbolRenderingMode(.hierarchical)
                     .fontWeight(.thin)
                 // Overlay the aspect ratio text
-//                Text(camera.aspectRatio.description)
-//                    .font(.system(size: 8))
-//                    .foregroundColor(.primary)
-//                    .offset(y: 12) // Adjust position as needed
+                Text(camera.aspectRatio.description)
+                    .font(.caption2)
+                    .foregroundColor(.primary)
+                    .offset(y: 12) // Adjust position as needed
             }
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
