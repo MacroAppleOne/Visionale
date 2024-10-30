@@ -97,12 +97,10 @@ final class CameraModel: Camera {
         
         compositions = [
             Composition(name: "CENTER", description: "", image: "center", isRecommended: false),
-            Composition(name: "CURVED", description: "", image: "curved", isRecommended: false),
-            Composition(name: "DIAGONAL", description: "", image: "diagonal", isRecommended: false),
+            Composition(name: "LEADING LINES", description: "", image: "leading", isRecommended: false),
             Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
             Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
             Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
-            Composition(name: "TRIANGLE", description: "", image: "triangle", isRecommended: false)
         ]
         
         // Initialize active composition ID.
