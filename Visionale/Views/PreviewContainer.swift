@@ -76,7 +76,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                                 }
 
                         }
-                        .padding(12)
+                        .padding(5)
                         .background(Material.ultraThin)
                         .clipShape(.capsule)
                         .padding(12)
@@ -139,7 +139,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))×")
             .font(.caption)
             .fontWeight(.medium)
-            .frame(width: 32, height: 32, alignment: .center)
+            .frame(width: 30, height: 30, alignment: .center)
             .gesture(
                 DragGesture()
                     .onChanged { value in

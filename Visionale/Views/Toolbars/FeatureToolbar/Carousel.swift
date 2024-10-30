@@ -243,7 +243,7 @@ struct Carousel<CameraModel: Camera>: View {
             .font(.subheadline)
             .fontWeight(.semibold)
             .padding(8)
-            .background(Color.base)
+            .background(Color.accent)
             .background(Material.thin)
             .cornerRadius(4)
             .offset(y: isRevealed ? 350 : 400)
