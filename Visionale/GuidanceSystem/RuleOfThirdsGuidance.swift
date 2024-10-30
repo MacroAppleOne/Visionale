@@ -8,9 +8,16 @@
 import Vision
 import UIKit
 
+enum ObjectType {
+    case wide
+    case tall
+    case wideAndTall
+}
+
 @Observable
 class RuleOfThirdsGuidance: GuidanceSystem {
     var saliencyHandler: SaliencyHandler = .init()
+    var tracker: VNTrackObjectRequest? = nil
     
     var bestShotPoint: CGPoint? = .zero
     
@@ -19,6 +26,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
     
     var trackedObjects: [VNDetectedObjectObservation]? = []
     var selectedKeypoints: [Int] = []
+    var targetPoint: CGPoint = .zero
     var keypoints: [CGPoint] = [
         CGPoint(x: 0.33, y: 0.33),
         CGPoint(x: 0.67, y: 0.33),
@@ -27,132 +35,206 @@ class RuleOfThirdsGuidance: GuidanceSystem {
     ]
     
     func guide(buffer: CMSampleBuffer) {
-//        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
-//        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center)
-//        
-//        self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
-//        self.findBestShotPoint(buffer: cvPixelBuffer, observation: result)
-//        self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
+        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
+        
+        self.bestShotPoint = self.findBestShotPoint(buffer: cvPixelBuffer)
+        self.isAligned = self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
+    }
+    
+    func resetTrackerAndGuidance() {
+        self.shouldReset = true
+        self.tracker = nil
+        self.trackedObjects?.removeAll()
+        self.selectedKeypoints.removeAll()
+        self.targetPoint = .zero
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
-//        self.selectedKeypoint = []
-//        
-//        let focusPoint = self.getAttentionFocusPoint(from: observation) ?? .zero
-//        let distance = keypoints.map({distanceBetween($0, and: focusPoint)})
-//        let rect = self.boundingBoxes?.filter({ isInRect(rect: $0, point: focusPoint) })
-//        
-//        var targetPoint: CGPoint = .zero
-//        var adjustmentNeededX: CGFloat = 0.0
-//        var adjustmentNeededY: CGFloat = 0.0
-//        
-//        if rect?.count ?? 0 > 0 {
-//            let width = rect?[0].width
-//            let height = rect?[0].height
-//            let centerX = rect?[0].midX
-//            let centerY = rect?[0].midY
-//            
-//            print("width: \(width)")
-//            print("height: \(height)")
-//            
-//            // If the object is large, such as crowd, use the bounding box center instead
-//            if height ?? 0 > 0.33 || (height ?? 0 > 0.33 && width ?? 0 > 0.33 && height ?? 0 >= width ?? 0) {
-//                print("height")
-//                let leftDistance = distanceBetween(CGPoint(x: centerX ?? 0, y: 0), and: self.keypoints[0])
-//                let rightDistance = distanceBetween(CGPoint(x: centerX ?? 0, y: 0), and: self.keypoints[1])
-//                
-//                if rightDistance > leftDistance {
-//                    print("left")
-//                    targetPoint = CGPoint(x: 0.33, y: 0.5)
-//                    selectedKeypoint.append(0)
-//                    selectedKeypoint.append(2)
-//                }
-//                else {
-//                    print("right")
-//                    targetPoint = CGPoint(x: 0.67, y: 0.5)
-//                    selectedKeypoint.append(1)
-//                    selectedKeypoint.append(3)
-//                }
-//            }
-//            else if width ?? 0 > 0.33 || (height ?? 0 > 0.33 && width ?? 0 > 0.33 && height ?? 0 < width ?? 0) {
-//                print("width")
-//                let upperVerticalLineDistance = distanceBetween(CGPoint(x: 0, y: centerY ?? 0), and: self.keypoints[0])
-//                let lowerVerticalLineDistance = distanceBetween(CGPoint(x: 0, y: centerY ?? 0), and: self.keypoints[2])
-//                
-//                if upperVerticalLineDistance > lowerVerticalLineDistance {
-//                    targetPoint = CGPoint(x: 0.5, y: 0.67)
-//                    selectedKeypoint.append(2)
-//                    selectedKeypoint.append(3)
-//                }
-//                else {
-//                    targetPoint = CGPoint(x: 0.5, y: 0.33)
-//                    selectedKeypoint.append(0)
-//                    selectedKeypoint.append(1)
-//                }
-//            }
-//            else {
-//                print("small")
-//                guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return }
-//                
-//                targetPoint = keypoints[selectedKeyPoint]
-//                selectedKeypoint.append(selectedKeyPoint)
-//            }
-//        }
-//        else {
-//            print("no rect")
-//            guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return }
-//            
-//            targetPoint = keypoints[selectedKeyPoint]
-//            selectedKeypoint.append(selectedKeyPoint)
-//        }
-//        
-////        print(targetPoint)
-////        print(CGPoint(x: adjustmentNeededX, y: adjustmentNeededY))
-//        adjustmentNeededX = -(targetPoint.x - focusPoint.x)
-//        adjustmentNeededY = -(targetPoint.y - focusPoint.y)
-////        self.bestShotPoint = CGPoint(x: focusPoint.x + adjustmentNeededX, y: focusPoint.y + adjustmentNeededY)
-//        self.bestShotPoint = focusPoint
-        return nil
-    }
-    
-    func checkAlignment(shotPoint: CGPoint) -> Bool {
-//        let min = 0.5 * 0.8
-//        let max = 0.5 * 1.2
-//        
-//        if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
-//            self.isAligned = true
-//        }
-//        else {
-//            self.isAligned = false
-//        }
+        // MARK: SALIENCY
+        if shouldReset {
+            resetTrackerAndGuidance()
+            self.trackedObjects?.removeAll()
+            self.selectedKeypoints.removeAll()
+            
+            let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
+            let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
+            
+            guard let boundingBoxes else {
+                logger.debug("No bounding boxes found, resetting guidance system")
+                resetTrackerAndGuidance()
+                return nil
+            }
+
+            let boundingBox = boundingBoxes.filter({ $0.contains(focusPoint) })
+            let trackedObjectCandidate: CGRect = boundingBox.first ?? .zero
+            
+            if trackedObjectCandidate.width > 0 && trackedObjectCandidate.height > 0 {
+                if trackedObjectCandidate.width > 0.33 || trackedObjectCandidate.height > 0.33 {
+                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: trackedObjectCandidate)]
+                }
+            }
+            
+            let origin = CGPoint(
+                x: focusPoint.x - 0.2,
+                y: focusPoint.y - 0.2
+            )
+            self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
+            self.shouldReset = false
+        }
         
-        return true
-    }
-    
-    func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]? {
-//        guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else {
-//            return
-//        }
-//        
-//        let result = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: saliencyType, frameType: .center)
-//        self.boundingBoxes = result?.salientObjects?.map({$0.boundingBox})
         
-        return nil
-    }
-    
-    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
-        return nil
-    }
-    
-    func getAttentionFocusPoint(from observation: VNSaliencyImageObservation?) -> CGPoint? {
-        // Extract the pixel buffer from the observation
-        guard let pixelBuffer = observation?.pixelBuffer else {
-            logger.debug("Can't extract pixel buffer from observation")
+        guard let mainObject = self.trackedObjects?.first else {
+            logger.debug("No main object detected, resetting guidance system")
+            resetTrackerAndGuidance()
             return nil
         }
         
+        // MARK: DETERMINE KEYPOINT
+        let width = mainObject.boundingBox.width
+        let height = mainObject.boundingBox.height
+        let centerX = mainObject.boundingBox.midX
+        let centerY = mainObject.boundingBox.midY
+            
+        // Tall Object
+        if height > 0.33 || (height > 0.33 && width > 0.33 && height >= width) {
+            let leftDistance = distanceBetween(CGPoint(x: centerX, y: 0), and: self.keypoints[0])
+            let rightDistance = distanceBetween(CGPoint(x: centerX, y: 0), and: self.keypoints[1])
+            
+            if rightDistance > leftDistance {
+                print("tall left")
+                self.targetPoint = CGPoint(x: 0.33, y: 0.5)
+                self.selectedKeypoints.append(0)
+                self.selectedKeypoints.append(2)
+            }
+            else {
+                print("tall right")
+                self.targetPoint = CGPoint(x: 0.67, y: 0.5)
+                self.selectedKeypoints.append(1)
+                self.selectedKeypoints.append(3)
+            }
+        }
+        
+        // Wide Object
+        else if width > 0.33 || (height > 0.33 && width > 0.33 && height < width) {
+            let upperVerticalLineDistance = distanceBetween(CGPoint(x: 0, y: centerY), and: self.keypoints[0])
+            let lowerVerticalLineDistance = distanceBetween(CGPoint(x: 0, y: centerY), and: self.keypoints[2])
+
+            if upperVerticalLineDistance > lowerVerticalLineDistance {
+                print("wide below")
+                self.targetPoint = CGPoint(x: 0.5, y: 0.67)
+                self.selectedKeypoints.append(2)
+                self.selectedKeypoints.append(3)
+            }
+            else {
+                print("wide above")
+                self.targetPoint = CGPoint(x: 0.5, y: 0.33)
+                self.selectedKeypoints.append(0)
+                self.selectedKeypoints.append(1)
+            }
+        }
+        
+        // Small Object
+        else {
+            print("small")
+            let distance = keypoints.map({distanceBetween($0, and: CGPoint(x: mainObject.boundingBox.midX, y: mainObject.boundingBox.midY))})
+            guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return nil }
+
+            self.targetPoint = keypoints[selectedKeyPoint]
+            self.selectedKeypoints.append(selectedKeyPoint)
+        }
+        
+        // MARK: OBJECT TRACKING
+        guard let trackResult = self.startTrackingObject(buffer: buffer, initialObservation: mainObject) else {
+            logger.debug("Can't track object")
+            resetTrackerAndGuidance()
+            return nil
+        }
+        
+        self.trackedObjects?.removeAll()
+        self.trackedObjects?.append(trackResult)
+        
+        // reset tracked object coordinate
+        let trackedObjectBoundingBox = self.trackedObjects?.first?.boundingBox
+        let adjustmentNeededX = -(targetPoint.x - (trackedObjectBoundingBox?.midX ?? 0))
+        let adjustmentNeededY = -(targetPoint.y - (trackedObjectBoundingBox?.midY ?? 0))
+        
+        print(trackedObjectBoundingBox?.origin.y ?? 0 + adjustmentNeededY)
+        
+        return CGPoint(
+            x: (trackedObjectBoundingBox?.origin.x ?? 0) + adjustmentNeededX,
+            y: 1 - (trackedObjectBoundingBox?.origin.y ?? 0) - adjustmentNeededY
+        )
+    }
+    
+    func checkAlignment(shotPoint: CGPoint) -> Bool {
+        let min = 0.5 * 0.8
+        let max = 0.5 * 1.2
+        
+        if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
+            return true
+        }
+        else {
+            return false
+        }
+    }
+    
+    func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]? {
+        let result = saliencyHandler.detectSalientRegions(in: buffer, saliencyType: .objectness, frameType: .center)
+        return result?.salientObjects?.map({$0.boundingBox})
+    }
+    
+    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
+        if self.tracker == nil {
+            self.tracker = VNTrackObjectRequest(detectedObjectObservation: initialObservation)
+            self.tracker?.trackingLevel = .accurate
+        }
+        
+        guard let tracker = self.tracker else {
+            logger.debug("No tracker available.")
+            resetTrackerAndGuidance()
+            return nil
+        }
+        
+        // create new tracker
+        let sequenceHandler: VNImageRequestHandler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: saliencyHandler.imageOrientationFromDeviceOrientation(), options: [:])
+
+        // Track the object in subsequent frames
+        do {
+            // Pass the frame and request to the handler
+            try sequenceHandler.perform([tracker])
+            
+            // Check the results after performing the request
+            if let result = tracker.results?.first as? VNDetectedObjectObservation {
+                if result.confidence > 0.33 {  // Adjust confidence threshold as needed
+                    self.shouldReset = false
+                    return result
+                } else {
+                    resetTrackerAndGuidance()
+                    logger.debug("Tracking lost with low confidence")
+                    return nil
+                }
+            }
+        } catch {
+            logger.debug("Tracking error: \(error)")
+            resetTrackerAndGuidance()
+            return nil
+        }
+        
+        logger.debug("Tracking error: No result")
+        resetTrackerAndGuidance()
+        return nil
+    }
+    
+    func getAttentionFocusPoint(from buffer: CVPixelBuffer) -> CGPoint? {
+        guard let observation = saliencyHandler.detectSalientRegions(in: buffer, saliencyType: .attention, frameType: .ruleOfThirds) else {
+            logger.debug("Saliency result yield no result")
+            resetTrackerAndGuidance()
+            return nil
+        }
+        
+        
         var focusPoint: CGPoint? = .zero
-        if let heatmapCGImage = saliencyHandler.convertPixelBufferToCGImage(pixelBuffer),
+        if let heatmapCGImage = saliencyHandler.convertPixelBufferToCGImage(observation.pixelBuffer),
            let upsampledHeatmap = upsampleSaliencyHeatmap(heatmapCGImage, to: CGSize(width: saliencyHandler.originalWidth, height: saliencyHandler.originalHeight)),
            let mostWhitePixel = getMostWhitePixel(in: upsampledHeatmap) {
             focusPoint = mostWhitePixel

@@ -34,6 +34,21 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
                         .overlay(alignment: .topLeading) {
+                            ZStack {
+//                                Circle()
+//                                    .offset(x: 0.62 * gr.size.width, y: 0.45 * gr.size.height)
+//                                    .foregroundStyle(Color.red.opacity(0.5))
+//                                    .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
+                                
+                                Circle()
+                                    .offset(
+                                        x: bestShotPoint.x * gr.size.width,
+                                        y: bestShotPoint.y * gr.size.height
+                                    )
+                                    .foregroundStyle(Color.accent).opacity(0.5)
+                                    .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
+                            }
+//                            logger.debug(boundingBox)
 //                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
 //                            
 //                            let adjustedX = boundingBox.origin.x
@@ -47,18 +62,13 @@ struct CameraView<CameraModel: Camera>: PlatformView {
 //                                path.addRect(rect, transform: transform)
 //                            }
 //                            .stroke(Color.red, lineWidth: 1)
-                            Circle()
-                                .offset(
-                                    x: bestShotPoint.x * gr.size.width,
-                                    y: bestShotPoint.y * gr.size.height
-                                )
-                                .foregroundStyle(Color.accent).opacity(0.5)
-                                .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
+                            
                         }
                         .onChange(of: camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero) {
                             Task {
                                 withAnimation {
                                     bestShotPoint = camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero
+                                    boundingBox = camera.mlcLayer?.guidanceSystem?.trackedObjects?.first?.boundingBox ?? .zero
                                 }
                             }
                         }

@@ -35,11 +35,13 @@ class CenterGuidance: GuidanceSystem {
             let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
             let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
             
-            guard let rect = boundingBoxes?.filter({ $0.contains(focusPoint) }) else {
+            guard let boundingBoxes else {
                 logger.debug("No bounding boxes found, resetting guidance system")
                 self.shouldReset = true
                 return nil
             }
+            
+            let rect = boundingBoxes.filter({ $0.contains(focusPoint) })
             
             // if the focus point is inside a rectangle
             if rect.count > 0 {
@@ -59,7 +61,6 @@ class CenterGuidance: GuidanceSystem {
                     let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
                     self.trackedObjects = [VNDetectedObjectObservation(boundingBox: rect)]
                 }
-                
             }
             else {
                 let origin = CGPoint(
@@ -142,7 +143,11 @@ class CenterGuidance: GuidanceSystem {
     }
     
     func getAttentionFocusPoint(from cvPixelBuffer: CVPixelBuffer) -> CGPoint? {
-        guard let observation = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center) else { return nil }
+        guard let observation = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center) else {
+            logger.debug("Saliency result yield no result")
+            self.shouldReset = true
+            return nil
+        }
         
         var attentionCenterPoint: CGPoint? = .zero
         if let heatmapCGImage = saliencyHandler.convertPixelBufferToCGImage(observation.pixelBuffer),
