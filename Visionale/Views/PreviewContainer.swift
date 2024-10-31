@@ -38,6 +38,8 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     
     @State private var hideZoomButton: Bool = false
     
+    @State var grOrientation: GoldenRatioOrientation = .bottomLeft
+    
     var onCarouselAction: ((Bool) -> Void)?
     
     init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content, onCarouselAction: ((Bool) -> Void)? = nil) {
@@ -79,10 +81,14 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         cameraZoomComponent
                     }
                     .overlay {
+                        let goldenRatio = camera.aspectRatio.size.width / camera.aspectRatio.size.height == 9 / 16 ? 1 : 0.786
+                        
                         switch camera.activeComposition {
                         case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
-                        case "GOLDEN RATIO": GoldenRatioGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "GOLDEN RATIO":
+                            GoldenRatioGrid(camera: camera)
+                                .frame(width: gr.size.width * goldenRatio, height: gr.size.height)
                         case "RULE OF THIRDS": RuleOfThirdsGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         default:
@@ -90,7 +96,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         }
                     }
                     .overlay {
-                        Carousel(camera: camera)
+                        Carousel(camera: camera, grOrientation: $grOrientation)
                     }
             }
             .clipped()

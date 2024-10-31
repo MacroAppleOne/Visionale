@@ -28,6 +28,12 @@ class CenterGuidance: GuidanceSystem {
         self.isAligned = self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
     }
     
+    func reset() {
+        self.trackedObjects = []
+        self.shouldReset = true
+        self.isAligned = false
+    }
+    
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
         // MARK: SALIENCY
         if shouldReset {
@@ -37,7 +43,7 @@ class CenterGuidance: GuidanceSystem {
             
             guard let boundingBoxes else {
                 logger.debug("No bounding boxes found, resetting guidance system")
-                self.shouldReset = true
+                reset()
                 return nil
             }
             
@@ -74,25 +80,23 @@ class CenterGuidance: GuidanceSystem {
                 self.shouldReset = false
             }
             else {
-                self.shouldReset = true
+                reset()
             }
         }
         
         // MARK: OBJECT TRACKING
         guard let mainObject = self.trackedObjects?.first else {
             logger.debug("No main object detected, resetting guidance system")
-            self.shouldReset = true
+            reset()
             return nil
         }
         
         guard let trackResult = self.startTrackingObject(buffer: buffer, initialObservation: mainObject) else {
-            self.shouldReset = true
             return nil
         }
         
         // reset tracked object coordinate
-        self.trackedObjects?.removeAll()
-        self.trackedObjects?.append(trackResult)
+        self.trackedObjects = [trackResult]
         
         return CGPoint(x: trackResult.boundingBox.midX, y: 1 - trackResult.boundingBox.midY)
     }
@@ -114,19 +118,20 @@ class CenterGuidance: GuidanceSystem {
                     self.shouldReset = false
                     return result
                 } else {
-                    self.shouldReset = true
+                    reset()
                     logger.debug("Tracking lost with low confidence")
                     return nil
                 }
             }
+            else {
+                reset()
+                return nil
+            }
         } catch {
             logger.debug("Tracking error: \(error)")
-            self.shouldReset = true
+            reset()
             return nil
         }
-        
-        self.shouldReset = true
-        return nil
     }
     
     func checkAlignment(shotPoint: CGPoint) -> Bool {

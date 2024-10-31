@@ -94,7 +94,6 @@ class RuleOfThirdsGuidance: GuidanceSystem {
             }
         }
         
-        
         guard let mainObject = self.trackedObjects?.first else {
             logger.debug("No main object detected, resetting guidance system")
             resetTrackerAndGuidance()
@@ -166,8 +165,8 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         let adjustmentNeededY = -(targetPoint.y - (trackedObjectBoundingBox?.midY ?? 0))
         
         return CGPoint(
-            x: (trackedObjectBoundingBox?.origin.x ?? 0) + adjustmentNeededX,
-            y: 1 - ((trackedObjectBoundingBox?.origin.y ?? 0) + adjustmentNeededY)
+            x: (trackedObjectBoundingBox?.midX ?? 0) + adjustmentNeededX,
+            y: 1 - ((trackedObjectBoundingBox?.midY ?? 0) + adjustmentNeededY)
         )
     }
     
@@ -309,16 +308,5 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         let dy = otherPoint.y - point.y
         
         return sqrt(dx * dx + dy * dy)
-    }
-    
-    func isInRect(rect: CGRect, point: CGPoint) -> Bool {
-        let newWidth = rect.width * 1.2
-        let newHeight = rect.height * 1.2
-        
-        // Calculate new origin to keep the rectangle centered
-        let newX = rect.origin.x - (newWidth - rect.width) / 2
-        let newY = rect.origin.y - (newHeight - rect.height) / 2
-        
-        return rect.contains(point)
     }
 }

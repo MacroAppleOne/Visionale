@@ -175,6 +175,13 @@ enum FrameType: String {
     case triangle = "Triangle"
 }
 
+enum GoldenRatioOrientation {
+    case bottomLeft
+    case bottomRight
+    case topLeft
+    case topRight
+}
+
 protocol GuidanceSystem {
     var saliencyHandler: SaliencyHandler { get }
     var bestShotPoint: CGPoint? { get set }

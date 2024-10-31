@@ -7,6 +7,7 @@ struct Carousel<CameraModel: Camera>: View {
     @State private var hideCarousel: DispatchWorkItem?
     @State private var lastInteraction = Date()
     @State private var cancellable: AnyCancellable?
+    @Binding var grOrientation: GoldenRatioOrientation
         
     @ViewBuilder
     var body: some View {
@@ -72,25 +73,38 @@ struct Carousel<CameraModel: Camera>: View {
                 .onChange(of: camera.activeID) { _, newID in
                     camera.updateActiveComposition(id: newID)
                     
-                    switch camera.activeComposition {
+                    switch camera.activeComposition.uppercased() {
                     case "CENTER":
                         camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
                     case "DIAGONAL":
                         camera.mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
                     case "GOLDEN RATIO":
-                        camera.mlcLayer?.setGuidanceSystem(GoldenRatioGuidance())
+                        camera.mlcLayer?.setGuidanceSystem(
+                            GoldenRatioGuidance(
+                                aspectRatio: (camera.aspectRatio.size.width / camera.aspectRatio.size.height),
+                                orientation: self.grOrientation
+                            )
+                        )
                     case "RULE OF THIRDS":
                         camera.mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
                     case "SYMMETRIC":
                         camera.mlcLayer?.setGuidanceSystem(SymmetricGuidance())
                     default:
-                        camera.mlcLayer?.setGuidanceSystem(nil)
+                        camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
                     }
                     
                     lastInteraction = Date()
                 }
                 .onChange(of: (camera.mlcLayer?.predictionLabel) ?? "Unknown") { _, newComposition in
                     camera.findComposition(withName: newComposition)
+                }
+                .onChange(of: self.grOrientation) {
+                    camera.mlcLayer?.setGuidanceSystem(
+                        GoldenRatioGuidance(
+                            aspectRatio: (camera.aspectRatio.size.width / camera.aspectRatio.size.height),
+                            orientation: self.grOrientation
+                        )
+                    )
                 }
             }
             .offset(y: geometry.size.height - 200)
@@ -229,5 +243,5 @@ extension Composition {
 
 
 #Preview {
-    Carousel(camera: CameraModel())
+//    Carousel(camera: CameraModel())
 }
