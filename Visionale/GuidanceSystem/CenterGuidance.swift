@@ -136,7 +136,6 @@ class CenterGuidance: GuidanceSystem {
                 trackingRequest.inputObservation = observation
                 trackingRequest.trackingLevel = .accurate
                 newTrackingRequests.append(trackingRequest)
-                logger.debug("Tracking success")
                 self.trackingRequests = newTrackingRequests
                 return observation
             } else {

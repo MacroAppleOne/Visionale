@@ -56,7 +56,6 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         
         // MARK: SALIENCY
         if shouldReset {
-            reset()
             self.trackedObjects?.removeAll()
             self.selectedKeypoints.removeAll()
             
@@ -209,7 +208,6 @@ class RuleOfThirdsGuidance: GuidanceSystem {
                 trackingRequest.inputObservation = observation
                 trackingRequest.trackingLevel = .accurate
                 newTrackingRequests.append(trackingRequest)
-                logger.debug("Tracking success")
                 self.trackingRequests = newTrackingRequests
                 return observation
             } else {
