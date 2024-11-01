@@ -11,13 +11,15 @@ import UIKit
 @Observable
 class CenterGuidance: GuidanceSystem {
     var saliencyHandler: SaliencyHandler = .init()
+    private var trackingRequests: [VNTrackObjectRequest]?
+    private var sequenceRequestHandler = VNSequenceRequestHandler()
     
     var bestShotPoint: CGPoint? = .zero
     
     var isAligned: Bool = false
     var shouldReset: Bool = true
     
-    var trackedObjects: [VNDetectedObjectObservation]? = []
+    var trackedObjects: [CGRect]? = []
     var selectedKeypoints: [Int] = []
     var keypoints: [CGPoint] = []
 
@@ -29,7 +31,7 @@ class CenterGuidance: GuidanceSystem {
     }
     
     func reset() {
-        self.trackedObjects = []
+        self.trackingRequests = nil
         self.shouldReset = true
         self.isAligned = false
     }
@@ -37,6 +39,7 @@ class CenterGuidance: GuidanceSystem {
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
         // MARK: SALIENCY
         if shouldReset {
+            logger.debug("RESET")
             self.trackedObjects?.removeAll()
             let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
             let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
@@ -53,10 +56,11 @@ class CenterGuidance: GuidanceSystem {
             if rect.count > 0 {
                 let width = rect[0].width
                 let height = rect[0].height
+                var mainObject: CGRect = .zero
                 
                 // If the object in focus is large such as crowds, use the bounding box center instead
                 if width > 0.5 || height > 0.5 {
-                    self.trackedObjects =  [VNDetectedObjectObservation(boundingBox: rect[0])]
+                    mainObject = rect[0]
                 }
                 
                 else {
@@ -65,10 +69,12 @@ class CenterGuidance: GuidanceSystem {
                         y: focusPoint.y - 0.2
                     )
                     let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
-                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: rect)]
+                    mainObject = rect
                 }
                 
                 self.shouldReset = false
+                self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: mainObject))]
+                self.sequenceRequestHandler = VNSequenceRequestHandler()
             }
             else if !boundingBoxes.isEmpty {
                 let origin = CGPoint(
@@ -76,59 +82,72 @@ class CenterGuidance: GuidanceSystem {
                     y: focusPoint.y - 0.2
                 )
                 let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
-                self.trackedObjects = [VNDetectedObjectObservation(boundingBox: rect)]
                 self.shouldReset = false
-            }
-            else {
-                reset()
-            }
-        }
-        
-        // MARK: OBJECT TRACKING
-        guard let mainObject = self.trackedObjects?.first else {
-            logger.debug("No main object detected, resetting guidance system")
-            reset()
-            return nil
-        }
-        
-        guard let trackResult = self.startTrackingObject(buffer: buffer, initialObservation: mainObject) else {
-            return nil
-        }
-        
-        // reset tracked object coordinate
-        self.trackedObjects = [trackResult]
-        
-        return CGPoint(x: trackResult.boundingBox.midX, y: 1 - trackResult.boundingBox.midY)
-    }
-    
-    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
-        // create new tracker
-        let trackHandler = VNTrackObjectRequest(detectedObjectObservation: initialObservation)
-        trackHandler.trackingLevel = .accurate
-        let sequenceHandler: VNImageRequestHandler = VNImageRequestHandler(cvPixelBuffer: buffer, orientation: saliencyHandler.imageOrientationFromDeviceOrientation(), options: [:])
-
-        // Track the object in subsequent frames
-        do {
-            // Pass the frame and request to the handler
-            try sequenceHandler.perform([trackHandler])
-            
-            // Check the results after performing the request
-            if let result = trackHandler.results?.first as? VNDetectedObjectObservation {
-                if result.confidence > 0.5 {  // Adjust confidence threshold as needed
-                    self.shouldReset = false
-                    return result
-                } else {
-                    reset()
-                    logger.debug("Tracking lost with low confidence")
-                    return nil
-                }
+                self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: rect))]
+                self.sequenceRequestHandler = VNSequenceRequestHandler()
             }
             else {
                 reset()
                 return nil
             }
-        } catch {
-            logger.debug("Tracking error: \(error)")
+        }
+        
+        // MARK: OBJECT TRACKING
+        guard let trackResult = self.startTrackingObject(buffer: buffer) else {
+            return nil
+        }
+        
+        self.trackedObjects = [trackResult.boundingBox]
+        return CGPoint(x: trackResult.boundingBox.midX, y: 1 - trackResult.boundingBox.midY)
+    }
+    
+    func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation? {
+        guard let requests = self.trackingRequests, !requests.isEmpty else {
+            logger.debug("no tracking request is made")
+            reset()
+            return nil
+        }
+        
+        do {
+            try self.sequenceRequestHandler.perform(requests, on: buffer, orientation: self.saliencyHandler.imageOrientationFromDeviceOrientation())
+        } catch let error as NSError {
+            logger.debug("Failed to perform SequenceRequest: \(error)")
+            reset()
+            return nil
+        }
+        
+        // Setup the next round of tracking.
+        var newTrackingRequests = [VNTrackObjectRequest]()
+        
+        guard let trackingRequest = requests.first else {
+            logger.debug("no tracked object is found")
+            reset()
+            return nil
+        }
+            
+        guard let observation = trackingRequest.results?.first as? VNDetectedObjectObservation else {
+            logger.debug("Can't get observation")
+            reset()
+            return nil
+        }
+            
+        if !trackingRequest.isLastFrame {
+            if observation.confidence > 0.5 {
+                trackingRequest.inputObservation = observation
+                trackingRequest.trackingLevel = .accurate
+                newTrackingRequests.append(trackingRequest)
+                logger.debug("Tracking success")
+                self.trackingRequests = newTrackingRequests
+                return observation
+            } else {
+                trackingRequest.isLastFrame = true
+                logger.debug("Tracking lost")
+                reset()
+                return nil
+            }
+        }
+        else {
+            logger.debug("Last frame")
             reset()
             return nil
         }

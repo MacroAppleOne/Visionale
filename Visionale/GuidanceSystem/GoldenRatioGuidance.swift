@@ -22,7 +22,7 @@ class GoldenRatioGuidance: GuidanceSystem {
     var isAligned: Bool = false
     var shouldReset: Bool = true
     
-    var trackedObjects: [VNDetectedObjectObservation]? = []
+    var trackedObjects: [CGRect]? = []
     var selectedKeypoints: [Int] = []
     var targetPoint: CGPoint? = .zero
     var keypoints: [CGPoint] = []
@@ -52,110 +52,112 @@ class GoldenRatioGuidance: GuidanceSystem {
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
         // MARK: SALIENCY
-        if shouldReset {
-            resetTrackerAndGuidance()
-            self.trackedObjects?.removeAll()
-            self.selectedKeypoints.removeAll()
-            
-            let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
-            let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
-            
-            guard let boundingBoxes else {
-                logger.debug("No bounding boxes found, resetting guidance system")
-                resetTrackerAndGuidance()
-                return nil
-            }
-
-            let boundingBox = boundingBoxes.filter({ $0.contains(focusPoint) })
-            let trackedObjectCandidate: CGRect = boundingBox.first ?? .zero
-            
-            if trackedObjectCandidate.width > 0 && trackedObjectCandidate.height > 0 {
-                if trackedObjectCandidate.width > 0.33 || trackedObjectCandidate.height > 0.33 {
-                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: trackedObjectCandidate)]
-                }
-                else {
-                    let origin = CGPoint(
-                        x: focusPoint.x - 0.2,
-                        y: focusPoint.y - 0.2
-                    )
-                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
-                }
-                self.shouldReset = false
-            }
-            else if !boundingBoxes.isEmpty {
-                let origin = CGPoint(
-                    x: focusPoint.x - 0.2,
-                    y: focusPoint.y - 0.2
-                )
-                self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
-                self.shouldReset = false
-            }
-            else {
-                resetTrackerAndGuidance()
-            }
-        }
+//        if shouldReset {
+//            resetTrackerAndGuidance()
+//            self.trackedObjects?.removeAll()
+//            self.selectedKeypoints.removeAll()
+//            
+//            let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
+//            let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
+//            
+//            guard let boundingBoxes else {
+//                logger.debug("No bounding boxes found, resetting guidance system")
+//                resetTrackerAndGuidance()
+//                return nil
+//            }
+//
+//            let boundingBox = boundingBoxes.filter({ $0.contains(focusPoint) })
+//            let trackedObjectCandidate: CGRect = boundingBox.first ?? .zero
+//            
+//            if trackedObjectCandidate.width > 0 && trackedObjectCandidate.height > 0 {
+//                if trackedObjectCandidate.width > 0.33 || trackedObjectCandidate.height > 0.33 {
+//                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: trackedObjectCandidate)]
+//                }
+//                else {
+//                    let origin = CGPoint(
+//                        x: focusPoint.x - 0.2,
+//                        y: focusPoint.y - 0.2
+//                    )
+//                    self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
+//                }
+//                self.shouldReset = false
+//            }
+//            else if !boundingBoxes.isEmpty {
+//                let origin = CGPoint(
+//                    x: focusPoint.x - 0.2,
+//                    y: focusPoint.y - 0.2
+//                )
+//                self.trackedObjects = [VNDetectedObjectObservation(boundingBox: CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4)))]
+//                self.shouldReset = false
+//            }
+//            else {
+//                resetTrackerAndGuidance()
+//            }
+//        }
+//        
+//        let offsetX = self.aspectRatio == 9 / 16 ? 0 : 0.214
+//        
+//        switch orientation {
+//        case .bottomLeft:
+//            self.targetPoint = CGPoint(
+//                x: (offsetX / 2) + 0.236,
+//                y: 0.282
+//            )
+//        case .bottomRight:
+//            self.targetPoint = CGPoint(
+//                x: 1 - ((offsetX / 2) + 0.236),
+//                y: 0.5
+//            )
+//        case .topLeft:
+//            self.targetPoint = CGPoint(
+//                x: (offsetX / 2) + 0.236,
+//                y: 1 - 0.282
+//            )
+//        case .topRight:
+//            self.targetPoint = CGPoint(
+//                x: 1 - ((offsetX / 2) + 0.236),
+//                y: 1 - 0.282
+//            )
+//        }
+//        
+////        print(self.targetPoint)
+//        
+//        guard let mainObject = self.trackedObjects?.first else {
+//            logger.debug("No main object detected, resetting guidance system")
+//            resetTrackerAndGuidance()
+//            return nil
+//        }
+//        
+//        // MARK: OBJECT TRACKING
+//        guard let trackResult = self.startTrackingObject(buffer: buffer, initialObservation: mainObject) else {
+//            logger.debug("Can't get object tracking result")
+//            resetTrackerAndGuidance()
+//            return nil
+//        }
+//        
+//        self.trackedObjects?.removeAll()
+//        self.trackedObjects?.append(trackResult)
+//        
+//        // reset tracked object coordinate
+//        let trackedObjectBoundingBox = mainObject.boundingBox
+//        
+////        print("target: \(targetPoint)")
+////        print("tracked object: \(CGPoint(x: mainObject.boundingBox.midX, y: mainObject.boundingBox.midY))")
+//        let adjustmentNeededX = -((targetPoint?.x ?? 0) - (trackedObjectBoundingBox.midX))
+//        let adjustmentNeededY = -((targetPoint?.y ?? 0) - (trackedObjectBoundingBox.midY))
+//        
+////        print("adjustment needed: \(CGPoint(x: adjustmentNeededX, y: adjustmentNeededY))")
+//        
+//        let bestShotPoint = CGPoint(
+//            x: (trackedObjectBoundingBox.midX) + adjustmentNeededX,
+//            y: 1 - ((trackedObjectBoundingBox.midY) + adjustmentNeededY)
+//        )
+//        
+////        print("best shot point: \(bestShotPoint)")
+//        
+//        return bestShotPoint
         
-        let offsetX = self.aspectRatio == 9 / 16 ? 0 : 0.214
-        
-        switch orientation {
-        case .bottomLeft:
-            self.targetPoint = CGPoint(
-                x: (offsetX / 2) + 0.236,
-                y: 0.282
-            )
-        case .bottomRight:
-            self.targetPoint = CGPoint(
-                x: 1 - ((offsetX / 2) + 0.236),
-                y: 0.5
-            )
-        case .topLeft:
-            self.targetPoint = CGPoint(
-                x: (offsetX / 2) + 0.236,
-                y: 1 - 0.282
-            )
-        case .topRight:
-            self.targetPoint = CGPoint(
-                x: 1 - ((offsetX / 2) + 0.236),
-                y: 1 - 0.282
-            )
-        }
-        
-//        print(self.targetPoint)
-        
-        guard let mainObject = self.trackedObjects?.first else {
-            logger.debug("No main object detected, resetting guidance system")
-            resetTrackerAndGuidance()
-            return nil
-        }
-        
-        // MARK: OBJECT TRACKING
-        guard let trackResult = self.startTrackingObject(buffer: buffer, initialObservation: mainObject) else {
-            logger.debug("Can't get object tracking result")
-            resetTrackerAndGuidance()
-            return nil
-        }
-        
-        self.trackedObjects?.removeAll()
-        self.trackedObjects?.append(trackResult)
-        
-        // reset tracked object coordinate
-        let trackedObjectBoundingBox = mainObject.boundingBox
-        
-//        print("target: \(targetPoint)")
-//        print("tracked object: \(CGPoint(x: mainObject.boundingBox.midX, y: mainObject.boundingBox.midY))")
-        let adjustmentNeededX = -((targetPoint?.x ?? 0) - (trackedObjectBoundingBox.midX))
-        let adjustmentNeededY = -((targetPoint?.y ?? 0) - (trackedObjectBoundingBox.midY))
-        
-//        print("adjustment needed: \(CGPoint(x: adjustmentNeededX, y: adjustmentNeededY))")
-        
-        let bestShotPoint = CGPoint(
-            x: (trackedObjectBoundingBox.midX) + adjustmentNeededX,
-            y: 1 - ((trackedObjectBoundingBox.midY) + adjustmentNeededY)
-        )
-        
-//        print("best shot point: \(bestShotPoint)")
-        
-        return bestShotPoint
+        return nil
 //        return CGPoint(
 //            x: (trackedObjectBoundingBox?.origin.x ?? 0) + adjustmentNeededX,
 //            y: 1 - ((trackedObjectBoundingBox?.origin.y ?? 0) + adjustmentNeededY)
@@ -179,9 +181,9 @@ class GoldenRatioGuidance: GuidanceSystem {
         return result?.salientObjects?.map({$0.boundingBox})
     }
     
-    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
+    func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation? {
         if self.tracker == nil {
-            self.tracker = VNTrackObjectRequest(detectedObjectObservation: initialObservation)
+//            self.tracker = VNTrackObjectRequest(detectedObjectObservation: initialObservation)
             self.tracker?.trackingLevel = .accurate
         }
         

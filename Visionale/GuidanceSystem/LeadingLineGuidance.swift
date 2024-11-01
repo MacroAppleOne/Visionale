@@ -19,7 +19,7 @@ class LeadingLineGuidance: GuidanceSystem {
     
     var selectedKeypoints: [Int] = []
     var keypoints: [CGPoint] = []
-    var trackedObjects: [VNDetectedObjectObservation]? = []
+    var trackedObjects: [CGRect]? = []
     
     func guide(buffer: CMSampleBuffer) {
         
@@ -37,7 +37,7 @@ class LeadingLineGuidance: GuidanceSystem {
         return nil
     }
     
-    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation? {
+    func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation? {
         return nil
     }
 }

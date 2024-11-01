@@ -67,7 +67,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             Task {
                                 withAnimation {
                                     bestShotPoint = camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero
-                                    boundingBox = camera.mlcLayer?.guidanceSystem?.trackedObjects?.first?.boundingBox ?? .zero
+                                    boundingBox = camera.mlcLayer?.guidanceSystem?.trackedObjects?.first ?? .zero
                                 }
                             }
                         }

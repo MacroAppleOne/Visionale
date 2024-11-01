@@ -188,12 +188,12 @@ protocol GuidanceSystem {
     var isAligned: Bool { get }
     var selectedKeypoints: [Int] { get set }
     var keypoints: [CGPoint] { get }
-    var trackedObjects: [VNDetectedObjectObservation]? { get }
+    var trackedObjects: [CGRect]? { get }
     var shouldReset: Bool { get set }
     
     func guide(buffer: CMSampleBuffer)
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint?
     func checkAlignment(shotPoint: CGPoint) -> Bool
     func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]?
-    func startTrackingObject(buffer: CVPixelBuffer, initialObservation: VNDetectedObjectObservation) -> VNDetectedObjectObservation?
+    func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation?
 }
