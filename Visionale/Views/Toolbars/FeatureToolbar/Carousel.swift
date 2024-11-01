@@ -7,7 +7,6 @@ struct Carousel<CameraModel: Camera>: View {
     @State private var hideCarousel: DispatchWorkItem?
     @State private var lastInteraction = Date()
     @State private var cancellable: AnyCancellable?
-    @Binding var grOrientation: GoldenRatioOrientation
         
     @ViewBuilder
     var body: some View {
@@ -82,7 +81,7 @@ struct Carousel<CameraModel: Camera>: View {
                         camera.mlcLayer?.setGuidanceSystem(
                             GoldenRatioGuidance(
                                 aspectRatio: (camera.aspectRatio.size.width / camera.aspectRatio.size.height),
-                                orientation: self.grOrientation
+                                orientation: camera.grOrientation
                             )
                         )
                     case "RULE OF THIRDS":
@@ -97,14 +96,6 @@ struct Carousel<CameraModel: Camera>: View {
                 }
                 .onChange(of: (camera.mlcLayer?.predictionLabel) ?? "Unknown") { _, newComposition in
                     camera.findComposition(withName: newComposition)
-                }
-                .onChange(of: self.grOrientation) {
-                    camera.mlcLayer?.setGuidanceSystem(
-                        GoldenRatioGuidance(
-                            aspectRatio: (camera.aspectRatio.size.width / camera.aspectRatio.size.height),
-                            orientation: self.grOrientation
-                        )
-                    )
                 }
             }
             .offset(y: geometry.size.height - 200)

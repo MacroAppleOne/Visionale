@@ -88,9 +88,13 @@ protocol Camera: AnyObject {
     
     var activeComposition: String { get }
     
+    var grOrientation: GoldenRatioOrientation { get set }
+    
     /// Finds a composition by its name and updates recommended compositions.
     func findComposition(withName name: String)
     
     /// Updates the active composition based on the selected UUID.
     func updateActiveComposition(id: UUID?)
+    
+    func changeGoldenRatioOrientation(orientation: GoldenRatioOrientation)
 }

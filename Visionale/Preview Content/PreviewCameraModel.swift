@@ -85,12 +85,18 @@ class PreviewCameraModel: Camera {
         Composition(name: "GG", description: "", image: "", isRecommended: true)
     ]
     
+    var grOrientation: GoldenRatioOrientation = .bottomLeft
+    
     func findComposition(withName name: String) -> String? {
         return "mantap"
     }
     
     func updateActiveComposition(id: UUID?) {
         logger.info("blm")
+    }
+    
+    func changeGoldenRatioOrientation(orientation: GoldenRatioOrientation) {
+        
     }
     
     func toggleTorch() async {

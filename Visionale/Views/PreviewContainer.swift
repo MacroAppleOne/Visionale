@@ -38,8 +38,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     
     @State private var hideZoomButton: Bool = false
     
-    @State var grOrientation: GoldenRatioOrientation = .bottomLeft
-    
     var onCarouselAction: ((Bool) -> Void)?
     
     init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content, onCarouselAction: ((Bool) -> Void)? = nil) {
@@ -89,6 +87,16 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         case "GOLDEN RATIO":
                             GoldenRatioGrid(camera: camera)
                                 .frame(width: gr.size.width * goldenRatio, height: gr.size.height)
+                                .rotation3DEffect(
+                                    Angle(degrees: 180),
+                                    axis: camera.grOrientation == .bottomRight ? (x: 0, y: 1.0, z: 0) :
+                                        camera.grOrientation == .topLeft ? (x: 1, y: 0, z: 0) :
+                                        camera.grOrientation == .topRight ? (x: 1, y: 0, z: 0) : (x: 0, y: 0, z: 0)
+                                )
+                                .rotation3DEffect(
+                                    Angle(degrees: 180),
+                                    axis: camera.grOrientation == .topRight ? (x: 0, y: 1.0, z: 0) : (x: 0, y: 0, z: 0)
+                                )
                         case "RULE OF THIRDS": RuleOfThirdsGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         default:
@@ -96,7 +104,19 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         }
                     }
                     .overlay {
-                        Carousel(camera: camera, grOrientation: $grOrientation)
+                        Carousel(camera: camera)
+                    }
+                    .onTapGesture(count: 2) {
+                        switch camera.grOrientation {
+                        case .bottomLeft:
+                            camera.changeGoldenRatioOrientation(orientation: .bottomRight)
+                        case .bottomRight:
+                            camera.changeGoldenRatioOrientation(orientation: .topRight)
+                        case .topRight:
+                            camera.changeGoldenRatioOrientation(orientation: .topLeft)
+                        case .topLeft:
+                            camera.changeGoldenRatioOrientation(orientation: .bottomLeft)
+                        }
                     }
             }
             .clipped()

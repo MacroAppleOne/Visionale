@@ -109,7 +109,7 @@ class GoldenRatioGuidance: GuidanceSystem {
         case .bottomRight:
             self.targetPoint = CGPoint(
                 x: 1 - ((offsetX / 2) + 0.236),
-                y: 0.5
+                y: 0.282
             )
         case .topLeft:
             self.targetPoint = CGPoint(
@@ -196,7 +196,6 @@ class GoldenRatioGuidance: GuidanceSystem {
                 trackingRequest.inputObservation = observation
                 trackingRequest.trackingLevel = .accurate
                 newTrackingRequests.append(trackingRequest)
-                logger.debug("Tracking success")
                 self.trackingRequests = newTrackingRequests
                 return observation
             } else {

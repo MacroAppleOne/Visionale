@@ -39,7 +39,6 @@ class CenterGuidance: GuidanceSystem {
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
         // MARK: SALIENCY
         if shouldReset {
-            logger.debug("RESET")
             self.trackedObjects?.removeAll()
             let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
             let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)

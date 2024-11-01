@@ -19,6 +19,7 @@ import Combine
 @Observable
 final class CameraModel: Camera {
     
+    
     // MARK: - Properties
     /// The current status of the camera.
     private(set) var status = CameraStatus.unknown
@@ -90,6 +91,7 @@ final class CameraModel: Camera {
     var compositions: [Composition]
     var activeID: UUID? = nil
     var activeComposition: String = "CENTER"
+    var grOrientation: GoldenRatioOrientation = .bottomLeft
     
     // MARK: - Initialization
     
@@ -232,6 +234,14 @@ extension CameraModel {
                 UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
             }
         }
+    }
+    
+    func changeGoldenRatioOrientation(orientation: GoldenRatioOrientation) {
+        self.grOrientation = orientation
+        self.mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(
+            aspectRatio: self.aspectRatio.size.width / self.aspectRatio.size.height,
+            orientation: orientation
+        ))
     }
 }
 
