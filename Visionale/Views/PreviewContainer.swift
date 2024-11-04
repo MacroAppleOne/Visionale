@@ -38,6 +38,8 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     
     @State private var hideZoomButton: Bool = false
     
+//    @State private var shouldRese
+    
     var onCarouselAction: ((Bool) -> Void)?
     
     init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content, onCarouselAction: ((Bool) -> Void)? = nil) {
@@ -118,6 +120,17 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                             camera.changeGoldenRatioOrientation(orientation: .bottomLeft)
                         }
                     }
+//                    .task {
+//                        DispatchQueue.main.async {
+//                            Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
+//                                if camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel {
+//                                    let recommendedComposition = camera.compositions.first(where: {$0.name.lowercased() == camera.mlcLayer?.predictionLabel})
+//                                    camera.updateActiveComposition(id: recommendedComposition?.id)
+////                                    camera.mlcLayer?.lastRecomTime = Date(timeIntervalSince1970: 0)
+//                                }
+//                            }
+//                        }
+//                    }
             }
             .clipped()
             // Apply an appropriate aspect ratio based on the selected capture mode.

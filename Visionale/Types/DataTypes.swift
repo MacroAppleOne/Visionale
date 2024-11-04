@@ -184,16 +184,19 @@ enum GoldenRatioOrientation {
 
 protocol GuidanceSystem {
     var saliencyHandler: SaliencyHandler { get }
+    var trackingRequests: [VNTrackObjectRequest]? { get }
+    var sequenceRequestHandler: VNSequenceRequestHandler { get }
     var bestShotPoint: CGPoint? { get set }
     var isAligned: Bool { get }
+    var shouldReset: Bool { get set }
+    var trackedObjects: [CGRect]? { get }
     var selectedKeypoints: [Int] { get set }
     var keypoints: [CGPoint] { get }
-    var trackedObjects: [CGRect]? { get }
-    var shouldReset: Bool { get set }
     
     func guide(buffer: CMSampleBuffer)
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint?
     func checkAlignment(shotPoint: CGPoint) -> Bool
     func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]?
     func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation?
+    func reset()
 }

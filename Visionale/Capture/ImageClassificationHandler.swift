@@ -17,22 +17,26 @@ final class ImageClassificationHandler: NSObject, ObservableObject, AVCaptureVid
     
     var predictionLabel: String? = ""
     private var lastProcessingTime: Date = Date(timeIntervalSince1970: 0)
+    var lastRecomTime: Date = Date(timeIntervalSince1970: 0)
     
     func captureOutput(_ output: AVCaptureOutput, didOutput sampleBuffer: CMSampleBuffer, from connection: AVCaptureConnection) {
         // Get current time
         let currentTime = Date()
 
-        // Check if at least 1 second has passed since last processing
-        if currentTime.timeIntervalSince(lastProcessingTime) < 0.5 {
-            // Less than 0.5 second has passed, skip processing
+        // Check if at least 0.25 second has passed since last processing
+        if currentTime.timeIntervalSince(lastProcessingTime) < 0.25 {
+            // Less than 0.25 second has passed, skip processing
             return
         }
-
+        
         // Update last processing time
         lastProcessingTime = currentTime
         
         // Frame Recommendation
-        self.predictionLabel = self.frameRecommendation.processFrame(sampleBuffer)
+        if self.guidanceSystem?.shouldReset == true {
+            self.predictionLabel = self.frameRecommendation.processFrame(sampleBuffer)
+            self.lastRecomTime = currentTime
+        }
         
         // Guidance System
         self.guidanceSystem?.guide(buffer: sampleBuffer)

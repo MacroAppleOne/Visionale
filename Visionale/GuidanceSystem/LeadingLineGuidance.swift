@@ -9,6 +9,9 @@ import Vision
 //import CoreML
 
 class LeadingLineGuidance: GuidanceSystem {
+    var trackingRequests: [VNTrackObjectRequest]? = nil
+    var sequenceRequestHandler: VNSequenceRequestHandler = VNSequenceRequestHandler()
+    
 //    var sequenceHandler: VNSequenceRequestHandler = .init()
     var saliencyHandler: SaliencyHandler = .init()
     
@@ -39,5 +42,9 @@ class LeadingLineGuidance: GuidanceSystem {
     
     func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation? {
         return nil
+    }
+
+    func reset() {
+        
     }
 }

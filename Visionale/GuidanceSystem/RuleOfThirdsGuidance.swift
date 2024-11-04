@@ -17,8 +17,8 @@ enum ObjectType {
 @Observable
 class RuleOfThirdsGuidance: GuidanceSystem {
     var saliencyHandler: SaliencyHandler = .init()
-    private var trackingRequests: [VNTrackObjectRequest]?
-    private var sequenceRequestHandler = VNSequenceRequestHandler()
+    var trackingRequests: [VNTrackObjectRequest]?
+    var sequenceRequestHandler = VNSequenceRequestHandler()
     
     var bestShotPoint: CGPoint? = .zero
     
@@ -52,7 +52,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
-        var mainObject: CGRect = .zero
+        var mainObject: CGRect = self.trackedObjects?.first ?? .zero
         
         // MARK: SALIENCY
         if shouldReset {
@@ -276,7 +276,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         let context = CIContext()
         return context.createCGImage(scaledImage, from: CGRect(origin: .zero, size: targetSize))
     }
-
+    
     func getMostWhitePixel(in image: CGImage) -> CGPoint? {
         // Get image dimensions and pixel data
         let width = image.width
@@ -292,7 +292,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         
         var maxBrightness: UInt8 = 0
         var maxPoint: CGPoint?
-
+        
         // Iterate through each pixel
         for y in 0..<height {
             for x in 0..<width {
@@ -300,10 +300,10 @@ class RuleOfThirdsGuidance: GuidanceSystem {
                 let red = data[pixelOffset]
                 let green = data[pixelOffset + 1]
                 let blue = data[pixelOffset + 2]
-
+                
                 // Calculate brightness (we assume full white as max brightness)
                 let brightness = max(red, green, blue)
-
+                
                 // Update if this pixel has a higher brightness
                 if brightness > maxBrightness {
                     maxBrightness = brightness

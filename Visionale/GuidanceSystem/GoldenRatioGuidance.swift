@@ -11,8 +11,8 @@ import UIKit
 @Observable
 class GoldenRatioGuidance: GuidanceSystem {
     var saliencyHandler: SaliencyHandler = .init()
-    private var trackingRequests: [VNTrackObjectRequest]?
-    private var sequenceRequestHandler = VNSequenceRequestHandler()
+    var trackingRequests: [VNTrackObjectRequest]?
+    var sequenceRequestHandler = VNSequenceRequestHandler()
     
     var bestShotPoint: CGPoint? = .zero
     

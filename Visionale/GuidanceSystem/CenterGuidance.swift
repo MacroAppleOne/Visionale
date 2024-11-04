@@ -11,8 +11,8 @@ import UIKit
 @Observable
 class CenterGuidance: GuidanceSystem {
     var saliencyHandler: SaliencyHandler = .init()
-    private var trackingRequests: [VNTrackObjectRequest]?
-    private var sequenceRequestHandler = VNSequenceRequestHandler()
+    var trackingRequests: [VNTrackObjectRequest]?
+    var sequenceRequestHandler = VNSequenceRequestHandler()
     
     var bestShotPoint: CGPoint? = .zero
     
@@ -39,7 +39,6 @@ class CenterGuidance: GuidanceSystem {
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
         // MARK: SALIENCY
         if shouldReset {
-            self.trackedObjects?.removeAll()
             let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
             let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
             

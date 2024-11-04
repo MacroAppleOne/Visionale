@@ -6,6 +6,7 @@ struct Carousel<CameraModel: Camera>: View {
     @State var camera: CameraModel
     @State private var hideCarousel: DispatchWorkItem?
     @State private var lastInteraction = Date()
+    @State private var lastRecomTime = Date()
     @State private var cancellable: AnyCancellable?
         
     @ViewBuilder
@@ -72,6 +73,8 @@ struct Carousel<CameraModel: Camera>: View {
                 .onChange(of: camera.activeID) { _, newID in
                     camera.updateActiveComposition(id: newID)
                     
+                    camera.mlcLayer?.lastRecomTime = Date(timeIntervalSince1970: 0)
+                    
                     switch camera.activeComposition.uppercased() {
                     case "CENTER":
                         camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
@@ -99,7 +102,6 @@ struct Carousel<CameraModel: Camera>: View {
                 }
             }
             .offset(y: geometry.size.height - 200)
-            
         }
     }
     
