@@ -1,220 +1,195 @@
-
 import SwiftUI
-import Combine
 
 struct Carousel<CameraModel: Camera>: View {
     @State var camera: CameraModel
-    @State private var hideCarousel: DispatchWorkItem?
-    @State private var lastInteraction = Date()
-    @State private var lastRecomTime = Date()
-    @State private var cancellable: AnyCancellable?
+    @State private var rotationAngle: Angle = .zero
+    @State private var lastRotationAngle: Angle = .zero
+    @State private var currentButton: Int = 0
+    @State private var lastCurrentButton: Int = 0
+    let totalButtonArc: Double = 75.0
+    let buttonSpacing: CGFloat = 42 // Adjust for horizontal spacing
+    @State private var translationOffset: CGFloat = 0
+    @State private var lastTranslationOffset: CGFloat = 0
+    
+    func HalfRotaryDial(geometry: GeometryProxy) -> some View {
+        // Precompute rotation angle limits
+        let anglePerButton = totalButtonArc / Double(camera.compositions.count - 1)
+        let startAngle = -90.0 - totalButtonArc / 2.0
         
-    @ViewBuilder
-    var body: some View {
-        if (!camera.isZoomSliderEnabled) {
-            VStack {
-                compositionTextView
-                if !camera.isFramingCarouselEnabled {
-                    ZStack{
-                        carouselImagesHStack
-                            .safeAreaPadding(.all)
-                            .padding(.trailing, 5)
+        let firstButtonAngle = startAngle + Double(0) * anglePerButton // Index 0
+        let lastButtonAngle = startAngle + Double(camera.compositions.count - 1) * anglePerButton // Last index
+        
+        let rotationAngleFirst = -90.0 - firstButtonAngle // When first button is at top
+        let rotationAngleLast = -90.0 - lastButtonAngle   // When last button is at top
+        
+        let safeZoneDegrees = 10.0
+        let maxRotationAngle = rotationAngleFirst + safeZoneDegrees
+        let minRotationAngle = rotationAngleLast - safeZoneDegrees
+        
+        return ZStack {
+            let radius = min(geometry.size.width - 72, geometry.size.height - 72) / 2
+            // Placing compositions along the arc or in a horizontal line
+            ForEach(Array(camera.compositions.enumerated()), id: \.offset) { index, element in
+                let anglePerButton = totalButtonArc / Double(camera.compositions.count - 1)
+                let startAngle = -90.0 - totalButtonArc / 2.0 // Center the compositions around the top
+                let buttonAngle = startAngle + Double(index) * anglePerButton
+                let angle = Angle.degrees(buttonAngle)
+                
+                CompositionButton(for: element)
+                    .rotationEffect(camera.isFramingCarouselEnabled ? -rotationAngle : .zero) // Keep compositions upright
+                    .offset(
+                        x: camera.isFramingCarouselEnabled ? radius * CGFloat(cos(angle.radians)) : CGFloat(index - camera.compositions.count / 2) * buttonSpacing + translationOffset,
+                        y: camera.isFramingCarouselEnabled ? radius * CGFloat(sin(angle.radians)) : 0
+                    )
+            }
+        }
+        .frame(width: geometry.size.width, height: geometry.size.height)
+        .offset(y: camera.isFramingCarouselEnabled ? 0 : -geometry.size.height / 5)
+        .rotationEffect(camera.isFramingCarouselEnabled ? rotationAngle : .zero) // Rotate dial if carousel is on
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    // Update the rotation angle based on the drag gesture
+                    rotationAngle = .degrees(value.translation.width / 2) + lastRotationAngle
+                    // Limit rotationAngle within allowed range
+                    rotationAngle.degrees = max(min(rotationAngle.degrees, maxRotationAngle), minRotationAngle)
+                    updateCurrentButton()
+                    
+                    if currentButton != lastCurrentButton {
+                        handleButtonChanges(direction: value.translation.width >= 0 ? 1 : -1)
+                        camera.updateActiveComposition(camera.compositions[currentButton].name)
+                        lastCurrentButton = currentButton
                     }
-                    .transition(.move(edge: .bottom))
-                } else {
-                    compositionCarousel
-                        .transition(.move(edge: .bottom))
-                        .onAppear {
-                            lastInteraction = Date() // Initialize interaction time
-                            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                                cancellable = Timer.publish(every: 0.5, on: .main, in: .common)
-                                    .autoconnect()
-                                    .sink { _ in
-                                        // Check if 2 seconds have passed since last interaction
-                                        if Date().timeIntervalSince(lastInteraction) > 2 {
-                                            withAnimation(.easeOut) {
-                                                camera.isFramingCarouselEnabled = false
-                                            }
-                                        }
-                                    }
+                    withAnimation {
+                        camera.isFramingCarouselEnabled = true
+                    }
+                }
+                .onEnded { value in
+                    // Update the rotation angle when the drag ends
+                    rotationAngle = .degrees(value.translation.width) + lastRotationAngle
+                    // Limit rotationAngle within allowed range
+                    rotationAngle.degrees = max(min(rotationAngle.degrees, maxRotationAngle), minRotationAngle)
+                    // Snap to the nearest button
+                    updateCurrentButton()
+                    snapToNearestButton()
+                    // Update the last rotation angle to the snapped position
+                    lastRotationAngle = rotationAngle
+                    lastCurrentButton = currentButton
+                    withAnimation {
+                        camera.isFramingCarouselEnabled = false
+                    }
+                }
+        )
+    }
+    
+    // Function to handle button changes
+    func handleButtonChanges(direction: Int) {
+        let buttonCount = camera.compositions.count
+        var index = lastCurrentButton
+        while index != currentButton {
+            index = (index + direction + buttonCount) % buttonCount
+            lastCurrentButton = index
+        }
+    }
+    
+    // Function to update the current button at the top middle position
+    func updateCurrentButton() {
+        let anglePerButton = totalButtonArc / Double(camera.compositions.count - 1)
+        let startAngle = -90.0 - totalButtonArc / 2.0
+        var minDifference = Double.infinity
+        var selectedButtonIndex = 0
+        
+        for index in 0..<camera.compositions.count {
+            let buttonAngle = startAngle + Double(index) * anglePerButton
+            let effectiveAngle = buttonAngle + rotationAngle.degrees
+            let difference = angularDifference(effectiveAngle, -90.0) // Compare with top position
+            if difference < minDifference {
+                minDifference = difference
+                selectedButtonIndex = index
+            }
+        }
+        currentButton = selectedButtonIndex
+    }
+    
+    // Snap rotation to the nearest button
+    func snapToNearestButton() {
+        let anglePerButton = totalButtonArc / Double(camera.compositions.count - 1)
+        let startAngle = -90.0 - totalButtonArc / 2.0
+        let buttonAngle = startAngle + Double(currentButton) * anglePerButton
+        let targetRotation = -90.0 - buttonAngle
+        
+        withAnimation(.easeOut) {
+            rotationAngle = .degrees(targetRotation)
+        }
+    }
+    
+    // Helper function to calculate the smallest angular difference
+    func angularDifference(_ angle1: Double, _ angle2: Double) -> Double {
+        var difference = (angle1 - angle2).truncatingRemainder(dividingBy: 360)
+        if difference > 180 {
+            difference -= 360
+        } else if difference < -180 {
+            difference += 360
+        }
+        return abs(difference)
+    }
+    
+    var body: some View {
+        GeometryReader { gr in
+            VStack(spacing: 0){
+                Spacer()
+                CompositionTextView
+                    .position(x: gr.size.width / 2, y:gr.size.height / (camera.isFramingCarouselEnabled ?  1.5 : 1.2))
+                HalfRotaryDial(geometry: gr)
+                    .background(CarouselBackground)
+                    .position(x: gr.size.width / 2, y:gr.size.height / 2.6)
+                    .scaleEffect(1.1)
+                    .frame(maxHeight: gr.size.height / 4)
+                    .onTapGesture {
+                        // Set isFramingCarouselEnabled to true
+                        withAnimation(.easeInOut) {
+                            camera.isFramingCarouselEnabled = true
+                        }
+                        // Revert back to false after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation(.easeInOut) {
+                                camera.isFramingCarouselEnabled = false
                             }
                         }
-                }
-            }
-        }
-    }
-    
-    @ViewBuilder
-    var compositionCarousel: some View {
-        GeometryReader { geometry in
-            ZStack {
-                HalfCircleShape()
-                    .fill(.darkGradient)
-                    .opacity(0.7)
-                    .frame(
-                        width: geometry.size.width + 10,
-                        height: geometry.size.height / 2 + 35
-                    )
-                
-                ScrollView(.horizontal) {
-                    HStack(spacing: -7) {
-                        ForEach(camera.compositions) { composition in
-                            compositionButton(for: composition)
-                        }
                     }
-                    .padding(.horizontal) // Ensure some padding around the content
-                }
-                .offset(y: -135)
-                .scrollTargetLayout()
-                .safeAreaPadding((geometry.size.width - 70) / 2)
-                .scrollIndicators(.hidden)
-                .scrollTargetBehavior(.viewAligned)
-                .scrollPosition(id: $camera.activeID)
-                .onChange(of: camera.activeID) { _, newID in
-                    camera.updateActiveComposition(id: newID)
-                    
-                    camera.mlcLayer?.lastRecomTime = Date(timeIntervalSince1970: 0)
-                    
-                    switch camera.activeComposition.uppercased() {
-                    case "CENTER":
-                        camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
-                    case "DIAGONAL":
-                        camera.mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
-                    case "GOLDEN RATIO":
-                        camera.mlcLayer?.setGuidanceSystem(
-                            GoldenRatioGuidance(
-                                aspectRatio: (camera.aspectRatio.size.width / camera.aspectRatio.size.height),
-                                orientation: camera.grOrientation
-                            )
-                        )
-                    case "RULE OF THIRDS":
-                        camera.mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
-                    case "SYMMETRIC":
-                        camera.mlcLayer?.setGuidanceSystem(SymmetricGuidance())
-                    default:
-                        camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
-                    }
-                    
-                    lastInteraction = Date()
-                }
-                .onChange(of: (camera.mlcLayer?.predictionLabel) ?? "Unknown") { _, newComposition in
-                    camera.findComposition(withName: newComposition)
-                }
             }
-            .offset(y: geometry.size.height - 200)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
     }
     
-    // Subview for Carousel Images when isCarouselHidden is true
     @ViewBuilder
-    var carouselImagesHStack: some View {
-        GeometryReader { geometry in
-            let totalWidth = CGFloat(camera.compositions.count) * 80 // Total width of all compositions
-            let centerOffset = (geometry.size.width - 195) / 2 // Calculate the offset to center the first image
-            
-            HStack(spacing: -25) {
-                ForEach(camera.compositions.indices, id: \.self) { index in
-                    let composition = camera.compositions[index]
-                    
-                    VStack {
-                        Image(composition.imageName(isActive: camera.activeID == composition.id, image: composition.image))
-                            .resizable()
-                            .frame(width: 35, height: 35)
-                            .opacity(1.0 - Double(index) * 0.25)
-                    }
-                    .frame(width: 80, height: 150)
-                    .animation(.easeInOut(duration: 0.3), value: camera.activeID) // Animate only on activeID change
-                }
-            }
-            .frame(width: totalWidth) // Set the total width of the HStack
-            .clipped() // Crop the content to fit within the frame
-            .offset(x: centerOffset, y: geometry.size.height - 100) // Center the HStack by applying the calculated offset
+    var CarouselBackground: some View {
+        if (camera.isFramingCarouselEnabled){
+            Circle()
+                .fill(.regularMaterial)
         }
     }
     
-    
-    // Subview for each composition's button
-    @ViewBuilder
-    func compositionButton(for composition: Composition) -> some View {
-        Button(action: {
-            withAnimation(.easeInOut(duration: 0.4)) {
-                camera.activeID = composition.id
-            }
-        }) {
-            VStack {
-                Image(composition.imageName(isActive: camera.activeID == composition.id, image: composition.image))
-                    .resizable()
-                    .frame(width: 35, height: 35)
-            }
-            .frame(width: 80, height: 150)
-            .scaleEffect(camera.activeID == composition.id ? 1.24 : 1.0)
-            .visualEffect {
-                view, proxy in
-                view
-                    .offset(y: offset(proxy))
-                    .offset(y: scale(proxy) * 2)
-            }
-            .scrollTransition(.interactive, axis: .horizontal) {
-                view, phase in
-                view
-            }
-            .animation(.easeInOut(duration: 0.4), value: camera.activeID)
-        }
+    // Subview for each composition's button (unchanged)
+    func CompositionButton(for composition: Composition) -> some View {
+        Image(composition.imageName(isActive: camera.activeComposition == composition.name, image: composition.image))
+            .resizable()
+            .frame(width: 36, height: 36)
+            .animation(.easeInOut(duration: 0.4), value: camera.activeComposition)
     }
     
-    // Subview for active composition text
-    @ViewBuilder
-    var compositionTextView: some View {
+    // Subview for active composition text (unchanged)
+    var CompositionTextView: some View {
         Text(camera.activeComposition)
             .foregroundColor(.darkGradient)
             .font(.subheadline)
             .fontWeight(.semibold)
             .padding(8)
             .background(Color.accent)
-            .background(Material.thin)
             .cornerRadius(4)
-            .offset(y: camera.isFramingCarouselEnabled ? 350 : 400)
     }
-    
-    // Circular Slider View Offset
-    nonisolated func offset(_ proxy: GeometryProxy) -> CGFloat {
-        let progress = progress(proxy)
-        return progress < 0 ? progress * -27 : progress * 27
-    }
-    
-    nonisolated func scale(_ proxy: GeometryProxy) -> CGFloat {
-        let progress = min(max(progress(proxy), -1), 1)
-        return progress < 0 ? 1 + progress : 1 - progress
-    }
-    
-    nonisolated func progress(_ proxy: GeometryProxy) -> CGFloat {
-        let viewWidth = proxy.size.width
-        let minX = (proxy.bounds(of: .scrollView)?.minX ?? 0)
-        return minX / viewWidth
-    }
-    
-    
 }
 
-// Custom Half Circle Shape
-struct HalfCircleShape: Shape {
-    func path(in rect: CGRect) -> Path {
-        var path = Path()
-        path.addArc(
-            center: CGPoint(
-                x: rect.midX,
-                y: rect.maxY
-            ),
-            radius: rect.width * 0.75,
-            startAngle: .degrees(180),
-            endAngle: .degrees(0),
-            clockwise: false
-        )
-        path.addLine(to: CGPoint(x: rect.maxX, y: rect.maxY))
-        path.addLine(to: CGPoint(x: rect.minX, y: rect.maxY))
-        return path
-    }
-}
 
 extension Composition {
     func imageName(isActive: Bool, image: String) -> String {
@@ -232,9 +207,4 @@ extension Composition {
         
         return imageName
     }
-}
-
-
-#Preview {
-//    Carousel(camera: CameraModel())
 }

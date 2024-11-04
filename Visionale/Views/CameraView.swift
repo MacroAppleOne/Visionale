@@ -34,25 +34,25 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
                     // INI JANGAN DIHAPUS DULU YA BANG
-//                        .overlay(alignment: .topLeading) {
-//                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
-//                            let adjustedX = boundingBox.origin.x
-//                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
-//                            let adjustedWidth = boundingBox.width
-//                            let adjustedHeight = boundingBox.height
-//                            
-//                            let rect = CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight)
-//                            
-//                            Path { path in
-//                                path.addRect(rect, transform: transform)
-//                            }
-//                            .stroke(Color.red, lineWidth: 1)
-//                        }
+                    //                        .overlay(alignment: .topLeading) {
+                    //                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
+                    //                            let adjustedX = boundingBox.origin.x
+                    //                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
+                    //                            let adjustedWidth = boundingBox.width
+                    //                            let adjustedHeight = boundingBox.height
+                    //                            
+                    //                            let rect = CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight)
+                    //                            
+                    //                            Path { path in
+                    //                                path.addRect(rect, transform: transform)
+                    //                            }
+                    //                            .stroke(Color.red, lineWidth: 1)
+                    //                        }
                         .overlay(alignment: .top) {
                             if camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel && camera.mlcLayer?.predictionLabel != "" {
                                 Button {
-                                    let recommendedComposition = camera.compositions.first(where: {$0.name.lowercased() == camera.mlcLayer?.predictionLabel})
-                                    camera.updateActiveComposition(id: recommendedComposition?.id)
+                                    camera.updateActiveComposition((camera.mlcLayer?.predictionLabel!.uppercased())!)
+                                    
                                 } label: {
                                     Text("Switch to \(camera.mlcLayer?.predictionLabel ?? "Unknown")".uppercased())
                                         .foregroundColor(.darkGradient)
@@ -64,14 +64,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                         .cornerRadius(4)
                                         .offset(x: 0, y: 10)
                                 }
-                                
                             }
                         }
                         .overlay(alignment: .topLeading) {
-//                            Circle()
-//                                .foregroundStyle(.red.opacity(0.5))
-//                                .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.height)
-//                                .position(x: (0.107 + 0.236) * gr.size.width, y: gr.size.height - (0.282 * gr.size.height))
                             if (bestShotPoint != .zero) {
                                 ZStack {
                                     Circle()
