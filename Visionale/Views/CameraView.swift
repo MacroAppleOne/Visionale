@@ -49,7 +49,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
 //                            .stroke(Color.red, lineWidth: 1)
 //                        }
                         .overlay(alignment: .top) {
-                            if camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel {
+                            if camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel && camera.mlcLayer?.predictionLabel != "" {
                                 Button {
                                     let recommendedComposition = camera.compositions.first(where: {$0.name.lowercased() == camera.mlcLayer?.predictionLabel})
                                     camera.updateActiveComposition(id: recommendedComposition?.id)
