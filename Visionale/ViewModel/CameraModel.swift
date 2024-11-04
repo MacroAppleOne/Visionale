@@ -77,9 +77,9 @@ final class CameraModel: Camera {
     
     /// The current aspect ratio
     var aspectRatio: AspectRatio = .ratio4_3
-
+    
     var isAspectRatioOptionEnabled: Bool = false
-
+    
     func toggleAspectRatioOption() {
         isAspectRatioOptionEnabled.toggle()
     }
@@ -213,7 +213,6 @@ final class CameraModel: Camera {
 // MARK: - Extensions
 
 extension CameraModel {
-    
     /// Finds a composition based on the machine learning prediction.
     func findComposition(withName name: String) {
         if let index = compositions.firstIndex(where: { $0.name.lowercased() == name.lowercased() }) {
@@ -227,13 +226,28 @@ extension CameraModel {
     }
     
     /// Updates the active composition based on the selected UUID.
-    func updateActiveComposition(id: UUID?) {
-        if let id = id {
-            if let composition = compositions.first(where: { $0.id == id }) {
-                activeComposition = composition.name
-                UIImpactFeedbackGenerator(style: .heavy).impactOccurred()
+    func updateActiveComposition(_ name: String) {
+        if let composition = compositions.first(where: { $0.name == name }) {
+            activeComposition = composition.name
+            switch activeComposition {
+            case "CENTER":
+                mlcLayer?.setGuidanceSystem(CenterGuidance())
+            case "DIAGONAL":
+                mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
+            case "GOLDEN RATIO":
+                mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(
+                    aspectRatio: self.aspectRatio.size.width / self.aspectRatio.size.height,
+                    orientation: .bottomLeft
+                ))
+            case "RULE OF THIRDS":
+                mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
+            case "SYMMETRIC":
+                mlcLayer?.setGuidanceSystem(SymmetricGuidance())
+            default:
+                mlcLayer?.setGuidanceSystem(nil)
             }
         }
+        
     }
     
     func changeGoldenRatioOrientation(orientation: GoldenRatioOrientation) {
@@ -269,7 +283,7 @@ enum AspectRatio: CaseIterable {
     case ratio4_3
     case ratio16_9
     case ratio1_1
-
+    
     var size: CGSize {
         switch self {
         case .ratio4_3:
@@ -280,7 +294,7 @@ enum AspectRatio: CaseIterable {
             return CGSize(width: 1, height: 1)
         }
     }
-
+    
     var description: String {
         switch self {
         case .ratio4_3:
@@ -291,7 +305,7 @@ enum AspectRatio: CaseIterable {
             return "1:1"
         }
     }
-
+    
     /// Get the next aspect ratio in the sequence.
     static func next(after current: AspectRatio) -> AspectRatio {
         let all = AspectRatio.allCases

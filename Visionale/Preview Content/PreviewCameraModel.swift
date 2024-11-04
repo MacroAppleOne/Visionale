@@ -17,6 +17,10 @@ import SwiftUI
 
 @Observable
 class PreviewCameraModel: Camera {
+    func updateActiveComposition(_ name: String) {
+        self.activeComposition = name
+    }
+    
     var isZoomSliderEnabled: Bool = false
     
     var aspectRatio: AspectRatio = .ratio4_3
