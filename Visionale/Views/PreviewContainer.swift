@@ -105,7 +105,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                     .overlay {
                         Carousel(camera: camera)
                     }
-                    .overlay(alignment: .bottomLeading) {
+                    .overlay(alignment: .bottomLeading) { 
                         cameraZoomComponent
                     }
                     .onTapGesture(count: 2) {
