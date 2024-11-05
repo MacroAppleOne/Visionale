@@ -52,7 +52,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             if camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel?.replacingOccurrences(of: "_", with: " ") && camera.mlcLayer?.predictionLabel != "" {
                                 Button {
                                     let recommendedComposition = camera.compositions.first(where: {$0.name.lowercased() == camera.mlcLayer?.predictionLabel?.lowercased().replacingOccurrences(of: "_", with: " ")})
-                                    camera.updateActiveComposition(id: recommendedComposition?.id)
+                                    camera.updateActiveComposition(recommendedComposition?.name ?? "")
                                 } label: {
                                     Text("Switch to \(camera.mlcLayer?.predictionLabel ?? "Unknown")".uppercased().replacingOccurrences(of: "_", with: " "))
                                         .foregroundColor(.darkGradient)
