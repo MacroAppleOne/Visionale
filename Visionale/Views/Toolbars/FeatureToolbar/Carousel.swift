@@ -172,7 +172,7 @@ struct Carousel<CameraModel: Camera>: View {
     
     // Subview for each composition's button (unchanged)
     func CompositionButton(for composition: Composition) -> some View {
-        Image(composition.imageName(isActive: camera.activeComposition == composition.name, image: composition.image))
+        Image(composition.imageName(isActive: camera.activeComposition == composition.name, image: composition.image, isRecommended: camera.mlcLayer?.predictionLabel!.uppercased().replacingOccurrences(of: "_", with: " ") == composition.name.uppercased()))
             .resizable()
             .frame(width: 36, height: 36)
             .animation(.easeInOut(duration: 0.4), value: camera.activeComposition)
@@ -192,7 +192,7 @@ struct Carousel<CameraModel: Camera>: View {
 
 
 extension Composition {
-    func imageName(isActive: Bool, image: String) -> String {
+    func imageName(isActive: Bool, image: String, isRecommended: Bool) -> String {
         var imageName = image
         
         if isActive && isRecommended {
