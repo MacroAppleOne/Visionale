@@ -77,9 +77,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                                 lastZoomFactor = camera.zoomFactor
                             }
                     )
-                    .overlay(alignment: .bottomLeading) {
-                        cameraZoomComponent
-                    }
                     .overlay {
                         let goldenRatio = camera.aspectRatio.size.width / camera.aspectRatio.size.height == 9 / 16 ? 1 : 0.786
                         
@@ -107,6 +104,9 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                     }
                     .overlay {
                         Carousel(camera: camera)
+                    }
+                    .overlay(alignment: .bottomLeading) {
+                        cameraZoomComponent
                     }
                     .onTapGesture(count: 2) {
                         switch camera.grOrientation {
