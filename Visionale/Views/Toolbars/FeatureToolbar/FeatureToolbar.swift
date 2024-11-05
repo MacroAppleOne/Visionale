@@ -22,7 +22,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                     livePhotoButton
                     Spacer()
                     aspectRatioButton
-                    otherIcontoggle
+//                    otherIcontoggle
                 } else {
                     Spacer()
                     livePhotoButton
@@ -120,14 +120,14 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
             camera.toggleAspectRatio()
         } label: {
             ZStack {
-                Image("custom.aspectratio.circle")
-                    .symbolRenderingMode(.hierarchical)
-                    .fontWeight(.thin)
+//                Image("custom.aspectratio.circle")
+//                    .symbolRenderingMode(.hierarchical)
+//                    .fontWeight(.thin)
                 // Overlay the aspect ratio text
                 Text(camera.aspectRatio.description)
-                    .font(.caption2)
+                    .font(.footnote)
                     .foregroundColor(.primary)
-                    .offset(y: 12) // Adjust position as needed
+//                    .offset(y: 12) // Adjust position as needed
             }
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)

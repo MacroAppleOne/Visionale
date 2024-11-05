@@ -204,7 +204,6 @@ extension Composition {
         } else {
             imageName += "_default"
         }
-        
         return imageName
     }
 }
