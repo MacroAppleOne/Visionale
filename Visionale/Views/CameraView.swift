@@ -56,8 +56,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                         .overlay(alignment: .top) {
                             if showOverlay, camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel?.replacingOccurrences(of: "_", with: " ") && camera.mlcLayer?.predictionLabel != "" {
                                 Button {
-                                    let recommendedComposition = camera.compositions.first(where: {$0.name.lowercased() == camera.mlcLayer?.predictionLabel?.lowercased().replacingOccurrences(of: "_", with: " ")})
-                                    camera.updateActiveComposition(recommendedComposition?.name ?? "")
+                                    camera.updateActiveComposition(camera.mlcLayer?.predictionLabel!.uppercased())
                                 } label: {
                                     Text("Switch to \(camera.mlcLayer?.predictionLabel ?? "Unknown")".uppercased())
                                         .font(.subheadline)
