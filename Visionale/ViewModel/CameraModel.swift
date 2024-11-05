@@ -99,7 +99,7 @@ final class CameraModel: Camera {
         
         compositions = [
             Composition(name: "CENTER", description: "", image: "center", isRecommended: false),
-            Composition(name: "LEADING LINES", description: "", image: "leading", isRecommended: false),
+            Composition(name: "LEADING LINE", description: "", image: "leading", isRecommended: false),
             Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
             Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
             Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
@@ -216,7 +216,7 @@ extension CameraModel {
     
     /// Finds a composition based on the machine learning prediction.
     func findComposition(withName name: String) {
-        if let index = compositions.firstIndex(where: { $0.name.lowercased() == name.lowercased() }) {
+        if let index = compositions.firstIndex(where: { $0.name.lowercased() == name.lowercased().replacingOccurrences(of: "_", with: " ") }) {
             compositions[index].isRecommended = true
             for i in 0..<compositions.count {
                 if i != index {

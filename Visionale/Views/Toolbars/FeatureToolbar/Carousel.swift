@@ -75,7 +75,7 @@ struct Carousel<CameraModel: Camera>: View {
                     
                     camera.mlcLayer?.lastRecomTime = Date(timeIntervalSince1970: 0)
                     
-                    switch camera.activeComposition.uppercased() {
+                    switch camera.activeComposition.uppercased().replacingOccurrences(of: "_", with: " ") {
                     case "CENTER":
                         camera.mlcLayer?.setGuidanceSystem(CenterGuidance())
                     case "DIAGONAL":

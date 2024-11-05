@@ -10,14 +10,14 @@ import CoreImage
 import AVFoundation
 
 class FrameRecommendation {
-    let model: FrameRecom3C?
+    let model: FrameRecom5C_3?
     
     init() {
         do {
             let config = MLModelConfiguration()
             config.computeUnits = .cpuAndNeuralEngine
 //            self.model = try CompositionClassifier(configuration: config)
-            self.model = try FrameRecom3C(configuration: config)
+            self.model = try FrameRecom5C_3(configuration: config)
         } catch {
             logger.debug("Error initializing model: \(error)")
             self.model = nil
@@ -92,30 +92,9 @@ class FrameRecommendation {
                 maxIndex = i
             }
         }
-        
-        // Access the pointer to the underlying data
-//        let pointer = multiArray.dataPointer.bindMemory(to: Double.self, capacity: multiArray.count)
-        
-        // Create an array from the pointer
-//        let array = Array(UnsafeBufferPointer(start: pointer, count: multiArray.count))
-        
-//        print(array)
-        
-        // Create an array of tuples (index, value) and sort by value in descending order
-//        let indexedArray = array.enumerated().sorted(by: { $0.element > $1.element })
-
-        // Extract the indices of the top 3 elements
-//        let topThreeIndices = indexedArray.prefix(3).map { $0.offset }
-        
-//        let classes = ["center", "curved", "golden_ratio", "leading_line", "rule_of_thirds", "symmetric"]
-        let classes = ["center", "curved", "rule of thirds"]
-//        let classes = ["curved", "rule_of_thirds", "leading_line", "center", "golden_ratio", "symmetric"]
-        
-//        print(topThreeIndices)
+        let classes = ["center", "golden_ratio", "leading_line", "rule_of_thirds", "symmetric"]
         
         return classes[maxIndex]
-        
-//        return Array(arrayLiteral: classes[topThreeIndices[0]], classes[topThreeIndices[1]], classes[topThreeIndices[2]])
     }
     
     func processFrame(_ buffer: CMSampleBuffer) -> String {
@@ -127,25 +106,35 @@ class FrameRecommendation {
         }
         
         // Resize and process the pixel buffer
-        guard let resizedBuffer = self.resizePixelBuffer(pixelBuffer, targetSize: CGSize(width: 224, height: 224)) else {
+        guard let resizedBuffer = self.resizePixelBuffer(pixelBuffer, targetSize: CGSize(width: 360, height: 360)) else {
             print("Error resizing pixel buffer")
             logger.debug("Error resizing pixel buffer")
             return predicted
         }
         
-        // Convert to MLMultiArray
-        if let multiArray = self.pixelBufferToMultiArray(resizedBuffer) {
-            // Pass the MLMultiArray to your Core ML model
-            do {
-                let input = FrameRecom3CInput(input_12: multiArray)  // Ensure your model's input type matches
-                let prediction = try model?.prediction(input: input)
-                
-                predicted = convertPredictionIntoLabel(in: prediction?.Identity) ?? "Unknown"
-                
-            } catch {
-                logger.debug("Error making prediction: \(error)")
-            }
+        do {
+            let input = FrameRecom5C_3Input(image: resizedBuffer)
+            let prediction = try model?.prediction(input: input)
+            predicted = prediction?.target ?? "Unknown"
         }
+        catch {
+            logger.debug("Error making predictions: \(error)")
+        }
+        
+        
+        // Convert to MLMultiArray
+//        if let multiArray = self.pixelBufferToMultiArray(resizedBuffer) {
+//            // Pass the MLMultiArray to your Core ML model
+//            do {
+//                let input = FrameRecom5C_3Input(image: pixelBuffer)  // Ensure your model's input type matches
+//                let prediction = try model?.prediction(input: input)
+//                
+//                predicted = convertPredictionIntoLabel(in: prediction?.target) ?? "Unknown"
+//                
+//            } catch {
+//                logger.debug("Error making prediction: \(error)")
+//            }
+//        }
         
         return predicted
     }
