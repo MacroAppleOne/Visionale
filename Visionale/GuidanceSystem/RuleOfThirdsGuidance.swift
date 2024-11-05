@@ -72,7 +72,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
             let trackedObjectCandidate: CGRect = boundingBox.first ?? .zero
             
             if trackedObjectCandidate.width > 0 && trackedObjectCandidate.height > 0 {
-                if trackedObjectCandidate.width > 0.33 || trackedObjectCandidate.height > 0.33 {
+                if trackedObjectCandidate.width > 0.4 || trackedObjectCandidate.height > 0.4 {
                     self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: trackedObjectCandidate))]
                     self.sequenceRequestHandler = VNSequenceRequestHandler()
                     mainObject = trackedObjectCandidate
@@ -82,7 +82,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
                         x: focusPoint.x - 0.2,
                         y: focusPoint.y - 0.2
                     )
-                    let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
+                    let rect = CGRect(origin: origin, size: CGSize(width: 0.2, height: 0.2))
                     self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: rect))]
                     self.sequenceRequestHandler = VNSequenceRequestHandler()
                     mainObject = rect
@@ -94,7 +94,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
                     x: focusPoint.x - 0.2,
                     y: focusPoint.y - 0.2
                 )
-                let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
+                let rect = CGRect(origin: origin, size: CGSize(width: 0.2, height: 0.2))
                 self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: rect))]
                 self.sequenceRequestHandler = VNSequenceRequestHandler()
                 mainObject = rect
