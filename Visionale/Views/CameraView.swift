@@ -19,6 +19,11 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @State var boundingBox: CGRect = .zero
     @State private var lastZoomFactor: CGFloat = 1.0
     
+    @State private var progress: CGFloat = 0.0
+    @State private var isAnimating = false
+    
+    @State private var showOverlay = true
+    
     var body: some View {
         ZStack {
             // A container view that manages the placement of the preview.
@@ -49,22 +54,35 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     //                            .stroke(Color.red, lineWidth: 1)
                     //                        }
                         .overlay(alignment: .top) {
-                            if camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel?.replacingOccurrences(of: "_", with: " ") && camera.mlcLayer?.predictionLabel != "" {
+                            if showOverlay, camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel?.replacingOccurrences(of: "_", with: " ") && camera.mlcLayer?.predictionLabel != "" {
                                 Button {
                                     let recommendedComposition = camera.compositions.first(where: {$0.name.lowercased() == camera.mlcLayer?.predictionLabel?.lowercased().replacingOccurrences(of: "_", with: " ")})
                                     camera.updateActiveComposition(recommendedComposition?.name ?? "")
                                 } label: {
-                                    Text("Switch to \(camera.mlcLayer?.predictionLabel ?? "Unknown")".uppercased().replacingOccurrences(of: "_", with: " "))
-                                        .foregroundColor(.darkGradient)
+                                    Text("Switch to \(camera.mlcLayer?.predictionLabel ?? "Unknown")".uppercased())
                                         .font(.subheadline)
+                                        .foregroundStyle(.circle)
                                         .fontWeight(.semibold)
-                                        .padding(8)
-                                        .background(Color.accent)
-                                        .background(Material.thin)
-                                        .cornerRadius(4)
+                                        .padding(10)
+                                        .background(
+                                            ZStack(alignment: .leading) {
+                                                Color.lightBase // Initial color background
+                                                Color.base
+                                                    .frame(width: 300 * progress) // Width grows with progress
+                                                    .cornerRadius(4)
+                                            }
+                                        )
+                                        .cornerRadius(12)
                                         .offset(x: 0, y: 10)
                                 }
+                                
+                                .frame(width: 300)
+                                .opacity(showOverlay ? 1 : 0) // Fade out effect
+                                .animation(.easeOut(duration: 1), value: showOverlay)
                             }
+                        }
+                        .onChange(of: camera.mlcLayer?.predictionLabel){
+                                startTimer()
                         }
                         .overlay(alignment: .topLeading) {
                             if (bestShotPoint != .zero) {
@@ -86,6 +104,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 }
                             }
                         }
+                        
                         .onChange(of: camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero) {
                             Task {
                                 withAnimation {
@@ -103,6 +122,24 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             }
             // The main camera user interface.
             CameraUI<CameraModel>(camera: camera)
+        }
+    }
+    
+    func startTimer() {
+        // Start animating the background fill over 5 seconds
+        isAnimating = true
+        showOverlay = true
+        withAnimation(.linear(duration: 5)) {
+            progress = 1.0
+        }
+        
+        // Reset after 5 seconds
+        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
+            progress = 0.0
+            isAnimating = false
+            withAnimation(.easeOut(duration: 1)) { // Fade out animation
+                        showOverlay = false // Hide overlay after 5 seconds
+                    }
         }
     }
 }
