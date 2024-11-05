@@ -58,7 +58,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 Button {
                                     camera.updateActiveComposition((camera.mlcLayer?.predictionLabel!.uppercased().replacingOccurrences(of: "_", with: " "))!)
                                 } label: {
-                                    Text("Switch to \(camera.mlcLayer?.predictionLabel ?? "Unknown")".uppercased())
+                                    Text("Switch to \(camera.mlcLayer?.predictionLabel ?? "Unknown")".uppercased().replacingOccurrences(of: "_", with: " "))
                                         .font(.subheadline)
                                         .foregroundStyle(.circle)
                                         .fontWeight(.semibold)
