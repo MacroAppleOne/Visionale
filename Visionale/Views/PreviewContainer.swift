@@ -82,7 +82,8 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         
                         switch camera.activeComposition {
                         case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
-                        case "DIAGONAL": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+//                        case "LEADING LINE": LeadingLineGuidance().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "LEADING LINE": DiagonalGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "GOLDEN RATIO":
                             GoldenRatioGrid(camera: camera)
                                 .frame(width: gr.size.width * goldenRatio, height: gr.size.height)

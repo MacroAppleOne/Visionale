@@ -23,6 +23,8 @@ class GoldenRatioGuidance: GuidanceSystem {
     var selectedKeypoints: [Int] = []
     var targetPoint: CGPoint? = .zero
     var keypoints: [CGPoint] = []
+    var contourPaths: [StraightLine] = []
+    var paths: CGPath = .init(rect: .zero, transform: .none)
     
     var aspectRatio: CGFloat = 0
     var orientation: GoldenRatioOrientation = .bottomLeft
@@ -133,15 +135,29 @@ class GoldenRatioGuidance: GuidanceSystem {
         self.trackedObjects = [trackResult.boundingBox]
         
         let trackedObjectBoundingBox = trackResult.boundingBox
-        let adjustmentNeededX = -((targetPoint?.x ?? 0) - (trackedObjectBoundingBox.midX))
-        let adjustmentNeededY = -((targetPoint?.y ?? 0) - (trackedObjectBoundingBox.midY))
-        
-        let bestShotPoint = CGPoint(
-            x: (trackedObjectBoundingBox.midX) + adjustmentNeededX,
-            y: 1 - ((trackedObjectBoundingBox.midY) + adjustmentNeededY)
+        let adjustmentNeededX = -((targetPoint?.x ?? 0) - trackedObjectBoundingBox.midX)
+        let adjustmentNeededY = -((targetPoint?.y ?? 0) - trackedObjectBoundingBox.midY)
+        let newShotPoint = CGPoint(
+            x: 0.5 + adjustmentNeededX,
+            y: 1 - (0.5 + adjustmentNeededY)
         )
         
-        return bestShotPoint
+        if isAligned {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.1 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.1 {
+                return newShotPoint
+            }
+            else {
+                return CGPoint(x: 0.5, y: 0.5)
+            }
+        }
+        else {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.05 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.05 {
+                return newShotPoint
+            }
+            else {
+                return self.bestShotPoint
+            }
+        }
     }
     
     func checkAlignment(shotPoint: CGPoint) -> Bool {

@@ -10,6 +10,7 @@ import UIKit
 
 @Observable
 class CenterGuidance: GuidanceSystem {
+    
     var saliencyHandler: SaliencyHandler = .init()
     var trackingRequests: [VNTrackObjectRequest]?
     var sequenceRequestHandler = VNSequenceRequestHandler()
@@ -22,7 +23,9 @@ class CenterGuidance: GuidanceSystem {
     var trackedObjects: [CGRect]? = []
     var selectedKeypoints: [Int] = []
     var keypoints: [CGPoint] = []
-
+    var contourPaths: [StraightLine] = []
+    var paths: CGPath = .init(rect: .zero, transform: .none)
+    
     func guide(buffer: CMSampleBuffer) {
         guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
         
@@ -96,7 +99,28 @@ class CenterGuidance: GuidanceSystem {
         }
         
         self.trackedObjects = [trackResult.boundingBox]
-        return CGPoint(x: trackResult.boundingBox.midX, y: 1 - trackResult.boundingBox.midY)
+        
+        let newShotPoint = CGPoint(
+            x: trackResult.boundingBox.midX,
+            y: 1 - trackResult.boundingBox.midY
+        )
+        
+        if isAligned {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.1 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.1 {
+                return newShotPoint
+            }
+            else {
+                return CGPoint(x: 0.5, y: 0.5)
+            }
+        }
+        else {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.05 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.05 {
+                return newShotPoint
+            }
+            else {
+                return self.bestShotPoint
+            }
+        }
     }
     
     func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation? {

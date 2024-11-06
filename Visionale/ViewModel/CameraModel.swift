@@ -96,7 +96,6 @@ final class CameraModel: Camera {
     // MARK: - Initialization
     
     init() {
-        
         compositions = [
             Composition(name: "CENTER", description: "", image: "center", isRecommended: false),
             Composition(name: "LEADING LINE", description: "", image: "leading", isRecommended: false),
@@ -232,7 +231,8 @@ extension CameraModel {
             switch activeComposition {
             case "CENTER":
                 mlcLayer?.setGuidanceSystem(CenterGuidance())
-            case "DIAGONAL":
+            case "LEADING LINE":
+                print("MASUK")
                 mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
             case "GOLDEN RATIO":
                 mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(

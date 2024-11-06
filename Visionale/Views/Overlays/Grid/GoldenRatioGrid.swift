@@ -43,7 +43,6 @@ struct GoldenRatioGrid<CameraModel: Camera>: View {
                 
                 Path { path in
                     path.addEllipse(in: CGRect(x: xOffset, y: yOffset, width: rectSize, height: rectSize))
-                    
                 }
                 .stroke(camera.mlcLayer?.guidanceSystem?.isAligned ?? false ? Color.accent.opacity(0.7) : Color.white.opacity(0.5), lineWidth: 1)
                 .backgroundStyle(.clear)

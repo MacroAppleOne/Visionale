@@ -34,6 +34,8 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         CGPoint(x: 0.33, y: 0.67),
         CGPoint(x: 0.67, y: 0.67),
     ]
+    var contourPaths: [StraightLine] = []
+    var paths: CGPath = .init(rect: .zero, transform: .none)
     
     func guide(buffer: CMSampleBuffer) {
         guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
@@ -72,21 +74,21 @@ class RuleOfThirdsGuidance: GuidanceSystem {
             let trackedObjectCandidate: CGRect = boundingBox.first ?? .zero
             
             if trackedObjectCandidate.width > 0 && trackedObjectCandidate.height > 0 {
-                if trackedObjectCandidate.width > 0.4 || trackedObjectCandidate.height > 0.4 {
+//                if trackedObjectCandidate.width > 0.4 || trackedObjectCandidate.height > 0.4 {
                     self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: trackedObjectCandidate))]
                     self.sequenceRequestHandler = VNSequenceRequestHandler()
                     mainObject = trackedObjectCandidate
-                }
-                else {
-                    let origin = CGPoint(
-                        x: focusPoint.x - 0.2,
-                        y: focusPoint.y - 0.2
-                    )
-                    let rect = CGRect(origin: origin, size: CGSize(width: 0.2, height: 0.2))
-                    self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: rect))]
-                    self.sequenceRequestHandler = VNSequenceRequestHandler()
-                    mainObject = rect
-                }
+//                }
+//                else {
+//                    let origin = CGPoint(
+//                        x: focusPoint.x - 0.2,
+//                        y: focusPoint.y - 0.2
+//                    )
+//                    let rect = CGRect(origin: origin, size: CGSize(width: 0.2, height: 0.2))
+//                    self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: rect))]
+//                    self.sequenceRequestHandler = VNSequenceRequestHandler()
+//                    mainObject = rect
+//                }
                 self.shouldReset = false
             }
             else if !boundingBoxes.isEmpty {
@@ -164,13 +166,29 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         
         // reset tracked object coordinate
         let trackedObjectBoundingBox = trackResult.boundingBox
-        let adjustmentNeededX = -(targetPoint.x - (trackedObjectBoundingBox.midX))
-        let adjustmentNeededY = -(targetPoint.y - (trackedObjectBoundingBox.midY))
-        
-        return CGPoint(
-            x: trackedObjectBoundingBox.midX + adjustmentNeededX,
-            y: 1 - (trackedObjectBoundingBox.midY + adjustmentNeededY)
+        let adjustmentNeededX = -(targetPoint.x - trackedObjectBoundingBox.midX)
+        let adjustmentNeededY = -(targetPoint.y - trackedObjectBoundingBox.midY)
+        let newShotPoint = CGPoint(
+            x: 0.5 + adjustmentNeededX,
+            y: 1 - (0.5 + adjustmentNeededY)
         )
+        
+        if isAligned {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.1 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.1 {
+                return newShotPoint
+            }
+            else {
+                return CGPoint(x: 0.5, y: 0.5)
+            }
+        }
+        else {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.05 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.05 {
+                return newShotPoint
+            }
+            else {
+                return self.bestShotPoint
+            }
+        }
     }
     
     func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation? {
@@ -225,8 +243,8 @@ class RuleOfThirdsGuidance: GuidanceSystem {
     }
     
     func checkAlignment(shotPoint: CGPoint) -> Bool {
-        let min = 0.5 * 0.8
-        let max = 0.5 * 1.2
+        let min = 0.5 * 0.9
+        let max = 0.5 * 1.1
         
         if shotPoint.x > min && shotPoint.x < max && shotPoint.y > min && shotPoint.y < max {
             return true

@@ -7,6 +7,7 @@
 
 import SwiftUI
 import AVFoundation
+import CoreGraphics
 
 @MainActor
 struct CameraView<CameraModel: Camera>: PlatformView {
@@ -17,6 +18,8 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @State var camera: CameraModel
     @State var bestShotPoint: CGPoint = .zero
     @State var boundingBox: CGRect = .zero
+    @State var cp: [StraightLine] = []
+    @State var contour: CGPath? = .init(rect: .zero, transform: .none)
     @State private var lastZoomFactor: CGFloat = 1.0
     
     @State private var progress: CGFloat = 0.0
@@ -39,20 +42,46 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
                     // INI JANGAN DIHAPUS DULU YA BANG
-                    //                        .overlay(alignment: .topLeading) {
-                    //                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
-                    //                            let adjustedX = boundingBox.origin.x
-                    //                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
-                    //                            let adjustedWidth = boundingBox.width
-                    //                            let adjustedHeight = boundingBox.height
-                    //                            
-                    //                            let rect = CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight)
-                    //                            
-                    //                            Path { path in
-                    //                                path.addRect(rect, transform: transform)
-                    //                            }
-                    //                            .stroke(Color.red, lineWidth: 1)
-                    //                        }
+                        .overlay(alignment: .topLeading) {
+                            ForEach(cp, id: \.id) { line in
+                                Path { path in
+                                    path.move(to: line.start)
+                                    path.addLine(to: line.end)
+                                }
+                                .transform(CGAffineTransform(scaleX: gr.size.width, y: gr.size.height))
+                                .stroke(Color.yellow, lineWidth: 1)
+                                .rotation3DEffect(Angle(degrees: 180), axis: (x: 1, y: 0, z: 0))
+                            }
+                        }
+                        .overlay(alignment: .topLeading) {
+                            Path(contour ?? .init(rect: .zero, transform: .none))
+                                .transform(CGAffineTransform(scaleX: gr.size.width, y: gr.size.height))
+                                .stroke(Color.red, lineWidth: 1)
+                                .rotation3DEffect(Angle(degrees: 180), axis: (x: 1, y: 0, z: 0))
+                        }
+//                        .overlay(alignment: .topLeading) {
+//                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
+//                            let adjustedX = boundingBox.origin.x
+//                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
+//                            let adjustedWidth = boundingBox.width
+//                            let adjustedHeight = boundingBox.height
+//                            
+//                            let rect = CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight)
+//                            
+//                            Path { path in
+//                                path.addRect(rect, transform: transform)
+//                            }
+//                            .stroke(Color.red, lineWidth: 1)
+//                        }
+//                        .overlay(alignment: .topLeading) {
+//                            Circle()
+//                                .foregroundStyle(Color.red).opacity(0.75)
+//                                .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
+//                                .position(
+//                                    x: boundingBox.midX * gr.size.width - 0.05,
+//                                    y: gr.size.height - (boundingBox.midY * gr.size.height) - 0.05
+//                                )
+//                        }
                         .overlay(alignment: .top) {
                             if showOverlay, camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel?.replacingOccurrences(of: "_", with: " ") && camera.mlcLayer?.predictionLabel != "" {
                                 Button {
@@ -80,9 +109,19 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 .animation(.easeOut(duration: 1), value: showOverlay)
                             }
                         }
-                        .onChange(of: camera.mlcLayer?.predictionLabel){
-                                startTimer()
+                        .onChange(of: camera.mlcLayer?.guidanceSystem?.contourPaths) {
+                            print("berubah")
+                            self.cp = camera.mlcLayer?.guidanceSystem?.contourPaths ?? []
+                            self.contour = camera.mlcLayer?.guidanceSystem?.paths
+                            
+                            print(self.cp.count)
                         }
+//                        .onChange(of: camera.mlcLayer?.predictionLabel){
+//                            startTimer()
+//                            Task {
+//                                self.cp = camera.mlcLayer?.guidanceSystem?.contourPaths
+//                            }
+//                        }
                         .overlay(alignment: .topLeading) {
                             if (bestShotPoint != .zero) {
                                 ZStack {
@@ -90,8 +129,8 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                         .foregroundStyle(Color.accent).opacity(0.75)
                                         .frame(width: 0.1 * gr.size.width, height: 0.1 * gr.size.width)
                                         .position(
-                                            x: bestShotPoint.x * gr.size.width,
-                                            y: bestShotPoint.y * gr.size.height
+                                            x: bestShotPoint.x * gr.size.width - 0.05,
+                                            y: bestShotPoint.y * gr.size.height - 0.05
                                         )
                                     
                                     Text("Point here")
@@ -103,7 +142,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 }
                             }
                         }
-                        
                         .onChange(of: camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero) {
                             Task {
                                 withAnimation {
@@ -137,8 +175,8 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             progress = 0.0
             isAnimating = false
             withAnimation(.easeOut(duration: 1)) { // Fade out animation
-                        showOverlay = false // Hide overlay after 5 seconds
-                    }
+                showOverlay = false // Hide overlay after 5 seconds
+            }
         }
     }
 }

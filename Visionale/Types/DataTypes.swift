@@ -192,6 +192,8 @@ protocol GuidanceSystem {
     var trackedObjects: [CGRect]? { get }
     var selectedKeypoints: [Int] { get set }
     var keypoints: [CGPoint] { get }
+    var contourPaths: [StraightLine] { get }
+    var paths: CGPath { get }
     
     func guide(buffer: CMSampleBuffer)
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint?

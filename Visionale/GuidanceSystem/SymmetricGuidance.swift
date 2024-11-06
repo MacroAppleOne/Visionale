@@ -8,6 +8,7 @@
 import Vision
 import UIKit
 
+@Observable
 class SymmetricGuidance: GuidanceSystem {
     var trackingRequests: [VNTrackObjectRequest]? = []
     var sequenceRequestHandler: VNSequenceRequestHandler = VNSequenceRequestHandler()
@@ -21,6 +22,8 @@ class SymmetricGuidance: GuidanceSystem {
     var selectedKeypoints: [Int] = []
     var keypoints: [CGPoint] = []
     var trackedObjects: [CGRect]? = []
+    var contourPaths: [StraightLine] = []
+    var paths: CGPath = .init(rect: .zero, transform: .none)
     
     func guide(buffer: CMSampleBuffer) {
         guard let cvPixelBuffer = saliencyHandler.convertPixelBuffer(buffer: buffer) else { return }
