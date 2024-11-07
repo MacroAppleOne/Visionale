@@ -149,11 +149,25 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         
         // Small Object
         else {
-            let distance = keypoints.map({distanceBetween($0, and: CGPoint(x: mainObject.midX, y: mainObject.midY))})
-            guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return nil }
+            if selectedKeypoints.isEmpty == false {
+                let mainObject = self.trackedObjects?.first
+                guard let mainObject else { return nil }
+                
+                if mainObject.midX < 0.4 || mainObject.midX > 0.6 || mainObject.midY < 0.4 || mainObject.midY > 0.6 {
+                    let distance = keypoints.map({distanceBetween($0, and: CGPoint(x: mainObject.midX, y: mainObject.midY))})
+                    guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return nil }
 
-            self.targetPoint = keypoints[selectedKeyPoint]
-            self.selectedKeypoints.append(selectedKeyPoint)
+                    self.targetPoint = keypoints[selectedKeyPoint]
+                    self.selectedKeypoints.append(selectedKeyPoint)
+                }
+            }
+            else {
+                let distance = keypoints.map({distanceBetween($0, and: CGPoint(x: mainObject.midX, y: mainObject.midY))})
+                guard let selectedKeyPoint = distance.firstIndex(of: distance.min()!) else { return nil }
+
+                self.targetPoint = keypoints[selectedKeyPoint]
+                self.selectedKeypoints.append(selectedKeyPoint)
+            }
         }
         
         // MARK: OBJECT TRACKING
@@ -182,7 +196,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
             }
         }
         else {
-            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.05 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.05 {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.025 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.025 {
                 return newShotPoint
             }
             else {
