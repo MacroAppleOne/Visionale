@@ -9,11 +9,11 @@ import SwiftUI
 @preconcurrency import AVFoundation
 
 struct CameraPreview: UIViewRepresentable {
-    
     private let source: PreviewSource
-    
-    init(source: PreviewSource) {
+    private let camera: Camera
+    init(source: PreviewSource, camera: Camera) {
         self.source = source
+        self.camera = camera
     }
     
     func makeUIView(context: Context) -> PreviewView {
@@ -24,7 +24,7 @@ struct CameraPreview: UIViewRepresentable {
     }
     
     func updateUIView(_ previewView: PreviewView, context: Context) {
-        // No-op.
+        previewView.updateAspectRatio(camera.aspectRatio)
     }
     
     /// A class that presents the captured content.
@@ -59,11 +59,24 @@ struct CameraPreview: UIViewRepresentable {
             layer as! AVCaptureVideoPreviewLayer
         }
         
+        // New function to handle aspect ratio changes
+        func updateAspectRatio(_ aspectRatio: AspectRatio) {
+            switch aspectRatio {
+            case .ratio4_3:
+                previewLayer.videoGravity = .resizeAspect
+            case .ratio16_9:
+                previewLayer.videoGravity = .resizeAspectFill
+            case .ratio1_1:
+                previewLayer.videoGravity = .resizeAspectFill // Or .resizeAspect depending on your needs
+            }
+        }
+        
         nonisolated func setSession(_ session: AVCaptureSession) {
             // Connects the session with the preview layer, which allows the layer
             // to provide a live view of the captured content.
             Task { @MainActor in
                 previewLayer.session = session
+                updateAspectRatio(.ratio4_3)
             }
         }
     }

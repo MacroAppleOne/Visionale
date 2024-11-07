@@ -32,7 +32,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             // A container view that manages the placement of the preview.
             PreviewContainer(camera: camera, lastZoomFactor: $lastZoomFactor) {
                 GeometryReader { gr in
-                    CameraPreview(source: camera.previewSource)
+                    CameraPreview(source: camera.previewSource, camera: camera)
                         .onTapGesture { location in
                             // Focus and expose at the tapped point.
                             Task { await camera.focusAndExpose(at: location) }
