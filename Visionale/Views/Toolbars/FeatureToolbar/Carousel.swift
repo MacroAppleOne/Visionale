@@ -41,6 +41,12 @@ struct Carousel<CameraModel: Camera>: View {
                         x: camera.isFramingCarouselEnabled ? radius * CGFloat(cos(angle.radians)) : CGFloat(index - camera.compositions.count / 2) * buttonSpacing + translationOffset,
                         y: camera.isFramingCarouselEnabled ? radius * CGFloat(sin(angle.radians)) : 0
                     )
+                    .onTapGesture {
+                        // Make the button trigger on tap, change composition
+                        camera.updateActiveComposition(camera.compositions[index].name)
+                        lastCurrentButton = currentButton
+                        
+                    }
             }
         }
         .frame(width: geometry.size.width, height: geometry.size.height)
