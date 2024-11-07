@@ -232,7 +232,6 @@ extension CameraModel {
             case "CENTER":
                 mlcLayer?.setGuidanceSystem(CenterGuidance())
             case "LEADING LINE":
-                print("MASUK")
                 mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
             case "GOLDEN RATIO":
                 mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(

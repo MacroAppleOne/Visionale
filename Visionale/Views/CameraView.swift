@@ -42,23 +42,23 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                     /// flash the screen to provide visual feedback.
                         .opacity(camera.shouldFlashScreen ? 0 : 1)
                     // INI JANGAN DIHAPUS DULU YA BANG
-                        .overlay(alignment: .topLeading) {
-                            ForEach(cp, id: \.id) { line in
-                                Path { path in
-                                    path.move(to: line.start)
-                                    path.addLine(to: line.end)
-                                }
-                                .transform(CGAffineTransform(scaleX: gr.size.width, y: gr.size.height))
-                                .stroke(Color.yellow, lineWidth: 1)
-                                .rotation3DEffect(Angle(degrees: 180), axis: (x: 1, y: 0, z: 0))
-                            }
-                        }
-                        .overlay(alignment: .topLeading) {
-                            Path(contour ?? .init(rect: .zero, transform: .none))
-                                .transform(CGAffineTransform(scaleX: gr.size.width, y: gr.size.height))
-                                .stroke(Color.red, lineWidth: 1)
-                                .rotation3DEffect(Angle(degrees: 180), axis: (x: 1, y: 0, z: 0))
-                        }
+//                        .overlay(alignment: .topLeading) {
+//                            ForEach(cp, id: \.id) { line in
+//                                Path { path in
+//                                    path.move(to: line.start)
+//                                    path.addLine(to: line.end)
+//                                }
+//                                .transform(CGAffineTransform(scaleX: gr.size.width, y: gr.size.height))
+//                                .stroke(Color.yellow, lineWidth: 1)
+//                                .rotation3DEffect(Angle(degrees: 180), axis: (x: 1, y: 0, z: 0))
+//                            }
+//                        }
+//                        .overlay(alignment: .topLeading) {
+//                            Path(contour ?? .init(rect: .zero, transform: .none))
+//                                .transform(CGAffineTransform(scaleX: gr.size.width, y: gr.size.height))
+//                                .stroke(Color.red, lineWidth: 1)
+//                                .rotation3DEffect(Angle(degrees: 180), axis: (x: 1, y: 0, z: 0))
+//                        }
 //                        .overlay(alignment: .topLeading) {
 //                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
 //                            let adjustedX = boundingBox.origin.x
@@ -109,13 +109,13 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 .animation(.easeOut(duration: 1), value: showOverlay)
                             }
                         }
-                        .onChange(of: camera.mlcLayer?.guidanceSystem?.contourPaths) {
-                            print("berubah")
-                            self.cp = camera.mlcLayer?.guidanceSystem?.contourPaths ?? []
-                            self.contour = camera.mlcLayer?.guidanceSystem?.paths
-                            
-                            print(self.cp.count)
-                        }
+//                        .onChange(of: camera.mlcLayer?.guidanceSystem?.contourPaths) {
+//                            print("berubah")
+//                            self.cp = camera.mlcLayer?.guidanceSystem?.contourPaths ?? []
+//                            self.contour = camera.mlcLayer?.guidanceSystem?.paths
+//                            
+//                            print(self.cp.count)
+//                        }
 //                        .onChange(of: camera.mlcLayer?.predictionLabel){
 //                            startTimer()
 //                            Task {
