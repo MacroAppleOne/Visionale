@@ -89,6 +89,14 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 }
                             }
                         }
+                        .overlay(alignment: .top) {
+                            LiveBadge()
+                                .opacity(camera.captureActivity.isLivePhoto ? 1.0 : 0.0)
+                            
+                        }
+                        .overlay {
+                            StatusOverlayView(status: camera.status)
+                        }
                         .onChange(of: camera.mlcLayer?.guidanceSystem?.bestShotPoint ?? .zero) {
                             Task {
                                 withAnimation {
