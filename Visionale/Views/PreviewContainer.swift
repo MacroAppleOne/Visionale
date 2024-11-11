@@ -1,14 +1,4 @@
-/*
- See the LICENSE.txt file for this sample’s licensing information.
- 
- Abstract:
- A view that provides a container view around the camera preview.
- */
-
 import SwiftUI
-
-// Portrait-orientation aspect ratios.
-//typealias AspectRatio = CGSize
 /// A view that provides a container view around the camera preview.
 ///
 /// This view applies transition effects when changing capture modes or switching devices.
@@ -35,7 +25,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // Timer for hiding the slider after inactivity
     @State private var hideSliderWorkItem: DispatchWorkItem?
     @State private var hideZoomButton: Bool = false
-        
+    
     var onCarouselAction: ((Bool) -> Void)?
     
     init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content, onCarouselAction: ((Bool) -> Void)? = nil) {
@@ -97,11 +87,9 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                             EmptyView()
                         }
                     }
-                    .overlay {
-                        Carousel(camera: camera)
-                    }
-                    .overlay(alignment: .bottomLeading) { 
+                    .overlay(alignment: .bottomLeading) {
                         cameraZoomComponent
+                            .offset(y: camera.aspectRatio == .ratio16_9 ?  -gr.size.height / 7 : 0)
                     }
                     .onTapGesture(count: 2) {
                         switch camera.grOrientation {

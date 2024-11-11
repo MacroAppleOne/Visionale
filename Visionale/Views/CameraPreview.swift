@@ -1,10 +1,3 @@
-/*
- See the LICENSE.txt file for this sample’s licensing information.
- 
- Abstract:
- A view that presents a video preview of the captured content.
- */
-
 import SwiftUI
 @preconcurrency import AVFoundation
 

@@ -11,6 +11,8 @@ struct Carousel<CameraModel: Camera>: View {
     @State private var translationOffset: CGFloat = 0
     @State private var lastTranslationOffset: CGFloat = 0
     
+    @State var geometry: GeometryProxy
+    
     func HalfRotaryDial(geometry: GeometryProxy) -> some View {
         // Precompute rotation angle limits
         let anglePerButton = totalButtonArc / Double(camera.compositions.count - 1)
@@ -49,8 +51,8 @@ struct Carousel<CameraModel: Camera>: View {
                     }
             }
         }
-        .frame(width: geometry.size.width, height: geometry.size.height)
-        .offset(y: camera.isFramingCarouselEnabled ? 0 : -geometry.size.height / 5)
+        //        .frame(width: geometry.size.width, height: geometry.size.height)
+        //        .offset(y: camera.isFramingCarouselEnabled ? 0 : -geometry.size.height / 5)
         .rotationEffect(camera.isFramingCarouselEnabled ? rotationAngle : .zero) // Rotate dial if carousel is on
         .gesture(
             DragGesture()
@@ -141,31 +143,34 @@ struct Carousel<CameraModel: Camera>: View {
     }
     
     var body: some View {
-        GeometryReader { gr in
-            VStack(spacing: 0){
-                Spacer()
-                CompositionTextView
-                    .position(x: gr.size.width / 2, y:gr.size.height / (camera.isFramingCarouselEnabled ?  1.5 : 1.2))
-                HalfRotaryDial(geometry: gr)
-                    .background(CarouselBackground)
-                    .position(x: gr.size.width / 2, y:gr.size.height / 2.6)
-                    .scaleEffect(1.1)
-                    .frame(maxHeight: gr.size.height / 4)
-                    .onTapGesture {
-                        // Set isFramingCarouselEnabled to true
+        VStack {
+            
+            
+            CompositionTextView
+            //        GeometryReader { gr in
+            //            VStack {
+            //                Spacer()
+            //                CompositionTextView
+            ////                    .position(x: gr.size.width / 2, y:gr.size.height / (camera.isFramingCarouselEnabled ?  1.5 : 1.2))
+            HalfRotaryDial(geometry: geometry)
+            ////                    .background(CarouselBackground)
+            ////                    .position(x: gr.size.width / 2, y:gr.size.height / 2.6)
+            ////                    .scaleEffect(1.1)
+            ////                    .frame(maxHeight: geometry.size.height / 2)
+                .onTapGesture {
+                    // Set isFramingCarouselEnabled to true
+                    withAnimation(.easeInOut) {
+                        camera.isFramingCarouselEnabled = true
+                    }
+                    // Revert back to false after 2 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         withAnimation(.easeInOut) {
-                            camera.isFramingCarouselEnabled = true
-                        }
-                        // Revert back to false after 2 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation(.easeInOut) {
-                                camera.isFramingCarouselEnabled = false
-                            }
+                            camera.isFramingCarouselEnabled = false
                         }
                     }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
         }
+        //        }
     }
     
     @ViewBuilder
