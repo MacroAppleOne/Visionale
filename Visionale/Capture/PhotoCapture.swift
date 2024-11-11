@@ -82,6 +82,7 @@ final class PhotoCapture: OutputService {
             photoSettings.photoQualityPrioritization = prioritization
         }
         
+        
         return photoSettings
     }
     

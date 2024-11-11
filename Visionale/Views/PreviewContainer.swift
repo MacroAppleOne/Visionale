@@ -26,7 +26,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     
     // When running in photo capture mode on a compact device size, move the preview area
     // update by the offset amount so that it's better centered between the top and bottom bars.
-    private let photoModeOffset = CGFloat(-44)
     private let content: Content
     
     // Binding to lastZoomFactor
@@ -35,11 +34,8 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     
     // Timer for hiding the slider after inactivity
     @State private var hideSliderWorkItem: DispatchWorkItem?
-    
     @State private var hideZoomButton: Bool = false
-    
-//    @State private var shouldRese
-    
+        
     var onCarouselAction: ((Bool) -> Void)?
     
     init(camera: CameraModel, lastZoomFactor: Binding<CGFloat>, @ViewBuilder content: () -> Content, onCarouselAction: ((Bool) -> Void)? = nil) {
@@ -79,10 +75,8 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                     )
                     .overlay {
                         let goldenRatio = camera.aspectRatio.size.width / camera.aspectRatio.size.height == 9 / 16 ? 1 : 0.786
-                        
                         switch camera.activeComposition {
                         case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
-//                        case "LEADING LINE": LeadingLineGuidance().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "LEADING LINE": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "GOLDEN RATIO":
                             GoldenRatioGrid(camera: camera)
@@ -121,23 +115,10 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                             camera.changeGoldenRatioOrientation(orientation: .bottomLeft)
                         }
                     }
-//                    .task {
-//                        DispatchQueue.main.async {
-//                            Timer.scheduledTimer(withTimeInterval: 3, repeats: true) { _ in
-//                                if camera.activeComposition.lowercased() != camera.mlcLayer?.predictionLabel {
-//                                    let recommendedComposition = camera.compositions.first(where: {$0.name.lowercased() == camera.mlcLayer?.predictionLabel})
-//                                    camera.updateActiveComposition(id: recommendedComposition?.id)
-////                                    camera.mlcLayer?.lastRecomTime = Date(timeIntervalSince1970: 0)
-//                                }
-//                            }
-//                        }
-//                    }
             }
             .clipped()
             // Apply an appropriate aspect ratio based on the selected capture mode.
             .aspectRatio(camera.aspectRatio.size, contentMode: .fit)
-            // In photo mode, adjust the vertical offset of the preview area to better fit the UI.
-            .offset(y: photoModeOffset)
         } else {
             // On regular-sized UIs, show the content in full screen.
             previewView

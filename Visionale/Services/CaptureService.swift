@@ -24,6 +24,7 @@ actor CaptureService {
     /// Indicates if the capture session is interrupted by a higher priority event.
     @Published private(set) var isInterrupted = false
     
+    @Published private var aspectRatio: CGSize = AspectRatio.ratio4_3.size
     // MARK: - Preview Source
     
     /// Connects a preview destination with the capture session.
@@ -50,6 +51,11 @@ actor CaptureService {
     private var currentDevice: AVCaptureDevice? {
         return activeVideoInput?.device
     }
+    
+    func updateAspectRatio(_ aspectRatio: AspectRatio) {
+        self.aspectRatio = aspectRatio.size
+    }
+
     
     // MARK: - Initialization
     
@@ -341,6 +347,8 @@ actor CaptureService {
     func capturePhoto(with features: EnabledPhotoFeatures) async throws -> Photo {
         return try await photoCapture.capturePhoto(with: features)
     }
+    
+    
     
     // MARK: - Internal State Management
     

@@ -148,6 +148,9 @@ final class CameraModel: Camera {
     func capturePhoto() async {
         do {
             let photo = try await captureService.capturePhoto(with: photoFeatures.current)
+            
+            
+            
             try await mediaLibrary.save(photo: photo)
         } catch {
             self.error = error
