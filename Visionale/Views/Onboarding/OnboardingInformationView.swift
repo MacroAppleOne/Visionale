@@ -67,7 +67,10 @@ struct OnboardingInformationView: View {
                             HStack{
                                 Spacer()
                                 Button(action: {
-                                    self.currentStep = onBoardingSteps.count - 1
+                                    withAnimation(.easeInOut(duration: 2)){
+                                        session.completeOnboarding()
+                                    }
+                                   
                                 }){
                                     Text("Skip")
                                         .padding(16)
