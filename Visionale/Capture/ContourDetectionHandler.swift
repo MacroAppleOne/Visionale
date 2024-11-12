@@ -48,6 +48,7 @@ class ContourDetectionHandler {
         request.maximumImageDimension = 1024
         request.contrastAdjustment = 1.0
         request.detectsDarkOnLight = true
+        request.preferBackgroundProcessing = true
         
         let handler = VNImageRequestHandler(
             cvPixelBuffer: buffer,

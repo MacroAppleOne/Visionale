@@ -202,6 +202,7 @@ class LeadingLineGuidance: GuidanceSystem {
         self.isAligned = false
         self.shouldReset = true
         self.selectedKeypoints.removeAll()
+        self.bestShotPoint = .zero
     }
     
     func extractStraightLines(from path: CGPath) -> [StraightLine] {

@@ -101,7 +101,7 @@ actor CaptureService {
             guard let defaultCamera = deviceLookup.cameras.first else {
                 throw CameraError.setupFailed
             }
-            defaultCamera.formats.forEach { print($0) }
+//            defaultCamera.formats.forEach { print($0) }
             activeVideoInput = try addInput(for: defaultCamera)
             captureSession.sessionPreset = .photo
             try addOutput(photoCapture.output)

@@ -39,6 +39,7 @@ class CenterGuidance: GuidanceSystem {
         self.trackingRequests = nil
         self.shouldReset = true
         self.isAligned = false
+        self.bestShotPoint = .zero
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {

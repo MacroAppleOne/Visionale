@@ -50,6 +50,7 @@ class GoldenRatioGuidance: GuidanceSystem {
         self.shouldReset = true
         self.selectedKeypoints.removeAll()
         self.targetPoint = .zero
+        self.bestShotPoint = .zero
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
