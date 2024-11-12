@@ -17,6 +17,7 @@ import SwiftUI
 
 @Observable
 class PreviewCameraModel: Camera {
+    var videoSwitchZoomFactors: [NSNumber] = [1.0, 2.0]
     func updateActiveComposition(_ name: String) {
         self.activeComposition = name
     }

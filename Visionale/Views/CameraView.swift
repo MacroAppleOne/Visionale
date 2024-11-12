@@ -216,40 +216,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
         //    }
     }
 
-//struct ShakeViewModifier: ViewModifier {
-//    let onShake: () -> Void
-//    private let shakeDetector = ShakeDetector()
-//
-//    func body(content: Content) -> some View {
-//        content
-//            .background(ShakeDetectorView(onShake: onShake, shakeDetector: shakeDetector))
-//    }
-//}
-//
-//struct ShakeDetectorView: UIViewControllerRepresentable {
-//    let onShake: () -> Void
-//    let shakeDetector: ShakeDetector
-//    
-//    func makeUIViewController(context: Context) -> UIViewController {
-//        let controller = UIViewController()
-//        shakeDetector.onShake = onShake
-//        UIApplication.shared.windows.first?.windowScene?.delegate = shakeDetector
-//        return controller
-//    }
-//    
-//    func updateUIViewController(_ uiViewController: UIViewController, context: Context) {}
-//}
-//
-//class ShakeDetector: UIResponder, UIWindowSceneDelegate {
-//    var onShake: (() -> Void)?
-//
-//    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
-//        if motion == .motionShake {
-//            onShake?()
-//        }
-//    }
-//}
-
 class ShakeDetectionController: UIViewController {
     var onShake: (() -> Void)?
     
@@ -273,4 +239,8 @@ struct ShakeDetector: UIViewControllerRepresentable {
     func updateUIViewController(_ uiViewController: ShakeDetectionController, context: Context) {
         uiViewController.onShake = onShake
     }
+}
+
+#Preview {
+    CameraView(camera: PreviewCameraModel())
 }
