@@ -48,12 +48,22 @@ actor CaptureService {
     // MARK: - Computed Properties
     
     /// The device for the active video input.
-    private var currentDevice: AVCaptureDevice? {
-        return activeVideoInput?.device
-    }
-    
     func updateAspectRatio(_ aspectRatio: AspectRatio) {
         self.aspectRatio = aspectRatio.size
+    }
+    
+    var virtualDeviceZoomSwitch: [NSNumber] {
+        var factors: [NSNumber] = [1.0, 4.0]
+        // add self.activeVideoInput?.device.virtualDeviceSwitchOverVideoZoomFactors in the middle
+        if let activeVideoInput = activeVideoInput {
+            let factorsAdd = activeVideoInput.device.virtualDeviceSwitchOverVideoZoomFactors
+            if !factorsAdd.isEmpty {
+                for factor in factorsAdd {
+                    factors.insert(factor, at: factors.startIndex + 1)
+                }
+            }
+        }
+        return factors
     }
 
     
@@ -86,7 +96,6 @@ actor CaptureService {
         try setUpSession()
         captureSession.startRunning()
         setInitialZoom()
-//        print(currentDevice?.activeFormat.videoMaxZoomFactor ?? "Blm ada")
     }
     
     // MARK: - Capture Setup
@@ -101,7 +110,6 @@ actor CaptureService {
             guard let defaultCamera = deviceLookup.cameras.first else {
                 throw CameraError.setupFailed
             }
-            defaultCamera.formats.forEach { print($0) }
             activeVideoInput = try addInput(for: defaultCamera)
             captureSession.sessionPreset = .photo
             try addOutput(photoCapture.output)
@@ -165,7 +173,7 @@ actor CaptureService {
     
     /// Returns the recommended maximum zoom factor for the current device.
     func getRecommendedMaxZoomFactor() -> CGFloat {
-        guard let currentDevice = currentDevice else { return 0.0 }
+        guard let currentDevice = activeVideoInput?.device else { return 0.0 }
         if let lastZoomFactor = currentDevice.virtualDeviceSwitchOverVideoZoomFactors.last as? CGFloat {
             return lastZoomFactor * 10
         } else {
@@ -173,24 +181,8 @@ actor CaptureService {
         }
     }
     
-//    func setZoomFactor(_ factor: CGFloat) -> CGFloat{
-//        guard let currentDevice = currentDevice else { return factor }
-//        do {
-//            try currentDevice.lockForConfiguration()
-//            let minZoom = currentDevice.minAvailableVideoZoomFactor
-//            let maxZoom = getRecommendedMaxZoomFactor()
-//            let clampedZoomFactor = max(minZoom, min(factor, maxZoom))
-//            currentDevice.videoZoomFactor = clampedZoomFactor
-//            currentDevice.unlockForConfiguration()
-//            return clampedZoomFactor
-//        } catch {
-//            print("Failed to set zoom level: \(error)")
-//        }
-//        return currentDevice.videoZoomFactor
-//    }
-    
     func setZoomFactor(_ factor: CGFloat) -> CGFloat {
-        guard let currentDevice = currentDevice else { return factor }
+        guard let currentDevice = activeVideoInput?.device else { return factor }
         do {
             try currentDevice.lockForConfiguration()
             let minZoom = currentDevice.minAvailableVideoZoomFactor
@@ -210,7 +202,7 @@ actor CaptureService {
     /// Changes the capture device that provides video input.
     func selectNextVideoDevice() {
         let videoDevices = deviceLookup.cameras
-        guard let currentDevice = currentDevice,
+        guard let currentDevice = activeVideoInput?.device,
               let selectedIndex = videoDevices.firstIndex(of: currentDevice) else { return }
         
         var nextIndex = selectedIndex + 1
@@ -234,6 +226,7 @@ actor CaptureService {
             createRotationCoordinator(for: device)
             observeSubjectAreaChanges(of: device)
             updateCaptureCapabilities()
+            setInitialZoom()
         } catch {
             captureSession.addInput(currentInput)
         }
@@ -322,7 +315,7 @@ actor CaptureService {
     
     /// Performs focus and exposure at the specified device point.
     private func focusAndExpose(at devicePoint: CGPoint, isUserInitiated: Bool) throws {
-        guard let device = currentDevice else { return }
+        guard let device = activeVideoInput?.device else { return }
         try device.lockForConfiguration()
         
         let focusMode: AVCaptureDevice.FocusMode = isUserInitiated ? .autoFocus : .continuousAutoFocus
@@ -354,7 +347,7 @@ actor CaptureService {
     
     /// Updates the capture capabilities.
     private func updateCaptureCapabilities() {
-        if let currentDevice = currentDevice {
+        if let currentDevice = activeVideoInput?.device {
             outputServices.forEach { $0.updateConfiguration(for: currentDevice) }
         }
         captureCapabilities = photoCapture.capabilities
@@ -398,7 +391,7 @@ actor CaptureService {
     
     /// Toggles the torch (flashlight) on or off.
     func toggleTorch() -> Bool {
-        guard let device = currentDevice, device.hasTorch else { return false }
+        guard let device = activeVideoInput?.device, device.hasTorch else { return false }
         do {
             try device.lockForConfiguration()
             if device.torchMode == .on {

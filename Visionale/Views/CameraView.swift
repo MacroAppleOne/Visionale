@@ -125,10 +125,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                 }
                 .offset(y: cameraOffset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                //                .padding(.top)
-                //                .if(camera.aspectRatio == .ratio16_9){ view in
-                //                    view.padding(.top)
-                //                }
             }
             .padding(.top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -170,4 +166,8 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             }
         }
     }
+}
+
+#Preview {
+    CameraView(camera: PreviewCameraModel())
 }

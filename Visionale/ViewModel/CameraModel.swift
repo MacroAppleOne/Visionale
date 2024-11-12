@@ -1,6 +1,6 @@
 /*
  See the LICENSE.txt file for this sample’s licensing information.
- 
+
  Abstract:
  An object that provides the interface to the features of the camera.
  */
@@ -18,8 +18,6 @@ import Combine
 ///
 @Observable
 final class CameraModel: Camera {
-    
-    
     // MARK: - Properties
     /// The current status of the camera.
     private(set) var status = CameraStatus.unknown
@@ -80,6 +78,8 @@ final class CameraModel: Camera {
     
     var isAspectRatioOptionEnabled: Bool = false
     
+    var videoSwitchZoomFactors: [NSNumber] = []
+    
     func toggleAspectRatioOption() {
         isAspectRatioOptionEnabled.toggle()
     }
@@ -101,9 +101,11 @@ final class CameraModel: Camera {
     var grOrientation: GoldenRatioOrientation = .bottomLeft
     
     // MARK: - Initialization
+    private func updateVideoSwitchZoomFactors() async {
+        await self.videoSwitchZoomFactors = captureService.virtualDeviceZoomSwitch
+    }
     
     init() {
-        // Load machine learning layer asynchronously.
         Task {
             await loadMLLayer()
         }
@@ -120,6 +122,7 @@ final class CameraModel: Camera {
         do {
             try await captureService.start()
             await updateMaxZoomFactors()
+            await updateVideoSwitchZoomFactors()
             observeState()
             status = .running
         } catch {
@@ -135,6 +138,7 @@ final class CameraModel: Camera {
         isSwitchingVideoDevices = true
         defer { isSwitchingVideoDevices = false }
         await captureService.selectNextVideoDevice()
+        await updateVideoSwitchZoomFactors()
     }
     
     // MARK: - Photo Capture

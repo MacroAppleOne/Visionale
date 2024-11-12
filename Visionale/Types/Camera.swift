@@ -88,6 +88,8 @@ protocol Camera: AnyObject {
     
     var grOrientation: GoldenRatioOrientation { get set }
     
+    var videoSwitchZoomFactors: [NSNumber] { get }
+    
     /// Finds a composition by its name and updates recommended compositions.
     func findComposition(withName name: String)
     

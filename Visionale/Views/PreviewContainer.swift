@@ -25,6 +25,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     // Timer for hiding the slider after inactivity
     @State private var hideSliderWorkItem: DispatchWorkItem?
     @State private var hideZoomButton: Bool = false
+    @State private var currentIndex = 0 // Adjust this to reflect the current index dynamically
     
     var onCarouselAction: ((Bool) -> Void)?
     
@@ -137,27 +138,35 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
     
     @ViewBuilder
     var cameraZoomComponent: some View {
-        if(!camera.isFramingCarouselEnabled) {
-            HStack {
-                cameraZoomButton
-                if camera.isZoomSliderEnabled {
-                    zoomSlider
+        if(camera.videoSwitchZoomFactors.count > 0){
+            if(!camera.isFramingCarouselEnabled) {
+                HStack(spacing: 2) {
+                    if camera.isZoomSliderEnabled{
+                        cameraZoomButtons
+
+                    } else {
+                        cameraZoomButton
+                    }
+                    if camera.isZoomSliderEnabled {
+                        zoomSlider
+                    }
                 }
+                .padding(5)
+                .background(Material.ultraThin)
+                .clipShape(.capsule)
+                .padding(12)
+                .animation(.spring, value: camera.isZoomSliderEnabled)
+                .opacity(hideZoomButton ? 0 : 1)
             }
-            .padding(5)
-            .background(Material.ultraThin)
-            .clipShape(.capsule)
-            .padding(12)
-            .animation(.spring, value: camera.isZoomSliderEnabled)
-            .opacity(hideZoomButton ? 0 : 1)
         }
     }
-    @ViewBuilder
+    
     var cameraZoomButton: some View {
         Text("\(camera.zoomFactor / 2, format: .number.precision(.fractionLength(0...1)))×")
             .font(.caption)
             .fontWeight(.medium)
             .frame(width: 30, height: 30, alignment: .center)
+            .clipShape(.circle)
             .gesture(
                 DragGesture()
                     .onChanged { value in
@@ -172,11 +181,79 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         resetHideSliderTimer()
                     }
             )
-            .onTapGesture {
-                toggleZoomSlider()
-            }
-        
     }
+
+    
+    @ViewBuilder
+    var cameraZoomButtons: some View {
+        // Calculate current zoom and factors
+        let currentZoom = camera.zoomFactor / 2
+        let factors = camera.videoSwitchZoomFactors.map { $0.doubleValue / 2 }
+        let currentIndex = factors.lastIndex(where: { $0 <= currentZoom }) ?? 0
+
+        ForEach(camera.videoSwitchZoomFactors.indices, id: \.self) { index in
+            let factor = factors[index]
+            // Check if this is the current index
+            if index == currentIndex {
+                // Display current zoom factor with padding
+                Text("\(currentZoom, format: .number.precision(.fractionLength(0...1)))×")
+                    .foregroundStyle(Color.accentColor)
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .frame(width: 30, height: 30, alignment: .center)
+                    .background(Material.thin)
+                    .clipShape(Circle())
+                    .scaleEffect(1.1)
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                if !camera.isZoomSliderEnabled {
+                                    toggleZoomSlider()
+                                }
+                                adjustZoom(dragOffset: value.translation.width)
+                                resetHideSliderTimer()
+                            }
+                            .onEnded { _ in
+                                lastZoomFactor = camera.zoomFactor
+                                resetHideSliderTimer()
+                            }
+                    )
+                    .onTapGesture {
+                        Task {
+                            await camera.setZoom(factor: camera.videoSwitchZoomFactors[index].doubleValue)
+                        }
+                    }
+            } else {
+                // Display default factor without padding
+                Text("\(factor, format: .number.precision(.fractionLength(0...1)))×")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .frame(width: 30, height: 30, alignment: .center)
+                    .background(Material.thin)
+                    .clipShape(Circle())
+                    .gesture(
+                        DragGesture()
+                            .onChanged { value in
+                                if !camera.isZoomSliderEnabled {
+                                    toggleZoomSlider()
+                                }
+                                adjustZoom(dragOffset: value.translation.width)
+                                resetHideSliderTimer()
+                            }
+                            .onEnded { _ in
+                                lastZoomFactor = camera.zoomFactor
+                                resetHideSliderTimer()
+                            }
+                    )
+                    .onTapGesture {
+                        Task {
+                            await camera.setZoom(factor: camera.videoSwitchZoomFactors[index].doubleValue)
+                        }
+                    }
+            }
+        }
+    }
+
     
     func adjustZoom(dragOffset: CGFloat) {
         let scaleAdjustment = dragOffset / 300
@@ -235,5 +312,3 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
         hideSliderWorkItem = nil
     }
 }
-
-
