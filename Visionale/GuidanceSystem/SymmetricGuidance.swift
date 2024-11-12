@@ -10,6 +10,8 @@ import UIKit
 
 @Observable
 class SymmetricGuidance: GuidanceSystem {
+    var contourRect: [CGRect] = []
+    
     var trackingRequests: [VNTrackObjectRequest]? = []
     var sequenceRequestHandler: VNSequenceRequestHandler = VNSequenceRequestHandler()
     var saliencyHandler: SaliencyHandler = .init()

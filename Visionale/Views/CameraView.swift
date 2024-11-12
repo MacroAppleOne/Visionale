@@ -9,6 +9,12 @@ import SwiftUI
 import AVFoundation
 import CoreGraphics
 
+//struct LineSegment: Shape {
+//    func path(in rect: CGRect) -> Path {
+//
+//    }
+//}
+
 @MainActor
 struct CameraView<CameraModel: Camera>: PlatformView {
     
@@ -20,6 +26,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @State var boundingBox: CGRect = .zero
     @State var cp: [StraightLine] = []
     @State var contour: CGPath? = .init(rect: .zero, transform: .none)
+    @State var contourRect: [CGRect] = []
     @State private var lastZoomFactor: CGFloat = 1.0
     @State private var progress: CGFloat = 0.0
     
@@ -72,6 +79,31 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                 PreviewContainer(camera: camera, lastZoomFactor: $lastZoomFactor) {
                     GeometryReader { gr in
                         CameraPreview(source: camera.previewSource, camera: camera)
+                        .overlay(alignment: .topLeading) {
+//                            ForEach(cp, id: \.id) { lines in
+//                                // For each array of StraightLine within cp
+//                                Path { path in
+//                                    path.move(to: lines.start)
+//                                    path.addLine(to: lines.end)
+//                                }
+//                                .transform(CGAffineTransform(scaleX: gr.size.width, y: gr.size.height))
+//                                .stroke(Color.red, lineWidth: 1)
+//                                .rotation3DEffect(Angle(degrees: 180), axis: (x: 1, y: 0, z: 0))
+//                            }
+//                        }
+//                        .overlay(alignment: .topLeading) {
+//                            let transform = CGAffineTransform(scaleX: gr.size.width, y: gr.size.height)
+//                            
+//                            let adjustedX = boundingBox.origin.x
+//                            let adjustedY = (1 - boundingBox.origin.y - boundingBox.height)
+//                            let adjustedWidth = boundingBox.width
+//                            let adjustedHeight = boundingBox.height
+//                            
+//                            Path { path in
+//                                path.addRect(CGRect(x: adjustedX, y: adjustedY, width: adjustedWidth, height: adjustedHeight), transform: transform)
+//                            }
+//                            .stroke(Color.blue, lineWidth: 1)
+//                        }
                             .onTapGesture { location in
                                 // Focus and expose at the tapped point.
                                 Task { await camera.focusAndExpose(at: location) }

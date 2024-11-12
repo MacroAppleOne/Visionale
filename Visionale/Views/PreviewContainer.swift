@@ -68,7 +68,20 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         let goldenRatio = camera.aspectRatio.size.width / camera.aspectRatio.size.height == 9 / 16 ? 1 : 0.786
                         switch camera.activeComposition {
                         case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
-                        case "LEADING LINE": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+//                        case "LEADING LINE": LeadingLineGuidance().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                        case "LEADING LINE":
+                            LeadingLineGrid(camera: camera)
+                                .frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+                                .rotation3DEffect(
+                                    Angle(degrees: 180),
+                                    axis: camera.grOrientation == .bottomRight ? (x: 0, y: 1.0, z: 0) :
+                                        camera.grOrientation == .topLeft ? (x: 1, y: 0, z: 0) :
+                                        camera.grOrientation == .topRight ? (x: 1, y: 0, z: 0) : (x: 0, y: 0, z: 0)
+                                )
+                                .rotation3DEffect(
+                                    Angle(degrees: 180),
+                                    axis: camera.grOrientation == .topRight ? (x: 0, y: 1.0, z: 0) : (x: 0, y: 0, z: 0)
+                                )
                         case "GOLDEN RATIO":
                             GoldenRatioGrid(camera: camera)
                                 .frame(width: gr.size.width * goldenRatio, height: gr.size.height)
@@ -93,15 +106,17 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                             .offset(y: camera.aspectRatio == .ratio16_9 ?  -gr.size.height / 7 : 0)
                     }
                     .onTapGesture(count: 2) {
-                        switch camera.grOrientation {
-                        case .bottomLeft:
-                            camera.changeGoldenRatioOrientation(orientation: .bottomRight)
-                        case .bottomRight:
-                            camera.changeGoldenRatioOrientation(orientation: .topRight)
-                        case .topRight:
-                            camera.changeGoldenRatioOrientation(orientation: .topLeft)
-                        case .topLeft:
-                            camera.changeGoldenRatioOrientation(orientation: .bottomLeft)
+                        if camera.activeComposition == "GOLDEN RATIO" || camera.activeComposition == "LEADING LINE" {
+                            switch camera.grOrientation {
+                            case .bottomLeft:
+                                camera.changeGoldenRatioOrientation(orientation: .bottomRight)
+                            case .bottomRight:
+                                camera.changeGoldenRatioOrientation(orientation: .topRight)
+                            case .topRight:
+                                camera.changeGoldenRatioOrientation(orientation: .topLeft)
+                            case .topLeft:
+                                camera.changeGoldenRatioOrientation(orientation: .bottomLeft)
+                            }
                         }
                     }
             }
