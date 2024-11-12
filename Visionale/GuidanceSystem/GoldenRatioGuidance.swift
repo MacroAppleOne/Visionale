@@ -10,6 +10,8 @@ import UIKit
 
 @Observable
 class GoldenRatioGuidance: GuidanceSystem {
+    var contourRect: [CGRect] = []
+    
     var saliencyHandler: SaliencyHandler = .init()
     var trackingRequests: [VNTrackObjectRequest]?
     var sequenceRequestHandler = VNSequenceRequestHandler()
@@ -151,7 +153,7 @@ class GoldenRatioGuidance: GuidanceSystem {
             }
         }
         else {
-            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.05 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.05 {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.025 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.025 {
                 return newShotPoint
             }
             else {
