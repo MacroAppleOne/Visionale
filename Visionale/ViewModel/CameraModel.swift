@@ -88,25 +88,21 @@ final class CameraModel: Camera {
     
     // MARK: - Compositions
     
-    var compositions: [Composition]
-    var activeID: UUID? = nil
+    var compositions: [Composition] = [
+        Composition(name: "CENTER", description: "", image: "center", isRecommended: false),
+        Composition(name: "LEADING LINE", description: "", image: "leading", isRecommended: false),
+        Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
+        Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
+        Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
+    ]
+    
+    
     var activeComposition: String = "CENTER"
     var grOrientation: GoldenRatioOrientation = .bottomLeft
     
     // MARK: - Initialization
     
     init() {
-        compositions = [
-            Composition(name: "CENTER", description: "", image: "center", isRecommended: false),
-            Composition(name: "LEADING LINE", description: "", image: "leading", isRecommended: false),
-            Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
-            Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
-            Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
-        ]
-        
-        // Initialize active composition ID.
-        activeID = compositions.first!.id
-        
         // Load machine learning layer asynchronously.
         Task {
             await loadMLLayer()
@@ -152,6 +148,9 @@ final class CameraModel: Camera {
     func capturePhoto() async {
         do {
             let photo = try await captureService.capturePhoto(with: photoFeatures.current)
+            
+            
+            
             try await mediaLibrary.save(photo: photo)
         } catch {
             self.error = error

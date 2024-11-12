@@ -17,19 +17,19 @@ struct MainToolbar<CameraModel: Camera>: PlatformView {
     @State var camera: CameraModel
     
     var body: some View {
-        
-        HStack {
-            ThumbnailButton(camera: camera)
-            Spacer()
-            CaptureButton(camera: camera)
-            Spacer()
-            SwitchCameraButton(camera: camera)
-        }
-        .foregroundColor(.white)
-        .font(.system(size: 24))
-        .frame(width: width, height: height)
-        .padding([.leading, .trailing])
-        
+//        VStack{
+
+            HStack {
+                ThumbnailButton(camera: camera)
+                Spacer()
+                CaptureButton(camera: camera)
+                Spacer()
+                SwitchCameraButton(camera: camera)
+            }
+            .font(.system(size: 24))
+            .frame(width: width, height: height)
+            .padding([.leading, .trailing])
+//        }
     }
     var width: CGFloat? { isRegularSize ? 250 : nil }
     var height: CGFloat? { 80 }

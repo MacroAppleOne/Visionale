@@ -84,11 +84,13 @@ class PhotoFeatures {
     var isFlashEnabled = false
     var isLivePhotoEnabled = false
     var qualityPrioritization: QualityPrioritization = .quality
-    
+    var aspectRatio: AspectRatio = .ratio4_3
     var current: EnabledPhotoFeatures {
         .init(isFlashEnabled: isFlashEnabled,
               isLivePhotoEnabled: isLivePhotoEnabled,
-              qualityPrioritization: qualityPrioritization)
+              qualityPrioritization: qualityPrioritization,
+              aspectRatio: aspectRatio
+        )
     }
 }
 
@@ -96,6 +98,7 @@ struct EnabledPhotoFeatures {
     let isFlashEnabled: Bool
     let isLivePhotoEnabled: Bool
     let qualityPrioritization: QualityPrioritization
+    let aspectRatio: AspectRatio
 }
 
 /// A structure that represents the capture capabilities of `CaptureService` in
