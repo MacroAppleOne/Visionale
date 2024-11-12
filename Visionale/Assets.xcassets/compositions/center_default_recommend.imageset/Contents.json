@@ -1,7 +1,7 @@
 {
   "images" : [
     {
-      "filename" : "center_default_recommend.svg",
+      "filename" : "Type=Center, State=Default, Recommend=Yes.svg",
       "idiom" : "universal",
       "scale" : "1x"
     },
