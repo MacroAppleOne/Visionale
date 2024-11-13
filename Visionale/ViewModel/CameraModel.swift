@@ -18,6 +18,10 @@ import Combine
 ///
 @Observable
 final class CameraModel: Camera {
+    var aspectRatio: AspectRatio {
+        return self.photoFeatures.aspectRatio
+    }
+    
     // MARK: - Properties
     /// The current status of the camera.
     private(set) var status = CameraStatus.unknown
@@ -74,8 +78,6 @@ final class CameraModel: Camera {
     var maxZoomFactor: CGFloat = 6.0
     
     /// The current aspect ratio
-    var aspectRatio: AspectRatio = .ratio4_3
-    
     var isAspectRatioOptionEnabled: Bool = false
     
     var videoSwitchZoomFactors: [NSNumber] = []
@@ -238,7 +240,7 @@ extension CameraModel {
                 mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
             case "GOLDEN RATIO":
                 mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(
-                    aspectRatio: self.aspectRatio.size.width / self.aspectRatio.size.height,
+                    aspectRatio: self.photoFeatures.aspectRatio.size.width / self.photoFeatures.aspectRatio.size.height,
                     orientation: .bottomLeft
                 ))
             case "RULE OF THIRDS":
@@ -256,7 +258,7 @@ extension CameraModel {
     func changeGoldenRatioOrientation(orientation: GoldenRatioOrientation) {
         self.grOrientation = orientation
         self.mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(
-            aspectRatio: self.aspectRatio.size.width / self.aspectRatio.size.height,
+            aspectRatio: self.photoFeatures.aspectRatio.size.width / self.photoFeatures.aspectRatio.size.height,
             orientation: orientation
         ))
     }
@@ -277,9 +279,8 @@ extension CameraModel {
 
 extension CameraModel {
     func toggleAspectRatio() {
-        aspectRatio = AspectRatio.next(after: aspectRatio)
+        self.photoFeatures.aspectRatio = AspectRatio.next(after: self.photoFeatures.aspectRatio)
     }
-    
 }
 /// Supported aspect ratios.
 enum AspectRatio: CaseIterable {
@@ -296,6 +297,10 @@ enum AspectRatio: CaseIterable {
         case .ratio1_1:
             return CGSize(width: 1, height: 1)
         }
+    }
+    
+    var value: CGFloat {
+        return size.width / size.height
     }
     
     var description: String {
