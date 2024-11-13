@@ -249,7 +249,8 @@ extension CameraModel {
                 mlcLayer?.setGuidanceSystem(nil)
             }
         }
-        
+        // Haptic
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
     
     func changeGoldenRatioOrientation(orientation: GoldenRatioOrientation) {
