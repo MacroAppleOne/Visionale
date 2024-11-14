@@ -170,7 +170,6 @@ enum SaliencyType {
 
 enum FrameType: String {
     case center = "Center"
-    case curved = "Curved"
     case leadingLine = "Leading Line"
     case goldenRatio = "Golden Ratio"
     case ruleOfThirds = "Rule Of Thirds"

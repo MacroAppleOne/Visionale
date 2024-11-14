@@ -12,18 +12,18 @@ import UIKit
 class SymmetricGuidance: GuidanceSystem {
     var contourRect: [CGRect] = []
     
-    var trackingRequests: [VNTrackObjectRequest]? = []
-    var sequenceRequestHandler: VNSequenceRequestHandler = VNSequenceRequestHandler()
     var saliencyHandler: SaliencyHandler = .init()
+    var trackingRequests: [VNTrackObjectRequest]?
+    var sequenceRequestHandler = VNSequenceRequestHandler()
     
     var bestShotPoint: CGPoint? = .zero
     
     var isAligned: Bool = false
     var shouldReset: Bool = true
     
+    var trackedObjects: [CGRect]? = []
     var selectedKeypoints: [Int] = []
     var keypoints: [CGPoint] = []
-    var trackedObjects: [CGRect]? = []
     var contourPaths: [StraightLine] = []
     var paths: CGPath = .init(rect: .zero, transform: .none)
     
@@ -33,21 +33,72 @@ class SymmetricGuidance: GuidanceSystem {
         self.bestShotPoint = self.findBestShotPoint(buffer: cvPixelBuffer)
         self.isAligned = self.checkAlignment(shotPoint: self.bestShotPoint ?? .zero)
     }
-
+    
     func reset() {
         self.trackingRequests = nil
         self.shouldReset = true
         self.isAligned = false
+        self.bestShotPoint = .zero
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
+        // MARK: SALIENCY
         if shouldReset {
             let focusPoint = self.getAttentionFocusPoint(from: buffer) ?? .zero
-            let boundingBoxes = self.getBoundingBoxes(buffer: buffer, saliencyType: .objectness)
+            let boundingBoxes = self.getBoundingBoxes(buffer: buffer,  saliencyType: .objectness)
+            
+            guard let boundingBoxes else {
+                logger.debug("No bounding boxes found, resetting guidance system")
+                reset()
+                return nil
+            }
+            
+            if !boundingBoxes.isEmpty {
+                let origin = CGPoint(
+                    x: focusPoint.x - 0.2,
+                    y: focusPoint.y - 0.2
+                )
+                let rect = CGRect(origin: origin, size: CGSize(width: 0.4, height: 0.4))
+                self.shouldReset = false
+                self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: rect))]
+                self.sequenceRequestHandler = VNSequenceRequestHandler()
+            }
+            else {
+                reset()
+                return nil
+            }
         }
-        return nil
+        
+        // MARK: OBJECT TRACKING
+        guard let trackResult = self.startTrackingObject(buffer: buffer) else {
+            return nil
+        }
+        
+        self.trackedObjects = [trackResult.boundingBox]
+        
+        let newShotPoint = CGPoint(
+            x: trackResult.boundingBox.midX,
+            y: 1 - trackResult.boundingBox.midY
+        )
+        
+        if isAligned {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.1 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.1 {
+                return newShotPoint
+            }
+            else {
+                return CGPoint(x: 0.5, y: 0.5)
+            }
+        }
+        else {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.025 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.025 {
+                return newShotPoint
+            }
+            else {
+                return self.bestShotPoint
+            }
+        }
     }
-
+    
     func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation? {
         guard let requests = self.trackingRequests, !requests.isEmpty else {
             logger.debug("no tracking request is made")
@@ -115,7 +166,7 @@ class SymmetricGuidance: GuidanceSystem {
         let result = saliencyHandler.detectSalientRegions(in: buffer, saliencyType: .objectness, frameType: .center)
         return result?.salientObjects?.map({$0.boundingBox})
     }
-
+    
     func getAttentionFocusPoint(from cvPixelBuffer: CVPixelBuffer) -> CGPoint? {
         guard let observation = saliencyHandler.detectSalientRegions(in: cvPixelBuffer, saliencyType: .attention, frameType: .center) else {
             logger.debug("Saliency result yield no result")
@@ -182,12 +233,9 @@ class SymmetricGuidance: GuidanceSystem {
                 
                 // Calculate brightness as the maximum of RGB components
                 let brightness = max(red, green, blue)
-
-                // Calculate distance to center, scaled between 0 and 1 (0 = center, 1 = farthest point)
-                let distanceToCenter = sqrt(pow(Double(x - centerX), 2) + pow(Double(y - centerY), 2)) / sqrt(pow(Double(centerX), 2) + pow(Double(centerY), 2))
                 
                 // Define a score that favors brightness and proximity to the center (lower distance)
-                let score = Double(brightness) * (1.0 - distanceToCenter)
+                let score = Double(brightness)
                 
                 // Update if this pixel has a higher score
                 if score > maxScore {

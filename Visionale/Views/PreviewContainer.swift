@@ -96,7 +96,7 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                                     axis: camera.grOrientation == .topRight ? (x: 0, y: 1.0, z: 0) : (x: 0, y: 0, z: 0)
                                 )
                         case "RULE OF THIRDS": RuleOfThirdsGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
-                        case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
+//                        case "SYMMETRIC": SymmetricGrid().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         default:
                             EmptyView()
                         }

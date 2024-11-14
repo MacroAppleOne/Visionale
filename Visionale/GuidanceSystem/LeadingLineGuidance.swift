@@ -63,8 +63,7 @@ class LeadingLineGuidance: GuidanceSystem {
                 reset()
                 return nil
             }
-            
-            vanishingPointBoundingBox = CGRect(x: vanishingPoint.x, y: vanishingPoint.y, width: 0.2, height: 0.2)
+            vanishingPointBoundingBox = CGRect(x: vanishingPoint.x - 0.125, y: vanishingPoint.y - 0.125, width: 0.25, height: 0.25)
             self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: vanishingPointBoundingBox))]
             self.sequenceRequestHandler = VNSequenceRequestHandler()
             

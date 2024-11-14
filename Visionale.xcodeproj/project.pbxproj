@@ -33,7 +33,6 @@
 		04507F3A2CCA7EAD00354629 /* Exceptions for "Visionale" folder in "VisionaléTests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				FrameRecom3C.mlmodel,
 				FrameRecom5C_3.mlmodel,
 			);
 			target = 93AB6A432CB6FEC00030095E /* VisionaléTests */;
@@ -41,7 +40,6 @@
 		04507F3B2CCA7EAD00354629 /* Exceptions for "Visionale" folder in "VisionaléUITests" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
-				FrameRecom3C.mlmodel,
 				FrameRecom5C_3.mlmodel,
 			);
 			target = 93AB6A4D2CB6FEC00030095E /* VisionaléUITests */;

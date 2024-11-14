@@ -221,7 +221,6 @@ class ShakeDetectionController: UIViewController {
     
     override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
         if motion == .motionShake {
-            logger.debug("shake detected")
             onShake?()
         }
     }
