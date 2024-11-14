@@ -28,7 +28,7 @@ protocol Camera: AnyObject {
     
     
     // MARK: UI Getter Setter
-    var aspectRatio: AspectRatio { get set }
+    var aspectRatio: AspectRatio { get }
     
     func toggleAspectRatio()
     

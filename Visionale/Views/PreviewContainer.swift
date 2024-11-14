@@ -68,7 +68,6 @@ struct PreviewContainer<Content: View, CameraModel: Camera>: View {
                         let goldenRatio = camera.aspectRatio.size.width / camera.aspectRatio.size.height == 9 / 16 ? 1 : 0.786
                         switch camera.activeComposition {
                         case "CENTER": CenterGrid(camera: camera).frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
-//                        case "LEADING LINE": LeadingLineGuidance().frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)
                         case "LEADING LINE":
                             LeadingLineGrid(camera: camera)
                                 .frame(width: gr.size.width, height: gr.size.width * camera.aspectRatio.size.height / camera.aspectRatio.size.width)

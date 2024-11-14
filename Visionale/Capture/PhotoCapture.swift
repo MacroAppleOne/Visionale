@@ -1,12 +1,13 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-An object that manages a photo capture output to take photographs.
-*/
+ See the LICENSE.txt file for this sample’s licensing information.
+ 
+ Abstract:
+ An object that manages a photo capture output to take photographs.
+ */
 
 import AVFoundation
 import CoreImage
+import UIKit
 
 enum PhotoCaptureError: Error {
     case noPhotoData
@@ -35,12 +36,14 @@ final class PhotoCapture: OutputService {
     /// The app calls this method when the user taps the photo capture button.
     func capturePhoto(with features: EnabledPhotoFeatures) async throws -> Photo {
         // Wrap the delegate-based capture API in a continuation to use it in an async context.
+        
+        
         try await withCheckedThrowingContinuation { continuation in
             
             // Create a settings object to configure the photo capture.
             let photoSettings = createPhotoSettings(with: features)
             
-            let delegate = PhotoCaptureDelegate(continuation: continuation)
+            let delegate = PhotoCaptureDelegate(continuation: continuation, features: features)
             monitorProgress(of: delegate)
             
             // Capture a new photo with the specified settings.
@@ -147,6 +150,7 @@ typealias PhotoContinuation = CheckedContinuation<Photo, Error>
 private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     
     private let continuation: PhotoContinuation
+    private let features: EnabledPhotoFeatures
     
     private var isLivePhoto = false
     private var isProxyPhoto = false
@@ -159,8 +163,9 @@ private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     private let activityContinuation: AsyncStream<CaptureActivity>.Continuation
     
     /// Creates a new delegate object with the checked continuation to call when processing is complete.
-    init(continuation: PhotoContinuation) {
+    init(continuation: PhotoContinuation, features: EnabledPhotoFeatures) {
         self.continuation = continuation
+        self.features = features
         
         let (activityStream, activityContinuation) = AsyncStream.makeStream(of: CaptureActivity.self)
         self.activityStream = activityStream
@@ -202,33 +207,99 @@ private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishProcessingPhoto photo: AVCapturePhoto, error: Error?) {
         if let error = error {
-            logger.debug("Error capturing photo: \(String(describing: error))")
+            logger.debug("Error capturing photo: \(error)")
             return
         }
-        photoData = photo.fileDataRepresentation()
+        
+        guard let photoData = photo.fileDataRepresentation(),
+              let image = UIImage(data: photoData) else {
+            logger.debug("No photo data or cannot create UIImage")
+            return
+        }
+        
+        let aspectRatio = features.aspectRatio
+        let croppedImage = cropImage(image, to: aspectRatio)
+        
+        guard let croppedPhotoData = croppedImage.jpegData(compressionQuality: 1.0) else {
+            logger.debug("Cannot convert cropped UIImage to data")
+            return
+        }
+        
+        self.photoData = croppedPhotoData
     }
     
-    func photoOutput(_ output: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
+    private func cropImage(_ image: UIImage, to aspectRatio: AspectRatio) -> UIImage {
+        let originalAspectRatio = image.size.height / image.size.width
+        var newImageSize = image.size
 
+        if originalAspectRatio > aspectRatio.value {
+            newImageSize.height = image.size.width * aspectRatio.value
+        } else if originalAspectRatio < aspectRatio.value {
+            newImageSize.width = image.size.height / aspectRatio.value
+        } else {
+            return image
+        }
+
+        let center = CGPoint(x: image.size.width / 2, y: image.size.height / 2)
+        let origin = CGPoint(x: center.x - newImageSize.width / 2, y: center.y - newImageSize.height / 2)
+        let cropZone = CGRect(origin: origin, size: newImageSize)
+
+        let cgImage = image.cgImage
+
+        // Adjust cropZone to the pixel coordinate space
+        let scale = image.scale
+        let scaledCropZone = CGRect(
+            x: cropZone.origin.x * scale,
+            y: cropZone.origin.y * scale,
+            width: cropZone.size.width * scale,
+            height: cropZone.size.height * scale
+        )
+
+        let croppedCgImage = cgImage!.cropping(to: scaledCropZone)!
+        let croppedImage = UIImage(cgImage: croppedCgImage, scale: image.scale, orientation: image.imageOrientation)
+
+        return croppedImage
+    }
+
+    
+    func photoOutput(_ output: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
         defer {
             /// Finish the continuation to terminate the activity stream.
             activityContinuation.finish()
         }
-
-        // If an error occurs, resume the continuation by throwing an error, and return.
-        if let error {
+        
+        if let error = error {
             continuation.resume(throwing: error)
             return
         }
         
-        // If the app captures no photo data, resume the continuation by throwing an error, and return.
+        // Ensure photoData is available
         guard let photoData else {
             continuation.resume(throwing: PhotoCaptureError.noPhotoData)
             return
         }
         
+        // Perform cropping here
+        guard let image = UIImage(data: photoData) else {
+            continuation.resume(throwing: PhotoCaptureError.noPhotoData)
+            return
+        }
+        
+        let aspectRatio = features.aspectRatio
+        let croppedImage = cropImage(image, to: aspectRatio)
+        
+        guard let croppedPhotoData = croppedImage.jpegData(compressionQuality: 1.0) else {
+            continuation.resume(throwing: PhotoCaptureError.noPhotoData)
+            return
+        }
+        
+        // Update photoData with cropped data
+        self.photoData = croppedPhotoData
+        print("save crop image")
+        
         /// Create a photo object to save to the `MediaLibrary`.
-        let photo = Photo(data: photoData, isProxy: isProxyPhoto, livePhotoMovieURL: livePhotoMovieURL)
+        let photo = Photo(data: croppedPhotoData, isProxy: isProxyPhoto, livePhotoMovieURL: livePhotoMovieURL)
+        print("masuk galer")
         // Resume the continuation by returning the captured photo.
         continuation.resume(returning: photo)
     }

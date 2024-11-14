@@ -29,7 +29,7 @@ struct Carousel<CameraModel: Camera>: View {
         let minRotationAngle = rotationAngleLast - safeZoneDegrees
         
         return ZStack {
-            let radius = min(geometry.size.width - 72, geometry.size.height - 72) / 2
+            let radius = min(geometry.size.width - 144, geometry.size.height - 144) / 2
             // Placing compositions along the arc or in a horizontal line
             ForEach(Array(camera.compositions.enumerated()), id: \.offset) { index, element in
                 let anglePerButton = totalButtonArc / Double(camera.compositions.count - 1)
@@ -51,8 +51,6 @@ struct Carousel<CameraModel: Camera>: View {
                     }
             }
         }
-        //        .frame(width: geometry.size.width, height: geometry.size.height)
-        //        .offset(y: camera.isFramingCarouselEnabled ? 0 : -geometry.size.height / 5)
         .rotationEffect(camera.isFramingCarouselEnabled ? rotationAngle : .zero) // Rotate dial if carousel is on
         .gesture(
             DragGesture()
@@ -143,34 +141,24 @@ struct Carousel<CameraModel: Camera>: View {
     }
     
     var body: some View {
-        VStack {
-            
-            
-            CompositionTextView
-            //        GeometryReader { gr in
-            //            VStack {
-            //                Spacer()
-            //                CompositionTextView
-            ////                    .position(x: gr.size.width / 2, y:gr.size.height / (camera.isFramingCarouselEnabled ?  1.5 : 1.2))
-            HalfRotaryDial(geometry: geometry)
-            ////                    .background(CarouselBackground)
-            ////                    .position(x: gr.size.width / 2, y:gr.size.height / 2.6)
-            ////                    .scaleEffect(1.1)
-            ////                    .frame(maxHeight: geometry.size.height / 2)
-                .onTapGesture {
-                    // Set isFramingCarouselEnabled to true
-                    withAnimation(.easeInOut) {
-                        camera.isFramingCarouselEnabled = true
-                    }
-                    // Revert back to false after 2 seconds
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+            VStack {
+                CompositionTextView
+                HalfRotaryDial(geometry: geometry)
+                    .onTapGesture {
+                        // Set isFramingCarouselEnabled to true
                         withAnimation(.easeInOut) {
-                            camera.isFramingCarouselEnabled = false
+                            camera.isFramingCarouselEnabled = true
+                        }
+                        // Revert back to false after 2 seconds
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
+                            withAnimation(.easeInOut) {
+                                camera.isFramingCarouselEnabled = false
+                            }
                         }
                     }
-                }
         }
-        //        }
+//            .padding(.bottom, 4)
+            .offset(y: -20)
     }
     
     @ViewBuilder
