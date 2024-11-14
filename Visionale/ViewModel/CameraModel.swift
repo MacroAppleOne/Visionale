@@ -1,6 +1,6 @@
 /*
  See the LICENSE.txt file for this sample’s licensing information.
-
+ 
  Abstract:
  An object that provides the interface to the features of the camera.
  */

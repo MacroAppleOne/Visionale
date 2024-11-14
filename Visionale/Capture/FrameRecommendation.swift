@@ -97,7 +97,7 @@ class FrameRecommendation {
     }
     
     func processFrame(_ buffer: CMSampleBuffer) -> String {
-        var predicted: String = "Unknwon"
+        var predicted: String = "Unknown"
         
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(buffer) else {
             logger.debug("Error getting pixel buffer")
@@ -120,20 +120,6 @@ class FrameRecommendation {
             logger.debug("Error making predictions: \(error)")
         }
         
-        
-        // Convert to MLMultiArray
-//        if let multiArray = self.pixelBufferToMultiArray(resizedBuffer) {
-//            // Pass the MLMultiArray to your Core ML model
-//            do {
-//                let input = FrameRecom5C_3Input(image: pixelBuffer)  // Ensure your model's input type matches
-//                let prediction = try model?.prediction(input: input)
-//                
-//                predicted = convertPredictionIntoLabel(in: prediction?.target) ?? "Unknown"
-//                
-//            } catch {
-//                logger.debug("Error making prediction: \(error)")
-//            }
-//        }
         
         return predicted
     }

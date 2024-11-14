@@ -229,38 +229,38 @@ private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     }
     
     private func cropImage(_ image: UIImage, to aspectRatio: AspectRatio) -> UIImage {
-        let originalAspectRatio = image.size.height / image.size.width
+        let originalAspectRatio = 0.75
         var newImageSize = image.size
-
-        if originalAspectRatio > aspectRatio.value {
-            newImageSize.height = image.size.width * aspectRatio.value
-        } else if originalAspectRatio < aspectRatio.value {
-            newImageSize.width = image.size.height / aspectRatio.value
-        } else {
+        
+        switch aspectRatio {
+            
+        case .ratio4_3:
+            return image
+        case .ratio16_9:
+            if image.imageOrientation != .up {
+                let h = image.size.height
+                let w = image.size.height * 9 / 16
+                newImageSize = CGSize(width: h, height: w)
+            } else {
+                newImageSize.height = image.size.width * 9/16
+                
+            }
+        case .ratio1_1:
+            if image.imageOrientation != .up {
+                newImageSize.height = image.size.height * originalAspectRatio
+            } else {
+                newImageSize.width = image.size.width * originalAspectRatio
+            }
+        }
+        let cropZone = CGRect(origin: .zero, size: newImageSize)
+        
+        guard let cgImage = image.cgImage?.cropping(to: cropZone) else {
             return image
         }
-
-        let center = CGPoint(x: image.size.width / 2, y: image.size.height / 2)
-        let origin = CGPoint(x: center.x - newImageSize.width / 2, y: center.y - newImageSize.height / 2)
-        let cropZone = CGRect(origin: origin, size: newImageSize)
-
-        let cgImage = image.cgImage
-
-        // Adjust cropZone to the pixel coordinate space
-        let scale = image.scale
-        let scaledCropZone = CGRect(
-            x: cropZone.origin.x * scale,
-            y: cropZone.origin.y * scale,
-            width: cropZone.size.width * scale,
-            height: cropZone.size.height * scale
-        )
-
-        let croppedCgImage = cgImage!.cropping(to: scaledCropZone)!
-        let croppedImage = UIImage(cgImage: croppedCgImage, scale: image.scale, orientation: image.imageOrientation)
-
-        return croppedImage
+        
+        return UIImage(cgImage: cgImage, scale: image.scale, orientation: image.imageOrientation)
     }
-
+    
     
     func photoOutput(_ output: AVCapturePhotoOutput, didFinishCaptureFor resolvedSettings: AVCaptureResolvedPhotoSettings, error: Error?) {
         defer {
@@ -295,11 +295,9 @@ private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         
         // Update photoData with cropped data
         self.photoData = croppedPhotoData
-        print("save crop image")
         
         /// Create a photo object to save to the `MediaLibrary`.
         let photo = Photo(data: croppedPhotoData, isProxy: isProxyPhoto, livePhotoMovieURL: livePhotoMovieURL)
-        print("masuk galer")
         // Resume the continuation by returning the captured photo.
         continuation.resume(returning: photo)
     }
