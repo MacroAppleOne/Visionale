@@ -95,7 +95,6 @@ final class CameraModel: Camera {
         Composition(name: "LEADING LINE", description: "", image: "leading", isRecommended: false),
         Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
         Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
-//        Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
     ]
     
     
