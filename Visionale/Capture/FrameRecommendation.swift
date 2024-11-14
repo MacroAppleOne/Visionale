@@ -10,13 +10,13 @@ import CoreImage
 import AVFoundation
 
 class FrameRecommendation {
-    let model: FrameRecom5C_3?
+    let model: FrameRecommendation4C?
     init() {
         do {
             let config = MLModelConfiguration()
             config.computeUnits = .cpuAndNeuralEngine
 //            self.model = try CompositionClassifier(configuration: config)
-            self.model = try FrameRecom5C_3(configuration: config)
+            self.model = try FrameRecommendation4C(configuration: config)
         } catch {
             logger.debug("Error initializing model: \(error)")
             self.model = nil
@@ -112,7 +112,7 @@ class FrameRecommendation {
         }
         
         do {
-            let input = FrameRecom5C_3Input(image: resizedBuffer)
+            let input = FrameRecommendation4CInput(image: resizedBuffer)
             let prediction = try model?.prediction(input: input)
             predicted = prediction?.target ?? "Unknown"
         }
