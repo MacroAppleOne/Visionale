@@ -244,8 +244,6 @@ extension CameraModel {
                 ))
             case "RULE OF THIRDS":
                 mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
-//            case "SYMMETRIC":
-//                mlcLayer?.setGuidanceSystem(nil)
             default:
                 mlcLayer?.setGuidanceSystem(nil)
             }

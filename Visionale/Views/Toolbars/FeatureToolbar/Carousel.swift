@@ -40,7 +40,7 @@ struct Carousel<CameraModel: Camera>: View {
                 CompositionButton(for: element)
                     .rotationEffect(camera.isFramingCarouselEnabled ? -rotationAngle : .zero) // Keep compositions upright
                     .offset(
-                        x: camera.isFramingCarouselEnabled ? radius * CGFloat(cos(angle.radians)) : CGFloat(index - camera.compositions.count / 2) * buttonSpacing + translationOffset,
+                        x: camera.isFramingCarouselEnabled ? radius * CGFloat(cos(angle.radians)) : (CGFloat(index) - (CGFloat(camera.compositions.count - 1) / 2.0)) * buttonSpacing + translationOffset,
                         y: camera.isFramingCarouselEnabled ? radius * CGFloat(sin(angle.radians)) : 0
                     )
                     .onTapGesture {
@@ -141,24 +141,23 @@ struct Carousel<CameraModel: Camera>: View {
     }
     
     var body: some View {
-            VStack {
-                CompositionTextView
-                HalfRotaryDial(geometry: geometry)
-                    .onTapGesture {
-                        // Set isFramingCarouselEnabled to true
+        VStack {
+            CompositionTextView
+            HalfRotaryDial(geometry: geometry)
+                .onTapGesture {
+                    // Set isFramingCarouselEnabled to true
+                    withAnimation(.easeInOut) {
+                        camera.isFramingCarouselEnabled = true
+                    }
+                    // Revert back to false after 2 seconds
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
                         withAnimation(.easeInOut) {
-                            camera.isFramingCarouselEnabled = true
-                        }
-                        // Revert back to false after 2 seconds
-                        DispatchQueue.main.asyncAfter(deadline: .now() + 1.5) {
-                            withAnimation(.easeInOut) {
-                                camera.isFramingCarouselEnabled = false
-                            }
+                            camera.isFramingCarouselEnabled = false
                         }
                     }
+                }
         }
-//            .padding(.bottom, 4)
-            .offset(y: -20)
+        .offset(y: -20)
     }
     
     @ViewBuilder
