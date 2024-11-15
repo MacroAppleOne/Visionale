@@ -10,14 +10,13 @@ import CoreImage
 import AVFoundation
 
 class FrameRecommendation {
-    let model: FrameRecom5C_3?
-    
+    let model: FrameRecommendation4C?
     init() {
         do {
             let config = MLModelConfiguration()
             config.computeUnits = .cpuAndNeuralEngine
 //            self.model = try CompositionClassifier(configuration: config)
-            self.model = try FrameRecom5C_3(configuration: config)
+            self.model = try FrameRecommendation4C(configuration: config)
         } catch {
             logger.debug("Error initializing model: \(error)")
             self.model = nil
@@ -92,13 +91,13 @@ class FrameRecommendation {
                 maxIndex = i
             }
         }
-        let classes = ["center", "golden_ratio", "leading_line", "rule_of_thirds", "symmetric"]
+        let classes = ["center", "golden_ratio", "leading_line", "rule_of_thirds"]
         
         return classes[maxIndex]
     }
     
     func processFrame(_ buffer: CMSampleBuffer) -> String {
-        var predicted: String = "Unknwon"
+        var predicted: String = "Unknown"
         
         guard let pixelBuffer = CMSampleBufferGetImageBuffer(buffer) else {
             logger.debug("Error getting pixel buffer")
@@ -113,7 +112,7 @@ class FrameRecommendation {
         }
         
         do {
-            let input = FrameRecom5C_3Input(image: resizedBuffer)
+            let input = FrameRecommendation4CInput(image: resizedBuffer)
             let prediction = try model?.prediction(input: input)
             predicted = prediction?.target ?? "Unknown"
         }
@@ -121,20 +120,6 @@ class FrameRecommendation {
             logger.debug("Error making predictions: \(error)")
         }
         
-        
-        // Convert to MLMultiArray
-//        if let multiArray = self.pixelBufferToMultiArray(resizedBuffer) {
-//            // Pass the MLMultiArray to your Core ML model
-//            do {
-//                let input = FrameRecom5C_3Input(image: pixelBuffer)  // Ensure your model's input type matches
-//                let prediction = try model?.prediction(input: input)
-//                
-//                predicted = convertPredictionIntoLabel(in: prediction?.target) ?? "Unknown"
-//                
-//            } catch {
-//                logger.debug("Error making prediction: \(error)")
-//            }
-//        }
         
         return predicted
     }

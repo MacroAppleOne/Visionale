@@ -46,6 +46,7 @@ class SaliencyHandler {
     func detectSalientRegions(in pixelBuffer: CVPixelBuffer, saliencyType: SaliencyType = .attention, frameType: FrameType) -> VNSaliencyImageObservation? {
         // Create the appropriate VNRequest for the saliency type
         let request: VNImageBasedRequest = (saliencyType == .attention) ? VNGenerateAttentionBasedSaliencyImageRequest() : VNGenerateObjectnessBasedSaliencyImageRequest()
+        request.preferBackgroundProcessing = true
         let handler = VNImageRequestHandler(cvPixelBuffer: pixelBuffer, orientation: imageOrientationFromDeviceOrientation(), options: [:])
         
         do {

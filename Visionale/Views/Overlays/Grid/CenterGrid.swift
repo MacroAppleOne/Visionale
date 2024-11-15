@@ -29,6 +29,6 @@ struct CenterGrid<CameraModel: Camera>: View {
     }
 }
 
-//#Preview {
-//    CenterGrid(isAligned: .constant(false))
-//}
+#Preview {
+    CenterGrid(camera: CameraModel())
+}

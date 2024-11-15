@@ -6,8 +6,10 @@
  */
 
 import SwiftUI
+import UIKit
 import AVFoundation
 import CoreGraphics
+
 
 @MainActor
 struct CameraView<CameraModel: Camera>: PlatformView {
@@ -20,11 +22,13 @@ struct CameraView<CameraModel: Camera>: PlatformView {
     @State var boundingBox: CGRect = .zero
     @State var cp: [StraightLine] = []
     @State var contour: CGPath? = .init(rect: .zero, transform: .none)
+    @State var contourRect: [CGRect] = []
     @State private var lastZoomFactor: CGFloat = 1.0
     @State private var progress: CGFloat = 0.0
     
     @State private var isAnimating = false
     @State private var showOverlay = true
+    @State private var shakeCount = 0
     
     private var cameraOffset: CGFloat {
         if camera.aspectRatio == .ratio16_9 {
@@ -76,6 +80,9 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                 // Focus and expose at the tapped point.
                                 Task { await camera.focusAndExpose(at: location) }
                             }
+                            .onTapGesture(count: 3) {
+                                camera.mlcLayer?.guidanceSystem?.reset()
+                            }
                         /// The value of `shouldFlashScreen` changes briefly to `true` when capture
                         /// starts, then immediately changes to `false`. Use this to
                         /// flash the screen to provide visual feedback.
@@ -103,7 +110,6 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                             .overlay(alignment: .top) {
                                 LiveBadge()
                                     .opacity(camera.captureActivity.isLivePhoto ? 1.0 : 0.0)
-                                
                             }
                             .overlay {
                                 StatusOverlayView(status: camera.status)
@@ -121,17 +127,15 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                                     UIImpactFeedbackGenerator(style: .medium).impactOccurred()
                                 }
                             }
+                        
                     }
                 }
                 .offset(y: cameraOffset)
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                //                .padding(.top)
-                //                .if(camera.aspectRatio == .ratio16_9){ view in
-                //                    view.padding(.top)
-                //                }
             }
             .padding(.top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.darkGradient)
             .overlay(alignment: .top){
                 VStack{
                     FeaturesToolbar(camera: camera)
@@ -139,35 +143,55 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                 }
             }
             .overlay(alignment: .bottom){
-                VStack{
+                VStack(spacing: 0){
                     if !camera.isZoomSliderEnabled || camera.aspectRatio == .ratio1_1 {
+                        ZStack{
+                            if (camera.isFramingCarouselEnabled) {
+                                    HalfCircle()
+                                    .fill(Color.darkGradient.opacity(0.7))
+                                        .frame(height: 56)
+                                        .offset(y: 12)
+                            }
                             Carousel(camera: camera, geometry: geometry)
-                                .padding(.bottom, 12)
-                        
+                        }
                     }
                     MainToolbar(camera: camera)
                 }
-                .padding(.bottom, geometry.size.height / 20)
             }
             .animation(.linear(duration: 0.1), value: camera.aspectRatio)
+            .background(
+                ShakeDetector(onShake: {
+                    camera.mlcLayer?.guidanceSystem?.reset()
+                })
+            )
         }
+    }
+}
+
+class ShakeDetectionController: UIViewController {
+    var onShake: (() -> Void)?
+    
+    override func motionEnded(_ motion: UIEvent.EventSubtype, with event: UIEvent?) {
+        if motion == .motionShake {
+            onShake?()
+        }
+    }
+}
+
+struct ShakeDetector: UIViewControllerRepresentable {
+    var onShake: () -> Void
+    
+    func makeUIViewController(context: Context) -> ShakeDetectionController {
+        let controller = ShakeDetectionController()
+        controller.onShake = onShake
+        return controller
     }
     
-    func startTimer() {
-        // Start animating the background fill over 5 seconds
-        isAnimating = true
-        showOverlay = true
-        withAnimation(.linear(duration: 5)) {
-            progress = 1.0
-        }
-        
-        // Reset after 5 seconds
-        DispatchQueue.main.asyncAfter(deadline: .now() + 5) {
-            progress = 0.0
-            isAnimating = false
-            withAnimation(.easeOut(duration: 1)) { // Fade out animation
-                showOverlay = false // Hide overlay after 5 seconds
-            }
-        }
+    func updateUIViewController(_ uiViewController: ShakeDetectionController, context: Context) {
+        uiViewController.onShake = onShake
     }
+}
+
+#Preview {
+    CameraView(camera: PreviewCameraModel())
 }

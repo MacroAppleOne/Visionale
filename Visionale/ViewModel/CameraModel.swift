@@ -18,7 +18,9 @@ import Combine
 ///
 @Observable
 final class CameraModel: Camera {
-    
+    var aspectRatio: AspectRatio {
+        return self.photoFeatures.aspectRatio
+    }
     
     // MARK: - Properties
     /// The current status of the camera.
@@ -76,9 +78,9 @@ final class CameraModel: Camera {
     var maxZoomFactor: CGFloat = 6.0
     
     /// The current aspect ratio
-    var aspectRatio: AspectRatio = .ratio4_3
-    
     var isAspectRatioOptionEnabled: Bool = false
+    
+    var videoSwitchZoomFactors: [NSNumber] = []
     
     func toggleAspectRatioOption() {
         isAspectRatioOptionEnabled.toggle()
@@ -93,7 +95,6 @@ final class CameraModel: Camera {
         Composition(name: "LEADING LINE", description: "", image: "leading", isRecommended: false),
         Composition(name: "GOLDEN RATIO", description: "", image: "golden", isRecommended: false),
         Composition(name: "RULE OF THIRDS", description: "", image: "rot", isRecommended: false),
-        Composition(name: "SYMMETRIC", description: "", image: "symmetric", isRecommended: false),
     ]
     
     
@@ -101,9 +102,11 @@ final class CameraModel: Camera {
     var grOrientation: GoldenRatioOrientation = .bottomLeft
     
     // MARK: - Initialization
+    private func updateVideoSwitchZoomFactors() async {
+        await self.videoSwitchZoomFactors = captureService.virtualDeviceZoomSwitch
+    }
     
     init() {
-        // Load machine learning layer asynchronously.
         Task {
             await loadMLLayer()
         }
@@ -120,6 +123,7 @@ final class CameraModel: Camera {
         do {
             try await captureService.start()
             await updateMaxZoomFactors()
+            await updateVideoSwitchZoomFactors()
             observeState()
             status = .running
         } catch {
@@ -135,6 +139,7 @@ final class CameraModel: Camera {
         isSwitchingVideoDevices = true
         defer { isSwitchingVideoDevices = false }
         await captureService.selectNextVideoDevice()
+        await updateVideoSwitchZoomFactors()
     }
     
     // MARK: - Photo Capture
@@ -234,24 +239,23 @@ extension CameraModel {
                 mlcLayer?.setGuidanceSystem(LeadingLineGuidance())
             case "GOLDEN RATIO":
                 mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(
-                    aspectRatio: self.aspectRatio.size.width / self.aspectRatio.size.height,
+                    aspectRatio: self.photoFeatures.aspectRatio.size.width / self.photoFeatures.aspectRatio.size.height,
                     orientation: .bottomLeft
                 ))
             case "RULE OF THIRDS":
                 mlcLayer?.setGuidanceSystem(RuleOfThirdsGuidance())
-            case "SYMMETRIC":
-                mlcLayer?.setGuidanceSystem(SymmetricGuidance())
             default:
                 mlcLayer?.setGuidanceSystem(nil)
             }
         }
-        
+        // Haptic
+        UIImpactFeedbackGenerator(style: .medium).impactOccurred()
     }
     
     func changeGoldenRatioOrientation(orientation: GoldenRatioOrientation) {
         self.grOrientation = orientation
         self.mlcLayer?.setGuidanceSystem(GoldenRatioGuidance(
-            aspectRatio: self.aspectRatio.size.width / self.aspectRatio.size.height,
+            aspectRatio: self.photoFeatures.aspectRatio.size.width / self.photoFeatures.aspectRatio.size.height,
             orientation: orientation
         ))
     }
@@ -272,9 +276,8 @@ extension CameraModel {
 
 extension CameraModel {
     func toggleAspectRatio() {
-        aspectRatio = AspectRatio.next(after: aspectRatio)
+        self.photoFeatures.aspectRatio = AspectRatio.next(after: self.photoFeatures.aspectRatio)
     }
-    
 }
 /// Supported aspect ratios.
 enum AspectRatio: CaseIterable {
@@ -291,6 +294,10 @@ enum AspectRatio: CaseIterable {
         case .ratio1_1:
             return CGSize(width: 1, height: 1)
         }
+    }
+    
+    var value: CGFloat {
+        return size.width / size.height
     }
     
     var description: String {

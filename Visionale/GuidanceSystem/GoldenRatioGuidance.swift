@@ -10,6 +10,8 @@ import UIKit
 
 @Observable
 class GoldenRatioGuidance: GuidanceSystem {
+    var contourRect: [CGRect] = []
+    
     var saliencyHandler: SaliencyHandler = .init()
     var trackingRequests: [VNTrackObjectRequest]?
     var sequenceRequestHandler = VNSequenceRequestHandler()
@@ -48,6 +50,7 @@ class GoldenRatioGuidance: GuidanceSystem {
         self.shouldReset = true
         self.selectedKeypoints.removeAll()
         self.targetPoint = .zero
+        self.bestShotPoint = .zero
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
@@ -151,7 +154,7 @@ class GoldenRatioGuidance: GuidanceSystem {
             }
         }
         else {
-            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.05 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.05 {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.025 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.025 {
                 return newShotPoint
             }
             else {

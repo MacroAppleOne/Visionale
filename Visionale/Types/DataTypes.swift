@@ -170,7 +170,6 @@ enum SaliencyType {
 
 enum FrameType: String {
     case center = "Center"
-    case curved = "Curved"
     case leadingLine = "Leading Line"
     case goldenRatio = "Golden Ratio"
     case ruleOfThirds = "Rule Of Thirds"
@@ -196,6 +195,7 @@ protocol GuidanceSystem {
     var selectedKeypoints: [Int] { get set }
     var keypoints: [CGPoint] { get }
     var contourPaths: [StraightLine] { get }
+    var contourRect: [CGRect] { get }
     var paths: CGPath { get }
     
     func guide(buffer: CMSampleBuffer)
@@ -204,4 +204,23 @@ protocol GuidanceSystem {
     func getBoundingBoxes(buffer: CVPixelBuffer, saliencyType: SaliencyType) -> [CGRect]?
     func startTrackingObject(buffer: CVPixelBuffer) -> VNDetectedObjectObservation?
     func reset()
+}
+
+struct StraightLine: Equatable, Identifiable{
+    let id: UUID = UUID()
+    let start: CGPoint
+    let end: CGPoint
+    
+    init(start: CGPoint, end: CGPoint) {
+        self.start = start
+        self.end = end
+    }
+}
+
+enum LineDirection {
+    case downRight
+    case downLeft
+    case upRight
+    case upLeft
+    case unknown
 }

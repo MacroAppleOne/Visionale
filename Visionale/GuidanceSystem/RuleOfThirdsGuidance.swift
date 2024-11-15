@@ -16,6 +16,9 @@ enum ObjectType {
 
 @Observable
 class RuleOfThirdsGuidance: GuidanceSystem {
+    var contourPaths: [StraightLine] = []
+    var contourRect: [CGRect] = []
+    
     var saliencyHandler: SaliencyHandler = .init()
     var trackingRequests: [VNTrackObjectRequest]?
     var sequenceRequestHandler = VNSequenceRequestHandler()
@@ -34,7 +37,6 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         CGPoint(x: 0.33, y: 0.67),
         CGPoint(x: 0.67, y: 0.67),
     ]
-    var contourPaths: [StraightLine] = []
     var paths: CGPath = .init(rect: .zero, transform: .none)
     
     func guide(buffer: CMSampleBuffer) {
@@ -51,6 +53,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
         self.shouldReset = true
         self.selectedKeypoints.removeAll()
         self.targetPoint = .zero
+        self.bestShotPoint = .zero
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {

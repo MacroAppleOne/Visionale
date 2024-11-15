@@ -8,7 +8,7 @@
 import Vision
 import UIKit
 
-class ContourHandler {
+class ContourDetectionHandler {
     var originalWidth = 0
     var originalHeight = 0
     
@@ -43,13 +43,15 @@ class ContourHandler {
         return context.createCGImage(ciImage, from: ciImage.extent)
     }
     
-    func detectContour(in pixelBuffer: CVPixelBuffer) -> VNContoursObservation? {
+    func detectContour(in buffer: CVPixelBuffer) -> VNContoursObservation? {
         let request = VNDetectContoursRequest()
+        request.maximumImageDimension = 1024
         request.contrastAdjustment = 1.0
         request.detectsDarkOnLight = true
+        request.preferBackgroundProcessing = true
         
         let handler = VNImageRequestHandler(
-            cvPixelBuffer: pixelBuffer,
+            cvPixelBuffer: buffer,
             orientation: imageOrientationFromDeviceOrientation(),
             options: [:]
         )

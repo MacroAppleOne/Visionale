@@ -1,9 +1,9 @@
 /*
-See the LICENSE.txt file for this sample’s licensing information.
-
-Abstract:
-An object that retrieves camera and microphone devices.
-*/
+ See the LICENSE.txt file for this sample’s licensing information.
+ 
+ Abstract:
+ An object that retrieves camera and microphone devices.
+ */
 
 import AVFoundation
 import Combine
@@ -28,7 +28,7 @@ final class DeviceLookup {
             AVCaptureDevice.userPreferredCamera = backCameraDiscoverySession.devices.first
         }
     }
-
+    
     var cameras: [AVCaptureDevice] {
         // Populate the cameras array with the available cameras.
         var cameras: [AVCaptureDevice] = []

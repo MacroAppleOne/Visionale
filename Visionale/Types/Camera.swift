@@ -28,7 +28,7 @@ protocol Camera: AnyObject {
     
     
     // MARK: UI Getter Setter
-    var aspectRatio: AspectRatio { get set }
+    var aspectRatio: AspectRatio { get }
     
     func toggleAspectRatio()
     
@@ -87,6 +87,8 @@ protocol Camera: AnyObject {
     var activeComposition: String { get }
     
     var grOrientation: GoldenRatioOrientation { get set }
+    
+    var videoSwitchZoomFactors: [NSNumber] { get }
     
     /// Finds a composition by its name and updates recommended compositions.
     func findComposition(withName name: String)

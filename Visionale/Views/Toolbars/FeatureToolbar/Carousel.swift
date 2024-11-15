@@ -29,7 +29,7 @@ struct Carousel<CameraModel: Camera>: View {
         let minRotationAngle = rotationAngleLast - safeZoneDegrees
         
         return ZStack {
-            let radius = min(geometry.size.width - 72, geometry.size.height - 72) / 2
+            let radius = min(geometry.size.width - 144, geometry.size.height - 144) / 2
             // Placing compositions along the arc or in a horizontal line
             ForEach(Array(camera.compositions.enumerated()), id: \.offset) { index, element in
                 let anglePerButton = totalButtonArc / Double(camera.compositions.count - 1)
@@ -40,7 +40,7 @@ struct Carousel<CameraModel: Camera>: View {
                 CompositionButton(for: element)
                     .rotationEffect(camera.isFramingCarouselEnabled ? -rotationAngle : .zero) // Keep compositions upright
                     .offset(
-                        x: camera.isFramingCarouselEnabled ? radius * CGFloat(cos(angle.radians)) : CGFloat(index - camera.compositions.count / 2) * buttonSpacing + translationOffset,
+                        x: camera.isFramingCarouselEnabled ? radius * CGFloat(cos(angle.radians)) : (CGFloat(index) - (CGFloat(camera.compositions.count - 1) / 2.0)) * buttonSpacing + translationOffset,
                         y: camera.isFramingCarouselEnabled ? radius * CGFloat(sin(angle.radians)) : 0
                     )
                     .onTapGesture {
@@ -51,8 +51,6 @@ struct Carousel<CameraModel: Camera>: View {
                     }
             }
         }
-        //        .frame(width: geometry.size.width, height: geometry.size.height)
-        //        .offset(y: camera.isFramingCarouselEnabled ? 0 : -geometry.size.height / 5)
         .rotationEffect(camera.isFramingCarouselEnabled ? rotationAngle : .zero) // Rotate dial if carousel is on
         .gesture(
             DragGesture()
@@ -144,19 +142,8 @@ struct Carousel<CameraModel: Camera>: View {
     
     var body: some View {
         VStack {
-            
-            
             CompositionTextView
-            //        GeometryReader { gr in
-            //            VStack {
-            //                Spacer()
-            //                CompositionTextView
-            ////                    .position(x: gr.size.width / 2, y:gr.size.height / (camera.isFramingCarouselEnabled ?  1.5 : 1.2))
             HalfRotaryDial(geometry: geometry)
-            ////                    .background(CarouselBackground)
-            ////                    .position(x: gr.size.width / 2, y:gr.size.height / 2.6)
-            ////                    .scaleEffect(1.1)
-            ////                    .frame(maxHeight: geometry.size.height / 2)
                 .onTapGesture {
                     // Set isFramingCarouselEnabled to true
                     withAnimation(.easeInOut) {
@@ -170,7 +157,7 @@ struct Carousel<CameraModel: Camera>: View {
                     }
                 }
         }
-        //        }
+        .offset(y: -20)
     }
     
     @ViewBuilder

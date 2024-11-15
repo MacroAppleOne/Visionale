@@ -10,6 +10,8 @@ import UIKit
 
 @Observable
 class CenterGuidance: GuidanceSystem {
+    var contourRect: [CGRect] = []
+    
     
     var saliencyHandler: SaliencyHandler = .init()
     var trackingRequests: [VNTrackObjectRequest]?
@@ -37,6 +39,7 @@ class CenterGuidance: GuidanceSystem {
         self.trackingRequests = nil
         self.shouldReset = true
         self.isAligned = false
+        self.bestShotPoint = .zero
     }
     
     func findBestShotPoint(buffer: CVPixelBuffer) -> CGPoint? {
@@ -114,7 +117,7 @@ class CenterGuidance: GuidanceSystem {
             }
         }
         else {
-            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.05 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.05 {
+            if abs(newShotPoint.x - (self.bestShotPoint?.x ?? 0)) > 0.025 || abs(newShotPoint.y - (self.bestShotPoint?.y ?? 0)) > 0.025 {
                 return newShotPoint
             }
             else {
