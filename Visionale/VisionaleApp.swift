@@ -30,6 +30,7 @@ struct VisionaleApp: App {
                         .environmentObject(onboardingService)
                 } else if !onboardingService.hasCompletedWalkthrough{
                     // All permissions granted, show main camera view
+                    
                     WalkthroughView(camera: camera)
                         .environmentObject(onboardingService)
                 } else {

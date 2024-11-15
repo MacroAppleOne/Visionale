@@ -76,7 +76,7 @@ class LocationManager: NSObject, CLLocationManagerDelegate {
     // MARK: - Walkthrough Completion
     func completeWalkthrough() {
         self.hasCompletedWalkthrough = true
-        UserDefaults.standard.set(true, forKey: "hasCompleteWalkthrough")
+        UserDefaults.standard.set(true, forKey: "hasCompletedWalkthrough")
     }
     
     // MARK: - Camera Permission
@@ -144,7 +144,7 @@ final class OnboardingService: ObservableObject {
     init() {
         // Check if onboarding has been completed
         self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
-        self.hasCompletedWalkthrough = UserDefaults.standard.bool(forKey: "hasCompletedWalkthrough")
+        self.hasCompletedWalkthrough = UserDefaults.standard.bool(forKey: "hasCompleteWalkthrough")
         
         // Initialize permissions
         self.cameraPermissionGranted = false

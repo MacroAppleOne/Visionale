@@ -55,7 +55,10 @@ struct WalkthroughView<CameraModel: Camera>: View {
                     .onTapGesture {
                         startBounceAnimation() // Trigger next step when tapped
                         if(currentStep == 5) {
+                            print("masuk")
+                            
                             session.completeWalkthrough()
+                            print(session.hasCompletedWalkthrough)
                         }
                     }
                 
