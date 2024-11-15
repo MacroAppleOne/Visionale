@@ -157,7 +157,7 @@ struct Carousel<CameraModel: Camera>: View {
                     }
                 }
         }
-        .offset(y: -20)
+        .offset(y: camera.isFramingCarouselEnabled ? -20 : -32)
     }
     
     @ViewBuilder
