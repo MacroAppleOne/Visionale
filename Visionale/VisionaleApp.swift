@@ -16,11 +16,7 @@ struct VisionaleApp: App {
     var body: some Scene {
         WindowGroup {
             Group {
-                if !onboardingService.hasCompletedOnboarding {
-                    // Show onboarding start view
-                    OnboardingStartView()
-                        .environmentObject(onboardingService)
-                } else if !onboardingService.cameraPermissionGranted {
+                if !onboardingService.cameraPermissionGranted {
                     // Show camera permission view
                     OnboardingCameraPermissionView()
                         .environmentObject(onboardingService)
@@ -28,8 +24,15 @@ struct VisionaleApp: App {
                     // Show photo library permission view
                     OnboardingGalleryPermissionView()
                         .environmentObject(onboardingService)
-                } else {
+                } else if !onboardingService.locationPermissionGranted {
+                    // Show photo library permission view
+                    OnboardingLocationPermissionView()
+                        .environmentObject(onboardingService)
+                } else if !onboardingService.hasCompletedWalkthrough{
                     // All permissions granted, show main camera view
+                    WalkthroughView(camera: camera)
+                        .environmentObject(onboardingService)
+                } else {
                     CameraView(camera: camera)
                         .statusBarHidden(true)
                         .task {

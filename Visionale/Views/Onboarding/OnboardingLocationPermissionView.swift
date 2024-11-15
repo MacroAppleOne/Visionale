@@ -1,4 +1,11 @@
 //
+//  OnboardingLocationPermissionView.swift
+//  Visionale
+//
+//  Created by Rio Jonathan on 15/11/24.
+//
+
+//
 //  OnboardingGalleryPermissionView.swift
 //  Visionalé
 //
@@ -8,7 +15,7 @@
 import SwiftUI
 import Photos
 
-struct OnboardingLocationPermissionView: View {
+struct OnboardingGalleryPermissionView: View {
     @EnvironmentObject var session: OnboardingService
     @State private var showPermissionAlert = false
     
@@ -51,26 +58,26 @@ struct OnboardingLocationPermissionView: View {
                 }
                 Spacer(minLength: 50)
                 VStack(alignment: .leading){
-                    Text("Location Access")
+                    Text("Photos Access")
                         .font(.largeTitle)
                         .foregroundColor(.lightGradient)
                         .bold()
-                    Text("Visionalé fully respects your privacy. We request access to your location only to enhance your experience by providing location-specific features. Rest assured, we do not collect or store your personal data, and your location information is never shared.")
+                    Text("Visionalé fully respects your privacy. We only request access to your photo library to ensure you can save and display your images, without collecting your personal data.")
                         .font(.footnote)
                         .foregroundColor(.lightGradient)
                     Button(action: {
-                        session.requestLocationPermission() {
-                            if !session.locationPermissionGranted {
+                        session.requestPhotoLibraryPermission {
+                            if !session.photoLibraryPermissionGranted {
                                 showPermissionAlert = true
                             }
                         }
                     }) {
                         HStack {
-                            Image(systemName: "location.fill")
+                            Image(systemName: "photo.fill.on.rectangle.fill")
                                 .foregroundColor(.darkGradient)
                                 .frame(width: 25, height: 25)
                             
-                            Text("Allow Location Access")
+                            Text("Allow Photos Access")
                                 .foregroundColor(.darkGradient)
                                 .fontWeight(.semibold)
                         }
@@ -82,8 +89,8 @@ struct OnboardingLocationPermissionView: View {
                     }
                     .alert(isPresented: $showPermissionAlert) {
                         Alert(
-                            title: Text("Location Access Denied"),
-                            message: Text("Please allow location access in settings."),
+                            title: Text("Gallery Access Denied"),
+                            message: Text("Please allow gallery access in settings."),
                             primaryButton: .default(Text("Settings"), action: {
                                 if let settingsURL = URL(string: UIApplication.openSettingsURLString),
                                    UIApplication.shared.canOpenURL(settingsURL) {
@@ -105,3 +112,4 @@ struct OnboardingLocationPermissionView: View {
 #Preview {
     OnboardingGalleryPermissionView()
 }
+
