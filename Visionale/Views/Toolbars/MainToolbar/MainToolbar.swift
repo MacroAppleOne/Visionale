@@ -29,7 +29,7 @@ struct MainToolbar<CameraModel: Camera>: PlatformView {
         .frame(width: width, height: height)
         .padding([.leading, .trailing])
         .padding(.bottom, 36)
-        .background(camera.isFramingCarouselEnabled && camera.aspectRatio == .ratio16_9 ? Color.black.opacity(0.7) : .clear)
+        .background(camera.isFramingCarouselEnabled && camera.aspectRatio == .ratio16_9 ? Color.darkGradient : .clear)
     }
     var width: CGFloat? { isRegularSize ? 250 : nil }
     var height: CGFloat? { 80 }

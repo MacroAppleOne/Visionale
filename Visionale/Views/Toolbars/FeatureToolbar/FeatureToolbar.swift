@@ -37,6 +37,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         }
         .buttonStyle(DefaultButtonStyle(size: isRegularSize ? .large : .small))
         .padding([.leading, .trailing])
+        .backgroundStyle(.darkGradient)
     }
     
     var carouselToggleButton: some View {

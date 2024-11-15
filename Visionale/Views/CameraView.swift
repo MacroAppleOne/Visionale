@@ -135,6 +135,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
             }
             .padding(.top)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .background(Color.darkGradient)
             .overlay(alignment: .top){
                 VStack{
                     FeaturesToolbar(camera: camera)
@@ -147,7 +148,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
                         ZStack{
                             if (camera.isFramingCarouselEnabled) {
                                     HalfCircle()
-                                    .fill(Color.black.opacity(0.7))
+                                    .fill(Color.darkGradient.opacity(0.7))
                                         .frame(height: 56)
                                         .offset(y: 12)
                             }
