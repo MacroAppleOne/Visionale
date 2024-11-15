@@ -229,8 +229,14 @@ private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
     }
     
     private func cropImage(_ image: UIImage, to aspectRatio: AspectRatio) -> UIImage {
+        guard let cgImageKu = image.cgImage else { return image }
         let originalAspectRatio = 0.75
         var newImageSize = image.size
+        var cropZone: CGRect = .zero
+        
+        print("original image size: \(image.size)")
+        print("original width: \(image.size.width) height: \(image.size.height)")
+//        print("original scale: \(image.)")
         
         switch aspectRatio {
             
@@ -238,23 +244,32 @@ private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
             return image
         case .ratio16_9:
             if image.imageOrientation != .up {
-                let h = image.size.height
-                let w = image.size.height * 9 / 16
+                print("no up")
+                
+                print("width:\(cgImageKu.width) height:\(cgImageKu.height)")
+                let h = cgImageKu.width
+                let w = cgImageKu.width * 9 / 16
                 newImageSize = CGSize(width: h, height: w)
             } else {
-                newImageSize.height = image.size.width * 9/16
+                print("up")
+                newImageSize.height = CGFloat(cgImageKu.width) * 9/16
                 
             }
+            
+            cropZone = CGRect(origin: CGPoint(x: 0, y: (cgImageKu.height - Int(newImageSize.height)) / 2), size: newImageSize)
+            
+            print("new image size: \(newImageSize)")
         case .ratio1_1:
             if image.imageOrientation != .up {
                 newImageSize.height = image.size.height * originalAspectRatio
             } else {
                 newImageSize.width = image.size.width * originalAspectRatio
             }
+            
+            cropZone = CGRect(origin: CGPoint(x: (cgImageKu.width - Int(newImageSize.width)) / 2, y: (cgImageKu.height - Int(newImageSize.height)) / 2), size: newImageSize)
         }
-        let cropZone = CGRect(origin: .zero, size: newImageSize)
         
-        guard let cgImage = image.cgImage?.cropping(to: cropZone) else {
+        guard let cgImage = cgImageKu.cropping(to: cropZone) else {
             return image
         }
         
