@@ -18,12 +18,13 @@ struct SwitchCameraButton<CameraModel: Camera>: View {
                 await camera.switchVideoDevices()
             }
         } label: {
-            Image(systemName: "arrow.triangle.2.circlepath")
-                .symbolRenderingMode(.hierarchical)
-                .frame(width: largeButtonSize.width, height: largeButtonSize.height)
+            Image(systemName: "arrow.triangle.2.circlepath.circle.fill")
+                .font(.system(size: 40))
+                .fontWeight(.light)
+                .foregroundStyle(.primary, .secondary)
                 .background(Color.darkGradient)
         }
-        .frame(width: largeButtonSize.width, height: largeButtonSize.height)
         .allowsHitTesting(!camera.isSwitchingVideoDevices)
+        .frame(width: largeButtonSize.width, height: largeButtonSize.height)
     }
 }

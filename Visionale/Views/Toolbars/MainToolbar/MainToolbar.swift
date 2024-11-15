@@ -19,16 +19,18 @@ struct MainToolbar<CameraModel: Camera>: PlatformView {
     var body: some View {
         HStack {
             ThumbnailButton(camera: camera)
+                .border(.primary, width: 1)
             Spacer()
             CaptureButton(camera: camera)
             Spacer()
             SwitchCameraButton(camera: camera)
+                .border(.primary, width: 1)
         }
         .font(.title2)
         .foregroundStyle(.theme)
         .frame(width: width, height: height)
         .padding([.leading, .trailing])
-        .padding(.bottom, 36)
+        .padding(.bottom, 30)
         .background(camera.isFramingCarouselEnabled && camera.aspectRatio == .ratio16_9 ? Color.darkGradient : .clear)
     }
     var width: CGFloat? { isRegularSize ? 250 : nil }
