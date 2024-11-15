@@ -234,31 +234,21 @@ private class PhotoCaptureDelegate: NSObject, AVCapturePhotoCaptureDelegate {
         var newImageSize = image.size
         var cropZone: CGRect = .zero
         
-        print("original image size: \(image.size)")
-        print("original width: \(image.size.width) height: \(image.size.height)")
-//        print("original scale: \(image.)")
-        
         switch aspectRatio {
             
         case .ratio4_3:
             return image
         case .ratio16_9:
             if image.imageOrientation != .up {
-                print("no up")
-                
-                print("width:\(cgImageKu.width) height:\(cgImageKu.height)")
                 let h = cgImageKu.width
                 let w = cgImageKu.width * 9 / 16
                 newImageSize = CGSize(width: h, height: w)
             } else {
-                print("up")
                 newImageSize.height = CGFloat(cgImageKu.width) * 9/16
                 
             }
             
             cropZone = CGRect(origin: CGPoint(x: 0, y: (cgImageKu.height - Int(newImageSize.height)) / 2), size: newImageSize)
-            
-            print("new image size: \(newImageSize)")
         case .ratio1_1:
             if image.imageOrientation != .up {
                 newImageSize.height = image.size.height * originalAspectRatio
