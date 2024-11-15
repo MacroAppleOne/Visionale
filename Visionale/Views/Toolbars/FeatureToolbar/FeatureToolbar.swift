@@ -37,7 +37,6 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         }
         .buttonStyle(DefaultButtonStyle(size: isRegularSize ? .large : .small))
         .padding([.leading, .trailing])
-        .backgroundStyle(.darkGradient)
     }
     
     var carouselToggleButton: some View {
@@ -50,6 +49,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                 .font(.title2)
                 .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
                 .foregroundStyle(camera.isFramingCarouselEnabled ? .accent:.primary , .secondary, .tertiary)
+                .background(Color.darkGradient)
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
@@ -62,7 +62,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
             Image(systemName: "ellipsis.circle")
                 .font(.title2)
                 .fontWeight(.thin)
-            
+                .background(Color.darkGradient)
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
@@ -74,6 +74,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
         } label: {
             Image(systemName: "livephoto")
                 .foregroundColor(camera.photoFeatures.isLivePhotoEnabled ? .accentColor : .primary)
+                .background(Color.darkGradient)
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
@@ -92,6 +93,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                 .font(.title2)
                 .contentTransition(.symbolEffect(.replace.magic(fallback: .downUp.byLayer)))
                 .foregroundColor(camera.isTorchOn ? .accentColor: .primary)
+                .background(Color.darkGradient)
         }
     }
     
@@ -128,8 +130,10 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                 Text(camera.aspectRatio.description)
                     .font(.footnote)
                     .foregroundColor(.primary)
+                    .padding(.vertical, 4)
 //                    .offset(y: 12) // Adjust position as needed
             }
+            .background(Color.darkGradient)
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
     }
