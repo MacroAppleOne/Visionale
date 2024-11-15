@@ -9,7 +9,127 @@ import SwiftUI
 import AVFoundation
 import Photos
 import CoreLocation
+import Observation
 
+@Observable
+class LocationManager: NSObject, CLLocationManagerDelegate {
+    var hasCompletedOnboarding: Bool
+    var cameraPermissionGranted: Bool
+    var photoLibraryPermissionGranted: Bool
+    var hasCompletedWalkthrough: Bool
+    var locationPermissionGranted: Bool
+    
+    var location: CLLocation? = nil
+    
+    private let locationManager = CLLocationManager()
+    
+    override init() {
+        self.hasCompletedOnboarding = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        self.hasCompletedWalkthrough = UserDefaults.standard.bool(forKey: "hasCompletedWalkthrough")
+        
+        // Initialize permissions
+        self.cameraPermissionGranted = false
+        self.photoLibraryPermissionGranted = false
+        self.locationPermissionGranted = false
+        
+
+        super.init()
+        // Check current permissions
+        checkCameraPermission()
+        checkPhotoLibraryPermission()
+        checkLocationPermission()
+        locationManager.delegate = self
+        
+    }
+    
+    func requestUserAuthorization() async throws {
+        locationManager.requestWhenInUseAuthorization()
+    }
+    
+    func startCurrentLocationUpdates() {
+        locationManager.startUpdatingLocation()
+    }
+    
+    func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
+        guard let location = locations.first else { return }
+        
+        self.location = location
+    }
+    
+    func locationManagerDidChangeAuthorization(_ manager: CLLocationManager) {
+        switch manager.authorizationStatus {
+        case .notDetermined, .restricted, .denied:
+            self.locationPermissionGranted = false
+        case .authorizedAlways, .authorizedWhenInUse:
+            self.locationPermissionGranted = true
+        @unknown default:
+            break
+        }
+    }
+    
+    // MARK: - Onboarding Completion
+    func completeOnboarding() {
+        self.hasCompletedOnboarding = true
+        UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+    }
+    
+    // MARK: - Walkthrough Completion
+    func completeWalkthrough() {
+        self.hasCompletedWalkthrough = true
+        UserDefaults.standard.set(true, forKey: "hasCompleteWalkthrough")
+    }
+    
+    // MARK: - Camera Permission
+    func checkCameraPermission() {
+        let status = AVCaptureDevice.authorizationStatus(for: .video)
+        self.cameraPermissionGranted = (status == .authorized)
+    }
+    
+    
+    func requestCameraPermission(completion: (() -> Void)? = nil) {
+        AVCaptureDevice.requestAccess(for: .video) { granted in
+            DispatchQueue.main.async {
+                self.cameraPermissionGranted = granted
+                completion?()
+            }
+        }
+    }
+    
+    // MARK: - Photo Library Permission
+    func checkPhotoLibraryPermission() {
+        let status = PHPhotoLibrary.authorizationStatus()
+        self.photoLibraryPermissionGranted = (status == .authorized || status == .limited)
+    }
+    
+    func requestPhotoLibraryPermission(completion: (() -> Void)? = nil) {
+        PHPhotoLibrary.requestAuthorization { status in
+            DispatchQueue.main.async {
+                self.photoLibraryPermissionGranted = (status == .authorized || status == .limited)
+                completion?()
+            }
+        }
+    }
+    
+    // MARK: - Location Permission
+    func checkLocationPermission() {
+        DispatchQueue.global().async{
+            
+//            let status = CLLocationManager.authorizationStatus()
+            if CLLocationManager.locationServicesEnabled() {
+
+                switch (CLLocationManager.authorizationStatus()) {
+                case .notDetermined, .restricted, .denied:
+                    self.locationPermissionGranted = false
+                case .authorizedAlways, .authorizedWhenInUse:
+                    self.locationPermissionGranted = true
+                @unknown default:
+                    break
+                }
+            }
+        }
+    }
+    
+}
 
 final class OnboardingService: ObservableObject {
     @Published var hasCompletedOnboarding: Bool
@@ -101,10 +221,21 @@ final class OnboardingService: ObservableObject {
     }
     //Coba lihat link ini
     //https://holyswift.app/the-new-way-to-get-current-user-location-in-swiftu-tutorial/
-    func requestLocationPermission(completion: (() -> Void)? = nil) {
+    
+    func sapiman()async throws {
         self.locationManager.requestWhenInUseAuthorization()
+    }
+    
+    func sapiman2()async throws {
+        self.locationPermissionGranted = (self.locationManager.authorizationStatus == .authorizedAlways || self.locationManager.authorizationStatus == .authorizedWhenInUse)
+    }
+    
+    func requestLocationPermission(completion: (() -> Void)? = nil) {
         
-        DispatchQueue.main.asyncAfter(deadline: .now() + 1) {
+        
+        Task{
+            try? await self.locationManager.requestWhenInUseAuthorization()
+//            print(s)
             self.locationPermissionGranted = (self.locationManager.authorizationStatus == .authorizedAlways || self.locationManager.authorizationStatus == .authorizedWhenInUse)
             completion?()
         }

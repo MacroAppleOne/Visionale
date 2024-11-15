@@ -36,7 +36,7 @@ struct CameraView<CameraModel: Camera>: PlatformView {
         } else if (camera.aspectRatio == .ratio1_1){
             return -72
         } else {
-            return -12
+            return -20
         }
     }
     

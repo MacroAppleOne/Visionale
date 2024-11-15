@@ -22,9 +22,10 @@ struct SwitchCameraButton<CameraModel: Camera>: View {
                 .font(.system(size: 40))
                 .fontWeight(.light)
                 .foregroundStyle(.primary, .secondary)
-                .background(Color.darkGradient)
+                .background(Color.clear)
         }
         .allowsHitTesting(!camera.isSwitchingVideoDevices)
         .frame(width: largeButtonSize.width, height: largeButtonSize.height)
+        .background(Color.clear)
     }
 }
