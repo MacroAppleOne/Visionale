@@ -160,13 +160,6 @@ struct Carousel<CameraModel: Camera>: View {
         .offset(y: camera.isFramingCarouselEnabled ? -20 : -32)
     }
     
-    @ViewBuilder
-    var CarouselBackground: some View {
-        if (camera.isFramingCarouselEnabled){
-            Circle()
-                .fill(.regularMaterial)
-        }
-    }
     
     // Subview for each composition's button (unchanged)
     func CompositionButton(for composition: Composition) -> some View {
