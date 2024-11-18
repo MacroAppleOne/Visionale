@@ -192,6 +192,3 @@ struct ShakeDetector: UIViewControllerRepresentable {
     }
 }
 
-#Preview {
-    CameraView(camera: PreviewCameraModel())
-}
