@@ -170,6 +170,11 @@ final class OnboardingService: ObservableObject {
         UserDefaults.standard.set(true, forKey: "hasCompleteWalkthrough")
     }
     
+    func toggleWalkthrough(){
+        self.hasCompletedWalkthrough.toggle()
+    }
+
+    
     // MARK: - Camera Permission
     func checkCameraPermission() {
         let status = AVCaptureDevice.authorizationStatus(for: .video)

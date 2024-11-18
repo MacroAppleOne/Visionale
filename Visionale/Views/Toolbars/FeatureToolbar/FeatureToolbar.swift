@@ -13,6 +13,12 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
     @Environment(\.verticalSizeClass) var verticalSizeClass
     @Environment(\.horizontalSizeClass) var horizontalSizeClass
     
+    @EnvironmentObject var session: OnboardingService
+    @StateObject private var onboardingService = OnboardingService()
+    @State private var showWalkthrough = false
+    
+    
+    
     @State var camera: CameraModel
     var body: some View {
         ZStack{
@@ -22,7 +28,7 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
                     livePhotoButton
                     Spacer()
                     aspectRatioButton
-//                    otherIcontoggle
+                    otherIcontoggle
                 } else {
                     Spacer()
                     livePhotoButton
@@ -57,14 +63,17 @@ struct FeaturesToolbar<CameraModel: Camera>: PlatformView {
     
     var otherIcontoggle: some View {
         Button {
-            
+            session.toggleWalkthrough ()
         } label: {
-            Image(systemName: "ellipsis.circle")
+            Image(systemName: "questionmark.circle.fill")
                 .font(.title2)
                 .fontWeight(.thin)
+                .foregroundColor(.primary)
                 .background(Color.darkGradient)
         }
         .frame(width: smallButtonSize.width, height: smallButtonSize.height)
+
+        
     }
     
     //  A button to toggle the enabled state of Live Photo capture.

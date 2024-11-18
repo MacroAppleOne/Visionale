@@ -35,6 +35,7 @@ struct VisionaleApp: App {
                         .environmentObject(onboardingService)
                 } else {
                     CameraView(camera: camera)
+                        .environmentObject(onboardingService)
                         .statusBarHidden(true)
                         .task {
                             await camera.start()

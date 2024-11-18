@@ -18,6 +18,7 @@ struct WalkthroughView<CameraModel: Camera>: View {
     
     @EnvironmentObject var session: OnboardingService
     
+    
     //
     
     
@@ -58,7 +59,8 @@ struct WalkthroughView<CameraModel: Camera>: View {
                             print("masuk")
                             
                             session.completeWalkthrough()
-                            print(session.hasCompletedWalkthrough)
+                            
+                            
                         }
                     }
                 
