@@ -53,7 +53,7 @@ struct OnboardingGalleryPermissionView: View {
                     Rectangle()
                         .fill(.darkGradient)
                         .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
-                    Image("systemVideoName")
+                    Image("locationImage")
                         .resizable()
                 }
                 Spacer(minLength: 50)

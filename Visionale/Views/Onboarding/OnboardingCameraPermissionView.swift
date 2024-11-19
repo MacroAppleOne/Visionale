@@ -43,7 +43,7 @@ struct OnboardingCameraPermissionView: View {
                     Rectangle()
                         .fill(.darkGradient)
                         .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
-                    Image("systemVideoName")
+                    Image("cameraImage")
                         .resizable()
                 }
                 
