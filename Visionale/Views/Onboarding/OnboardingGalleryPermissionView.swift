@@ -46,7 +46,7 @@ struct OnboardingLocationPermissionView: View {
                     Rectangle()
                         .fill(.darkGradient)
                         .frame(width: UIScreen.main.bounds.width, height: UIScreen.main.bounds.height / 2)
-                    Image("photosImage")
+                    Image("locationImage")
                         .resizable()
                 }
                 Spacer(minLength: 50)
