@@ -9,9 +9,9 @@ import SwiftUI
 import Photos
 
 struct OnboardingLocationPermissionView: View {
+    private var locationManager: CLLocationManager = CLLocationManager()
     @EnvironmentObject var session: OnboardingService
     @State private var showPermissionAlert = false
-    @State var sapiman = LocationManager()
     var meshGradient: some View {
         MeshGradient(
             width: 5,
@@ -59,23 +59,11 @@ struct OnboardingLocationPermissionView: View {
                         .font(.footnote)
                         .foregroundColor(.lightGradient)
                     Button(action: {
-//                        session.requestLocationPermission() {
-//                            if !session.locationPermissionGranted {
-//                                showPermissionAlert = true
-//                            }
-//                        }
-                        Task{
-//                            print("Minta sapiman")
-//                            try? await session.sapiman()
-//                            print("Minta sapiman2")
-//                            try? await session.sapiman2()
-//                            if !session.locationPermissionGranted {
-//                                showPermissionAlert = true
-//                            }
-                            print("Noce")
-                            try? await sapiman.requestUserAuthorization()
-                            print("Noce2")
-                        }
+                        
+//                                                Task{
+                        locationManager.requestWhenInUseAuthorization()
+                         session.requestLocationPermission()
+//                                                }
                     }) {
                         HStack {
                             Image(systemName: "location.fill")
@@ -110,7 +98,7 @@ struct OnboardingLocationPermissionView: View {
                     .padding(.horizontal, 35)
             }
             .edgesIgnoringSafeArea(.all)
-        }.onChange(of: sapiman.locationPermissionGranted) { oldValue, newValue in
+        }.onChange(of: session.locationPermissionGranted) { oldValue, newValue in
             session.locationPermissionGranted = newValue
         }
     }

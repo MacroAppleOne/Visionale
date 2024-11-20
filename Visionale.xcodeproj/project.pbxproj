@@ -410,13 +410,15 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"Visionale/Preview Content\"";
-				DEVELOPMENT_TEAM = 3K8JGLP9HY;
+				DEVELOPMENT_TEAM = KNP937X993;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = Visionale/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = "Visionalé";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires access to the camera.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app need your location permission to save location into Image metadata.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "This app need your location permission to save location into Image metadata.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app need your location permission to save location into Image metadata.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "This app requires access to your photo library, SO WE CAN TAKE YOUR DATA!";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs your library usage permision";
@@ -460,6 +462,8 @@
 				INFOPLIST_KEY_CFBundleDisplayName = "Visionalé";
 				INFOPLIST_KEY_LSApplicationCategoryType = "public.app-category.photography";
 				INFOPLIST_KEY_NSCameraUsageDescription = "This app requires access to the camera.";
+				INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription = "This app need your location permission to save location into Image metadata.";
+				INFOPLIST_KEY_NSLocationUsageDescription = "This app need your location permission to save location into Image metadata.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "This app need your location permission to save location into Image metadata.";
 				INFOPLIST_KEY_NSPhotoLibraryAddUsageDescription = "This app requires access to your photo library, SO WE CAN TAKE YOUR DATA!";
 				INFOPLIST_KEY_NSPhotoLibraryUsageDescription = "This app needs your library usage permision";

@@ -213,7 +213,6 @@ struct WalkthroughView<CameraModel: Camera>: View {
     func startBounceAnimation() {
         guard currentStep < steps.count else { return }
         // Use DispatchQueue to delay the execution of nextStep() after the bounce completes
-        let duration: Double = 0.6 // Match the duration of your spring animation
         DispatchQueue.main.asyncAfter(deadline: .now()) {
             if currentStep < steps.count - 1 {
                 nextStep()

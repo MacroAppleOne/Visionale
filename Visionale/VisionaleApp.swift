@@ -11,7 +11,7 @@ import SwiftUI
 @main
 /// The AVCam app's main entry point.
 struct VisionaleApp: App {
-    @StateObject private var onboardingService = OnboardingService()
+    @State private var onboardingService = OnboardingService()
     @State private var camera = CameraModel()
     var body: some Scene {
         WindowGroup {
@@ -30,7 +30,6 @@ struct VisionaleApp: App {
                         .environmentObject(onboardingService)
                 } else if !onboardingService.hasCompletedWalkthrough{
                     // All permissions granted, show main camera view
-                    
                     WalkthroughView(camera: camera)
                         .environmentObject(onboardingService)
                 } else {
