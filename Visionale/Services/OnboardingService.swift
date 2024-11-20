@@ -20,7 +20,7 @@ final class OnboardingService: NSObject,ObservableObject, CLLocationManagerDeleg
     var locationPermissionGranted: Bool
     
     //Location Permission
-    private var manager: CLLocationManager = CLLocationManager()
+    var manager: CLLocationManager = CLLocationManager()
     
     override init() {
         // Check if onboarding has been completed
@@ -38,6 +38,7 @@ final class OnboardingService: NSObject,ObservableObject, CLLocationManagerDeleg
         checkPhotoLibraryPermission()
 //        checkLocationPermission()
         locationManagerDidChangeAuthorization(manager)
+        manager.delegate = self
     }
     
     // MARK: - Onboarding Completion
@@ -108,7 +109,7 @@ final class OnboardingService: NSObject,ObservableObject, CLLocationManagerDeleg
     
     func requestLocationPermission(/*completion: (() -> Void)? = nil*/) {
         //        Task{
-        self.manager.requestAlwaysAuthorization()
+        self.manager.requestWhenInUseAuthorization()
 //        self.checkLocationPermission()
         //                self.locationPermissionGranted =
 //        completion?()
@@ -119,6 +120,7 @@ final class OnboardingService: NSObject,ObservableObject, CLLocationManagerDeleg
         switch self.manager.authorizationStatus {
         case .authorizedWhenInUse, .authorizedAlways:  // Location services are available.
             self.locationPermissionGranted = true
+            print(locationPermissionGranted)
             break
             
         case .restricted, .denied, .notDetermined:  // Location services currently unavailable.
@@ -130,6 +132,8 @@ final class OnboardingService: NSObject,ObservableObject, CLLocationManagerDeleg
         default:
             break
         }
+        
+        
     }
     
     

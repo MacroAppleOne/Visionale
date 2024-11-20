@@ -19,19 +19,19 @@ struct VisionaleApp: App {
                 if !onboardingService.cameraPermissionGranted {
                     // Show camera permission view
                     OnboardingCameraPermissionView()
-                        .environmentObject(onboardingService)
+                        
                 } else if !onboardingService.photoLibraryPermissionGranted {
                     // Show photo library permission view
                     OnboardingGalleryPermissionView()
-                        .environmentObject(onboardingService)
+//                        .environmentObject(onboardingService)
                 } else if !onboardingService.locationPermissionGranted {
                     // Show photo library permission view
                     OnboardingLocationPermissionView()
-                        .environmentObject(onboardingService)
+//                        .environmentObject(onboardingService)
                 } else if !onboardingService.hasCompletedWalkthrough{
                     // All permissions granted, show main camera view
                     WalkthroughView(camera: camera)
-                        .environmentObject(onboardingService)
+//                        .environmentObject(onboardingService)
                 } else {
                     CameraView(camera: camera)
                         .environmentObject(onboardingService)
@@ -41,6 +41,7 @@ struct VisionaleApp: App {
                         }
                 }
             }
+            .environmentObject(onboardingService)
             .onAppear {
                 // Refresh permissions on app launch
                 onboardingService.checkCameraPermission()

@@ -61,8 +61,12 @@ struct OnboardingLocationPermissionView: View {
                     Button(action: {
                         
 //                                                Task{
-                        locationManager.requestWhenInUseAuthorization()
-                         session.requestLocationPermission()
+                        session.requestLocationPermission()
+                        if session.manager.authorizationStatus == .denied{
+                            showPermissionAlert = true
+                        }
+//                        locationManager.requestWhenInUseAuthorization()
+                         
 //                                                }
                     }) {
                         HStack {
@@ -98,8 +102,12 @@ struct OnboardingLocationPermissionView: View {
                     .padding(.horizontal, 35)
             }
             .edgesIgnoringSafeArea(.all)
-        }.onChange(of: session.locationPermissionGranted) { oldValue, newValue in
-            session.locationPermissionGranted = newValue
+        }.onChange(of: session.manager.authorizationStatus) { oldValue, newValue in
+//            session.locationPermissionGranted = newValue
+            print(newValue)
+            if newValue == .denied {
+                showPermissionAlert = true
+            }
         }
     }
 }
