@@ -94,7 +94,7 @@ class RuleOfThirdsGuidance: GuidanceSystem {
 //                }
                 self.shouldReset = false
             }
-            else if !boundingBoxes.isEmpty {
+            else {
                 let origin = CGPoint(
                     x: focusPoint.x - 0.2,
                     y: focusPoint.y - 0.2
@@ -105,9 +105,9 @@ class RuleOfThirdsGuidance: GuidanceSystem {
                 mainObject = rect
                 self.shouldReset = false
             }
-            else {
-                reset()
-            }
+//            else {
+//                reset()
+//            }
         }
         
         // MARK: DETERMINE KEYPOINT

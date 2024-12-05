@@ -88,7 +88,7 @@ class GoldenRatioGuidance: GuidanceSystem {
                 }
                 self.shouldReset = false
             }
-            else if !boundingBoxes.isEmpty {
+            else {
                 let origin = CGPoint(
                     x: focusPoint.x - 0.2,
                     y: focusPoint.y - 0.2
@@ -98,9 +98,9 @@ class GoldenRatioGuidance: GuidanceSystem {
                 self.sequenceRequestHandler = VNSequenceRequestHandler()
                 self.shouldReset = false
             }
-            else {
-                reset()
-            }
+//            else {
+//                reset()
+//            }
         }
         
         let offsetX = self.aspectRatio == 9 / 16 ? 0 : 0.214

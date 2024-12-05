@@ -80,7 +80,7 @@ class CenterGuidance: GuidanceSystem {
                 self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: mainObject))]
                 self.sequenceRequestHandler = VNSequenceRequestHandler()
             }
-            else if !boundingBoxes.isEmpty {
+            else {
                 let origin = CGPoint(
                     x: focusPoint.x - 0.2,
                     y: focusPoint.y - 0.2
@@ -90,10 +90,10 @@ class CenterGuidance: GuidanceSystem {
                 self.trackingRequests = [VNTrackObjectRequest(detectedObjectObservation: VNDetectedObjectObservation(boundingBox: rect))]
                 self.sequenceRequestHandler = VNSequenceRequestHandler()
             }
-            else {
-                reset()
-                return nil
-            }
+//            else {
+//                reset()
+//                return nil
+//            }
         }
         
         // MARK: OBJECT TRACKING
